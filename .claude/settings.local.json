@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/yashsagar/Desktop)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_click"
+    ]
+  }
+}

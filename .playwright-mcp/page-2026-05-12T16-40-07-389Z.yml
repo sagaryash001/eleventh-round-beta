@@ -1,0 +1,268 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - link "The Eleventh Round — Home" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: XI
+        - generic [ref=e7]: Eleventh Round
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "The Problem" [ref=e10] [cursor=pointer]:
+            - /url: "#problems"
+        - listitem [ref=e11]:
+          - link "Products" [ref=e12] [cursor=pointer]:
+            - /url: "#products"
+        - listitem [ref=e13]:
+          - link "Platform" [ref=e14] [cursor=pointer]:
+            - /url: "#dashboard"
+        - listitem [ref=e15]:
+          - link "Podcast" [ref=e16] [cursor=pointer]:
+            - /url: /podcast
+        - listitem [ref=e17]:
+          - link "Apparel" [ref=e18] [cursor=pointer]:
+            - /url: /apparel
+      - generic [ref=e19]:
+        - link "Sign In" [ref=e20] [cursor=pointer]:
+          - /url: /login
+        - link "Join the Ecosystem" [ref=e21] [cursor=pointer]:
+          - /url: /login
+  - main [ref=e22]:
+    - generic [ref=e24]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: Career Infrastructure · Combat Sports
+        - generic [ref=e28]:
+          - generic [ref=e30]: Build a Career.
+          - generic [ref=e32]: Not Just
+          - generic [ref=e34]: a Record.
+        - paragraph [ref=e35]: A premium ecosystem for fighter readiness, manager systems, and long-term career development.
+        - generic [ref=e36]:
+          - link "Explore the Ecosystem" [ref=e37] [cursor=pointer]:
+            - /url: "#products"
+          - link "See the Platform" [ref=e38] [cursor=pointer]:
+            - /url: "#dashboard"
+      - generic [ref=e39]:
+        - generic [ref=e41]: "01"
+        - generic [ref=e44]: "02"
+        - generic [ref=e47]: "03"
+        - generic [ref=e50]: "04"
+        - generic [ref=e53]: "05"
+      - generic [ref=e304]: Scroll
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]: The Problem
+        - heading "The Industry Fails Fighters." [level=2] [ref=e60]:
+          - text: The Industry
+          - text: Fails Fighters.
+        - paragraph [ref=e61]: No standardized systems. No structured support. Talent gets wasted because the infrastructure was never built.
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - button "01 No Standardized Onboarding" [ref=e66] [cursor=pointer]:
+              - generic [ref=e67]: "01"
+              - generic [ref=e69]: No Standardized Onboarding
+              - img
+            - button "02 Sponsorship Chaos" [ref=e72] [cursor=pointer]:
+              - generic [ref=e73]: "02"
+              - generic [ref=e75]: Sponsorship Chaos
+              - img
+            - button "03 Missed Media Obligations" [ref=e78] [cursor=pointer]:
+              - generic [ref=e79]: "03"
+              - generic [ref=e81]: Missed Media Obligations
+              - img
+            - button "04 Financial Instability" [ref=e84] [cursor=pointer]:
+              - generic [ref=e85]: "04"
+              - generic [ref=e87]: Financial Instability
+              - img
+            - button "05 Weak Personal Brand" [ref=e90] [cursor=pointer]:
+              - generic [ref=e91]: "05"
+              - generic [ref=e93]: Weak Personal Brand
+              - img
+          - generic [ref=e95]:
+            - button "06 No Long-Term Roadmap" [ref=e97] [cursor=pointer]:
+              - generic [ref=e98]: "06"
+              - generic [ref=e100]: No Long-Term Roadmap
+              - img
+            - button "07 Poor Conduct & Professionalism" [ref=e103] [cursor=pointer]:
+              - generic [ref=e104]: "07"
+              - generic [ref=e106]: Poor Conduct & Professionalism
+              - img
+            - button "08 Managers Overwhelmed" [ref=e109] [cursor=pointer]:
+              - generic [ref=e110]: "08"
+              - generic [ref=e112]: Managers Overwhelmed
+              - img
+            - button "09 No Education on Contracts" [ref=e115] [cursor=pointer]:
+              - generic [ref=e116]: "09"
+              - generic [ref=e118]: No Education on Contracts
+              - img
+          - paragraph [ref=e119]: Select a node to explore
+        - generic [ref=e122]:
+          - generic [ref=e123]: 01 / 09
+          - heading "No Standardized Onboarding" [level=3] [ref=e124]
+          - paragraph [ref=e125]: Fighters enter gyms and sign with teams with no structured intake process. Critical information — medical history, mental health, finances, preferences — is never properly gathered or tracked, creating operational blind spots from day one.
+          - generic [ref=e126]: The Eleventh Round Solution
+          - paragraph [ref=e127]: MGMT-SUITE Lite provides white-labeled onboarding systems that capture everything managers need. Fighters enter the ecosystem fully documented, professionally ready, and tracked from the start.
+      - paragraph [ref=e129]: The Eleventh Round supports fighters and managers — it does not replace them.
+    - generic [ref=e130]:
+      - generic [ref=e131]:
+        - generic [ref=e132]: The Ecosystem
+        - heading "Built for Every Role." [level=2] [ref=e133]:
+          - text: Built for
+          - text: Every Role.
+        - paragraph [ref=e134]: Hover to preview · Click a node to expand
+      - generic [ref=e135]:
+        - img
+        - generic [ref=e137]: THE ECOSYSTEM
+        - generic [ref=e140] [cursor=pointer]:
+          - generic:
+            - generic: Build a career, not just a record
+          - generic [ref=e142]: Fighters
+          - generic [ref=e143]: Pipeline
+        - generic [ref=e145] [cursor=pointer]:
+          - generic:
+            - generic: Better systems. Fewer fires. Stronger fighters.
+          - generic [ref=e147]: Managers
+          - generic [ref=e148]: MGMT-SUITE
+        - generic [ref=e150] [cursor=pointer]:
+          - generic:
+            - generic: Track professionalism. Build a credible operation.
+          - generic [ref=e152]: Promotions
+          - generic [ref=e153]: PRMTN-HUB
+      - generic [ref=e154]:
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - generic [ref=e158]: Ecosystem · Audio
+            - heading "The Podcast" [level=2] [ref=e159]:
+              - text: The
+              - text: Podcast
+            - paragraph [ref=e160]: Culture. Credibility. Access. Conversations with fighters, managers, attorneys, and business minds who move with substance — not empty hype.
+            - paragraph [ref=e161]: Fighter stories · Career lessons · Contracts & business · Sponsor strategy
+            - link "Browse Episodes →" [ref=e162] [cursor=pointer]:
+              - /url: /podcast
+          - generic [ref=e164]:
+            - generic [ref=e165]: 🎙
+            - generic [ref=e166]: New Episodes Weekly
+            - generic [ref=e167]: Every conversation earns its place.
+            - generic [ref=e168]:
+              - generic [ref=e169]: E012 — Building a Career After the Belt
+              - generic [ref=e170]: E011 — What Sponsors Actually Want
+              - generic [ref=e171]: E010 — Managing a Roster Without Burning Out
+        - generic [ref=e172]:
+          - generic [ref=e174]:
+            - generic [ref=e175]: ◈
+            - generic [ref=e176]: Collections Live Now
+            - generic [ref=e177]: Wearable extension of the brand ethos.
+            - generic [ref=e178]:
+              - generic [ref=e179]: Resilience Line
+              - generic [ref=e180]: MMA Collection
+              - generic [ref=e181]: Boxing Collection
+              - generic [ref=e182]: Premium Essentials
+          - generic [ref=e183]:
+            - generic [ref=e184]: Ecosystem · Apparel
+            - heading "Apparel" [level=2] [ref=e185]
+            - paragraph [ref=e186]: Not random merch. Identity. Discipline. Resilience. Collections built around combat sports culture with real meaning behind every piece.
+            - paragraph [ref=e187]: By sport · By ethos · Premium quality · Worn with purpose
+            - link "Shop Collections →" [ref=e188] [cursor=pointer]:
+              - /url: /apparel
+    - generic [ref=e191]:
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - generic [ref=e194]: The Platform
+          - heading "The Operating System." [level=2] [ref=e195]:
+            - text: The Operating
+            - text: System.
+        - paragraph [ref=e196]: The dashboard is where people are managed, readiness is tracked, obligations are monitored, development is guided, and opportunities are unlocked. This is the infrastructure behind every promise.
+      - generic [ref=e197]:
+        - button "Command Center" [ref=e198] [cursor=pointer]
+        - button "Fighter View" [ref=e199] [cursor=pointer]
+        - button "Manager View" [ref=e200] [cursor=pointer]
+        - button "Promotions" [ref=e201] [cursor=pointer]
+      - generic [ref=e203]:
+        - generic [ref=e204]:
+          - generic [ref=e205]: Active Roster
+          - generic [ref=e206]: "47"
+          - generic [ref=e207]: Fighters in system
+          - generic [ref=e210]: 78% fully onboarded
+        - generic [ref=e211]:
+          - generic [ref=e212]: Readiness Overview
+          - generic [ref=e213]:
+            - generic [ref=e214]:
+              - img [ref=e215]
+              - generic [ref=e218]:
+                - generic [ref=e219]: "72"
+                - generic [ref=e220]: Score
+            - generic [ref=e221]:
+              - generic [ref=e223]: Brand
+              - generic [ref=e227]: Financial
+              - generic [ref=e231]: Conduct
+              - generic [ref=e235]: Sponsor
+        - generic [ref=e238]:
+          - generic [ref=e239]: Obligations Due
+          - generic [ref=e240]: "3"
+          - generic [ref=e241]: Overdue this week
+          - generic [ref=e244]: 2 sponsor · 1 media
+        - generic [ref=e245]:
+          - generic [ref=e246]: Recent Activity
+          - list [ref=e247]:
+            - listitem [ref=e248]:
+              - generic [ref=e249]: Marcus T. — Onboarding Complete
+              - generic [ref=e250]: Ready
+            - listitem [ref=e251]:
+              - generic [ref=e252]: Jordan K. — Sponsor Obligation Overdue
+              - generic [ref=e253]: Action Required
+            - listitem [ref=e254]:
+              - generic [ref=e255]: SponsorForge — 2 New Matches Available
+              - generic [ref=e256]: New
+            - listitem [ref=e257]:
+              - generic [ref=e258]: Diego M. — Financial Module 60%
+              - generic [ref=e259]: In Progress
+            - listitem [ref=e260]:
+              - generic [ref=e261]: 3 Consultations Scheduled This Week
+              - generic [ref=e262]: Confirmed
+      - generic [ref=e263]:
+        - link "Access Full Dashboard" [ref=e264] [cursor=pointer]:
+          - /url: /login
+        - generic [ref=e265]: Fighter · Manager · Admin roles
+    - generic [ref=e266]:
+      - generic: XI
+      - generic [ref=e268]:
+        - generic [ref=e269]: The Eleventh Round
+        - heading "Become Eleventh Round Ready." [level=2] [ref=e270]:
+          - text: Become
+          - text: Eleventh Round
+          - text: Ready.
+        - paragraph [ref=e271]: Professionalism creates opportunity. Development is a system. Readiness is the differentiator.
+        - generic [ref=e272]:
+          - link "Start for Fighters" [ref=e273] [cursor=pointer]:
+            - /url: /login
+          - link "Start for Managers" [ref=e274] [cursor=pointer]:
+            - /url: /login
+          - link "See the Platform" [ref=e275] [cursor=pointer]:
+            - /url: /login
+        - generic [ref=e276]:
+          - generic [ref=e277]:
+            - generic [ref=e278]: XI
+            - generic [ref=e279]: Rounds
+          - generic [ref=e280]:
+            - generic [ref=e281]: "3"
+            - generic [ref=e282]: Ecosystems
+          - generic [ref=e283]:
+            - generic [ref=e284]: ∞
+            - generic [ref=e285]: Careers
+          - generic [ref=e286]:
+            - generic [ref=e287]: "1"
+            - generic [ref=e288]: System
+  - contentinfo [ref=e289]:
+    - paragraph [ref=e291]: "\"Professionalism creates opportunity. Readiness is the differentiator.\""
+    - generic [ref=e292]:
+      - link "The Eleventh Round" [ref=e293] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e294]: XI
+        - generic [ref=e295]: The Eleventh Round
+      - generic [ref=e296]:
+        - link "Podcast" [ref=e297] [cursor=pointer]:
+          - /url: /podcast
+        - link "Apparel" [ref=e298] [cursor=pointer]:
+          - /url: /apparel
+        - link "Sign In" [ref=e299] [cursor=pointer]:
+          - /url: /login
+      - generic [ref=e300]: © 2026 The Eleventh Round
