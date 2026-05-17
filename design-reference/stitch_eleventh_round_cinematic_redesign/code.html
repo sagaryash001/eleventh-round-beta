@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Eleventh Round - Built For More Than Victory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#680016",
+                        "on-surface": "#e2e2e2",
+                        "surface-container-highest": "#333535",
+                        "surface-tint": "#c9c6c5",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-error": "#690005",
+                        "secondary": "#ffb3b4",
+                        "on-secondary-container": "#ffb7b8",
+                        "on-secondary-fixed": "#40000a",
+                        "outline-variant": "#444748",
+                        "surface-variant": "#333535",
+                        "surface-container-high": "#282a2b",
+                        "error-container": "#93000a",
+                        "inverse-primary": "#5f5e5e",
+                        "secondary-container": "#ac012c",
+                        "surface-dim": "#121414",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "secondary-fixed": "#ffdad9",
+                        "on-secondary-fixed-variant": "#920023",
+                        "on-tertiary": "#313030",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container": "#1e2020",
+                        "primary": "#c9c6c5",
+                        "on-primary-container": "#7c7a7a",
+                        "outline": "#8e9192",
+                        "surface-container-lowest": "#0c0f0f",
+                        "on-background": "#e2e2e2",
+                        "surface": "#121414",
+                        "on-error-container": "#ffdad6",
+                        "primary-container": "#0d0d0d",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c7c7",
+                        "secondary-fixed-dim": "#ffb3b4",
+                        "on-primary": "#313030",
+                        "background": "#121414",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-bright": "#38393a",
+                        "tertiary": "#c8c6c5",
+                        "inverse-surface": "#e2e2e2",
+                        "tertiary-container": "#0d0d0d",
+                        "inverse-on-surface": "#2f3131",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "primary-fixed": "#e5e2e1",
+                        "on-tertiary-container": "#7c7a7a",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "surface-container-low": "#1a1c1c",
+                        "on-primary-fixed-variant": "#474646"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Bebas Neue", "sans-serif"],
+                        "body-lg": ["Archivo Narrow", "sans-serif"],
+                        "headline-xl": ["Bebas Neue", "sans-serif"],
+                        "caption": ["Archivo Narrow", "sans-serif"],
+                        "body-md": ["Archivo Narrow", "sans-serif"],
+                        "headline-lg-mobile": ["Bebas Neue", "sans-serif"],
+                        "headline-lg": ["Bebas Neue", "sans-serif"],
+                        "label-bold": ["Archivo Narrow", "sans-serif"],
+                        "display-lg": ["Bebas Neue", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["40px", { "lineHeight": "36px", "letterSpacing": "-0.05em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "500" }],
+                        "headline-xl": ["80px", { "lineHeight": "72px", "letterSpacing": "-0.05em", "fontWeight": "400" }],
+                        "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["48px", { "lineHeight": "44px", "letterSpacing": "-0.05em", "fontWeight": "400" }],
+                        "headline-lg": ["64px", { "lineHeight": "60px", "letterSpacing": "-0.05em", "fontWeight": "400" }],
+                        "label-bold": ["14px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["120px", { "lineHeight": "100px", "letterSpacing": "-0.05em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>body {
+            background-color: #0D0D0D; /* Level 0 Canvas */
+            color: #e2e2e2;
+        }
+        .text-deep-red {
+            color: #C41E3A;
+        }
+        .bg-deep-red {
+            background-color: #C41E3A;
+        }
+        .border-deep-red {
+            border-color: #C41E3A;
+        }
+        .hover\:bg-darker-red:hover {
+            background-color: #A01830;
+        }
+        .hero-gradient {
+            background: radial-gradient(circle at 50% 30%, rgba(13, 13, 13, 0) 0%, rgba(13, 13, 13, 0.4) 40%, rgba(13, 13, 13, 0.95) 100%),
+                        linear-gradient(to right, rgba(13, 13, 13, 1) 0%, rgba(13, 13, 13, 0) 25%, rgba(13, 13, 13, 0) 75%, rgba(13, 13, 13, 1) 100%);
+        }
+        .card-gradient {
+            background: linear-gradient(to top, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 0) 100%);
+        }</style>
+</head>
+<body class="font-body-md antialiased selection:bg-deep-red selection:text-white">
+<!-- TopNavBar -->
+<nav class="fixed w-full top-0 z-50 bg-surface/80 backdrop-blur-md border-b-0 flat no shadows">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<a class="text-headline-md font-headline-md text-on-surface tracking-tighter italic" href="#">ELEVENTH ROUND</a>
+<div class="hidden md:flex gap-8">
+<a class="text-on-surface font-label-bold hover:text-secondary transition-colors text-label-bold italic" href="#">PROGRAMS</a>
+<a class="text-on-surface font-label-bold hover:text-secondary transition-colors text-label-bold italic" href="#">COACHES</a>
+<a class="text-on-surface font-label-bold hover:text-secondary transition-colors text-label-bold italic" href="#">GYM</a>
+<a class="text-on-surface font-label-bold hover:text-secondary transition-colors text-label-bold italic" href="#">MEMBERSHIP</a>
+</div>
+<div class="hidden md:flex items-center gap-4">
+<button class="bg-deep-red text-white text-label-bold font-label-bold uppercase italic px-6 py-3 hover:bg-darker-red transition-colors duration-300">BOOK TRIAL</button>
+</div>
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</nav>
+<main>
+<!-- Hero Section -->
+<section class="relative min-h-screen flex items-center pt-32 pb-32">
+<div class="absolute inset-0 z-0">
+<img alt="MMA fighter from back in dark arena" class="w-full h-full object-cover opacity-50 contrast-125 brightness-75" data-alt="A professional, high-contrast photograph of a muscular MMA fighter seen from behind, standing in a dark arena. The lighting is realistic, with sharp overhead spotlights creating crisp highlights on the skin and deep, natural shadows. The atmosphere is filled with subtle dust and fine-grain film texture, avoiding smooth digital gradients for a gritty, authentic look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs5V9bG9E3PLWuiyqww5GymjXCBqQ_ARz5z4mydRHjXOv4vtwsk9fc1He9I3FJIrlXOQA096wLAExX1Bk5AyUHwTlsdIS17FPjV15NeoegmkgQjPnYrc76BV3Ts4Gufy_mqsUKWUsxQ4yWTTNqZTbUMNjY7P0AF_56mBMYgGoeVAbHwsGE4awFpt3icEE5iXOj9MmEaRFxUg_yq9vGD8TBT6D8BpRkBOmHrL3sRabFkDPoLfb8ggfPaG36l4bSOwdAst4vTZxeA2s"/>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="max-w-3xl">
+<p class="text-deep-red text-label-bold font-label-bold uppercase tracking-[0.2em] mb-8 italic">Discipline. Focus. Evolve.</p>
+<h1 class="text-[96px] md:text-[144px] font-display-lg text-white mb-12 uppercase leading-[0.85] tracking-[-0.06em] drop-shadow-2xl">BUILT FOR <br/><span class="text-deep-red">MORE THAN</span><br/> VICTORY.</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-16 max-w-xl">Eleventh Round is more than a gym. It's where warriors are forged. Step into the arena and discover what you're truly capable of.</p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="bg-deep-red text-white text-label-bold font-label-bold uppercase italic px-8 py-4 hover:bg-darker-red transition-colors duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-2">
+                            BOOK A TRIAL
+                            <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="border-2 border-white text-white text-label-bold font-label-bold uppercase italic px-8 py-4 hover:bg-white hover:text-black transition-colors duration-300 w-full sm:w-auto text-center">
+                            EXPLORE CLASSES
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Section -->
+<section class="py-40 bg-[#1A1A1A]">
+<div class="w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20">
+<div class="flex gap-4">
+<div class="text-deep-red shrink-0">
+<span class="material-symbols-outlined text-4xl" data-icon="military_tech">military_tech</span>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-white mb-4 uppercase italic">ELITE COACHES</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Proven. Experienced. Dedicated to pushing your limits.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="text-deep-red shrink-0">
+<span class="material-symbols-outlined text-4xl" data-icon="fitness_center">fitness_center</span>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-white mb-4 uppercase italic">WORLD CLASS FACILITY</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Train in a high-performance, fully equipped environment.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="text-deep-red shrink-0">
+<span class="material-symbols-outlined text-4xl" data-icon="sports_martial_arts">sports_martial_arts</span>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-white mb-4 uppercase italic">COMPLETE TRAINING</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">MMA, BJJ, Striking, Strength &amp; Conditioning.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="text-deep-red shrink-0">
+<span class="material-symbols-outlined text-4xl" data-icon="shield">shield</span>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-white mb-4 uppercase italic">FIGHT READY</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Build skills. Build confidence. Be ready for anything.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Programs Grid -->
+<section class="py-40 bg-[#0D0D0D]">
+<div class="w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+<div class="max-w-3xl">
+<p class="text-deep-red text-label-bold font-label-bold uppercase tracking-[0.2em] mb-8 italic">TRAIN LIKE A WARRIOR</p>
+<h2 class="text-[80px] md:text-[112px] font-headline-xl text-white uppercase leading-[0.85] tracking-[-0.05em]">CLASSES FOR <br/><span class="text-deep-red">EVERY FIGHTER</span></h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-10">From fundamentals to fight camp, our programs are designed to build real skills and real athletes.</p>
+</div>
+<button class="border-2 border-[#333] text-white text-label-bold font-label-bold uppercase italic px-8 py-4 hover:bg-white hover:text-black transition-colors duration-300 flex items-center gap-2 whitespace-nowrap">
+                        VIEW ALL CLASSES
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+<!-- Program 1 -->
+<div class="group relative aspect-[3/4] overflow-hidden bg-[#1A1A1A] cursor-pointer">
+<img alt="BJJ Training" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700 grayscale" data-alt="A sharp, high-contrast monochrome photograph of two Brazilian Jiu-Jitsu practitioners grappling. The image features realistic textures on the gis, authentic sweat, and professional arena lighting. The composition avoids painterly artifacts, focusing on crisp detail and realistic anatomy during a high-stakes transition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwfO3_CkEDojEpT9q9ZqDRTxb4pfzP_impUDNFn0ACEl7BUw6WveKxOrxsh8rXR4wJ4La9h_2BWGeOSTVJSD8omUgBRbjvCWZQXPhx0Y9hDLgozF79q6K1nM32aUbDObnk6Rd_EBCdzzkPeTw8uTiK70J5sWyX5tWFcqp1iIvnuGxvRGB2CCGx44aBY4G5jR61VmwMSobyn0_WApHMTu7bYbFBnL-khwQYZdHTjAmCk7X0xOlUEg8zrccb4Q2oI1ToOMpYJoNs6tk"/>
+<div class="absolute inset-0 card-gradient"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-white text-3xl mb-4" data-icon="accessibility_new">accessibility_new</span>
+<h3 class="text-headline-md font-headline-md text-white uppercase mb-2 italic">BRAZILIAN JIU-JITSU</h3>
+<p class="text-body-md font-body-md text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-4 group-hover:translate-y-0">Master control. Dominate on the ground. Gi and No-Gi classes available.</p>
+</div>
+</div>
+<!-- Program 2 -->
+<div class="group relative aspect-[3/4] overflow-hidden bg-[#1A1A1A] cursor-pointer">
+<img alt="Striking Training" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700 grayscale" data-alt="A professional black and white action shot of a fighter striking a heavy bag. The image captures realistic movement blur, flying chalk dust, and sharp lighting from a single source. There are no smooth digital gradients; instead, the image has a raw, cinematic film grain and realistic muscle definition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3dIEIQAG0LWStFTrpRXFD1CoqAEuTj7AN2TfssfQkqyidBfPlMlYINV6_s6f2UYkCPeI8qzNW6JEx4o816wEAc8QyjBNRZrcgr9j-sZk5kr9qe_3s3p00sMKAp7Atv2RtNF7Jg-oYHQZtTmHf1rqIw7uZVQl4P2ivkNdpnzpJWWCD3oAwS3ngFp_cGF5bq8vc-tBYQKYB37_UeA2R-SUJ7GZMlLKFS8k7qeueTKtQ9JhbWj5hK_tx7YnAjRqAV3SVuCJ55IQokPE"/>
+<div class="absolute inset-0 card-gradient"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-white text-3xl mb-4" data-icon="sports_mma">sports_mma</span>
+<h3 class="text-headline-md font-headline-md text-white uppercase mb-2 italic">STRIKING</h3>
+<p class="text-body-md font-body-md text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-4 group-hover:translate-y-0">Sharp technique. Fight with precision. Boxing and Muay Thai focused.</p>
+</div>
+</div>
+<!-- Program 3 -->
+<div class="group relative aspect-[3/4] overflow-hidden bg-[#1A1A1A] cursor-pointer">
+<img alt="Wrestling" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700 grayscale" data-alt="A gritty, high-contrast realistic photograph of two wrestlers in a powerful takedown. The lighting is harsh and theatrical but physically accurate, highlighting the strain and sweat. The image has a professional sports photography feel with natural shadow fall-off and zero anatomical distortions." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPCh6hY7WxHX9VTiDy-HwfOshLLZ0Fb1byLrMTlky13vTCdH2ca4bt02owN1YbR6w_FDPr4jZSY3jBTynMcn5w22x5DIaSS-BN53ESfMNa13D-pkdFl7gnXFObYsnouJvwZpqrJOMJfLIqRIbEoQaHy5n9k5RgnUrjqvwTu6pUf_sHcjSPc533btAfLyjP4QsCmx9z6BWd_FKNnnIXrgBRqaAAp5DZR79i0m1ykNEQrGbshE0DzYWJnQo3Ddb3QLn9cSEC7-2vT_E"/>
+<div class="absolute inset-0 card-gradient"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-white text-3xl mb-4" data-icon="front_hand">front_hand</span>
+<h3 class="text-headline-md font-headline-md text-white uppercase mb-2 italic">WRESTLING</h3>
+<p class="text-body-md font-body-md text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-4 group-hover:translate-y-0">Control the fight. Take it anywhere. Essential skills for MMA domination.</p>
+</div>
+</div>
+<!-- Program 4 -->
+<div class="group relative aspect-[3/4] overflow-hidden bg-[#1A1A1A] cursor-pointer">
+<img alt="Strength and Conditioning" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700 grayscale" data-alt="A realistic, high-contrast photograph of an athlete flipping a heavy tractor tire in a dark gym. The image is professional and sharp, with realistic skin textures, sweat, and a gritty industrial background. The lighting is authentic, casting hard shadows that emphasize the physical effort without artificial smoothness." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArdPFiJfBeV838bRWn5mogci6Y7nqtwG_eKuas8VgnraESHM95H2tUbHiQCwx8S6sKvw-1Z_qpEQAmUnlpNBbAzMdUO1TN6FUCA8uZwwA2SnjZY45mX55swObX-qzxuyiW9lHYQQ1MYRFw5APFCNRQN3LclCA4v4jAZWT4L9kkSXLvZFFhSumI_B2DEXmNaQf5tr9fbH28oB4rPwAY0ZyllY2aRFKhrnIH72nBJ_SPC9sXxesey9dk9B8Kt-s2n7Xzt46hUmJHdjM"/>
+<div class="absolute inset-0 card-gradient"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-white text-3xl mb-4" data-icon="fitness_center">fitness_center</span>
+<h3 class="text-headline-md font-headline-md text-white uppercase mb-2 italic">STRENGTH &amp; CONDITIONING</h3>
+<p class="text-body-md font-body-md text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-4 group-hover:translate-y-0">Build power. Build endurance. Build an unbreakable weapon.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- About/Story Section -->
+<section class="py-40 bg-[#1A1A1A]">
+<div class="w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+<div class="relative aspect-video bg-[#0D0D0D] group cursor-pointer overflow-hidden border border-[#333]">
+<img alt="Gym Interior" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-700 grayscale" data-alt="A realistic, wide-angle professional photograph of a modern MMA gym interior. The image features a training cage and heavy bags under high-contrast industrial lighting. The textures are sharp and realistic, from the floor mats to the metal cage, with a cinematic, moody atmosphere and natural shadow depth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKFlJGuOq0SIRS38EhA8NLnO-zq3K1weps3G_d1d03ygju3iiO4IpbgppAqG700qfPjrjEvej08xIjuUchTHuIYWTe8EGo6eqwDP2voZybnjMSLf3ZiLxvlcG6gEifodFpFHhFOf5paMsMZ0jDi_JsEbigfyWSzl9XWn4TNGSDWvH54iMcCYFh7C6-6Xm2OrFn9pUe_yCHXxl2OvSF0BV9SqJ86GgStueGD5kZpNCIByiMpnefJy1D9MgtfydcLPXFLyCoeE_Ebzc"/>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<div class="w-20 h-20 border-2 border-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 group-hover:border-deep-red group-hover:text-deep-red">
+<span class="material-symbols-outlined text-4xl" data-icon="play_arrow">play_arrow</span>
+</div>
+<span class="text-white text-label-bold font-label-bold uppercase tracking-widest mt-8 group-hover:text-deep-red transition-colors italic">WATCH OUR STORY</span>
+</div>
+</div>
+<div class="flex flex-col h-full justify-center">
+<p class="text-deep-red text-label-bold font-label-bold uppercase tracking-[0.2em] mb-8 italic">ABOUT ELEVENTH ROUND</p>
+<h2 class="text-[80px] md:text-[112px] font-headline-xl text-white uppercase leading-[0.85] tracking-[-0.05em] mb-12">MORE THAN A GYM.<br/><span class="text-deep-red">A BROTHERHOOD.</span></h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-8">We believe in the journey. The grind. The discipline. Here, you'll find more than training—you'll find a family that pushes you to be your absolute best.</p>
+<p class="text-body-md font-body-md text-on-surface-variant mb-12">Our facility was built by fighters, for fighters, but our doors are open to anyone willing to put in the work. No egos. Just effort.</p>
+<div>
+<button class="border-2 border-[#333] text-white text-label-bold font-label-bold uppercase italic px-8 py-4 hover:bg-white hover:text-black transition-colors duration-300 flex items-center gap-2">
+                                LEARN MORE
+                                <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Testimonial -->
+<section class="py-40 bg-[#0D0D0D]">
+<div class="w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center">
+<span class="material-symbols-outlined text-deep-red text-6xl mb-12 opacity-50" data-icon="format_quote">format_quote</span>
+<blockquote class="text-[48px] md:text-[64px] font-headline-lg text-white max-w-5xl mx-auto mb-16 leading-[0.95] tracking-[-0.03em] uppercase italic">
+                    "Eleventh Round changed my mindset, my body, and my life. The coaches push you when you can't push yourself. It's truly a different breed of training."
+                </blockquote>
+<div class="flex items-center justify-center gap-6">
+<img alt="Aditya Verma" class="w-16 h-16 rounded-full object-cover border-2 border-[#333] grayscale" data-alt="A stark, high-contrast black and white portrait of a determined-looking man. The lighting is dramatic and directional, creating deep shadows on one side of his face. The mood is intense and serious, fitting the gritty, premium aesthetic of an elite fighting academy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuwNb6mPUWuSkTqsRQ3xHE5hmswGlWyIbmOSm2gQZPKLdaDAjNJsV6UTdZsjTwAe4uJ1d8HG17egM-6L8sl7ug5E8zrfR77vagbLZdT3LU1R3dyW-gQNhYHvNTTB1CSsR0C9sv1xwSiFGJS_HsiARUyQOh4IRqaZOjqNK5Iv6L3vKHIWlp-vq9E6_raNaNhjTag3sxJuNvFYeuQ1e23_rF9fWEUbpc91RUWsm9sdVtdWLEIcnvSr-3ssAjfRUW94jS24hxlkMM2QQ"/>
+<div class="text-left">
+<div class="text-white text-label-bold font-label-bold uppercase tracking-widest italic">ADITYA VERMA</div>
+<div class="text-on-surface-variant text-caption font-caption uppercase tracking-wider mt-1 italic">MEMBER SINCE 2022</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-40 relative overflow-hidden bg-black">
+<div class="absolute inset-0 z-0">
+<img alt="Gritty texture" class="w-full h-full object-cover opacity-20 grayscale" data-alt="A high-resolution, realistic texture of dark, weathered industrial concrete. The surface features natural imperfections, fine cracks, and a gritty, non-uniform grain that provides an authentic, brutalist background for the final call to action." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBynYsp7zffRoYYm8GnNWz2yDp8ZQsyeNGmXRwO5g7ehBX5yXmNTeE5WlX57mcAaFsqrXZ4JY8zO72McsnRnYLwkHnmcyvnBbuLnBSju-tGOtAtykpSavEbic_-LwOhjxqCMpdUvMTggBmbfPtTlOS_5KYR4cwVUQKUHUCVO-6dHNIHVJ-uMCQtWciTXaWG2OEALLhZ1LZy-K7dazZdpUcPV4PLnjipGsa838Jeqt8e9nQAbM_0lLD2Eb1LsPDrvrzTKvnINUKEVO4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black"></div>
+</div>
+<div class="relative z-10 w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center">
+<h2 class="text-[96px] md:text-[144px] font-display-lg text-white uppercase leading-[0.85] tracking-[-0.06em] mb-12 italic transform -skew-x-6">
+                    YOUR NEXT ROUND <span class="text-deep-red">STARTS HERE.</span>
+</h2>
+<p class="text-headline-md font-headline-md text-on-surface-variant mb-16 italic">Step in. Level up. Become who you're meant to be.</p>
+<button class="bg-deep-red text-white text-headline-md font-headline-md uppercase italic px-16 py-6 hover:bg-darker-red transition-colors duration-300 inline-flex items-center gap-4">
+                    BOOK YOUR TRIAL
+                    <span class="material-symbols-outlined text-3xl" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest w-full py-24 flex flex-col items-center px-margin-desktop max-w-container-max mx-auto text-center">
+<a class="text-[64px] font-headline-xl text-on-surface mb-12 block tracking-[-0.05em] italic" href="#">ELEVENTH ROUND</a>
+<div class="flex flex-wrap justify-center gap-8 mb-16">
+<a class="text-on-surface-variant hover:text-on-surface text-label-bold font-label-bold uppercase italic transition-all duration-300 focus:ring-2 focus:ring-secondary outline-none" href="#">PRIVACY POLICY</a>
+<a class="text-on-surface-variant hover:text-on-surface text-label-bold font-label-bold uppercase italic transition-all duration-300 focus:ring-2 focus:ring-secondary outline-none" href="#">TERMS OF SERVICE</a>
+<a class="text-on-surface-variant hover:text-on-surface text-label-bold font-label-bold uppercase italic transition-all duration-300 focus:ring-2 focus:ring-secondary outline-none" href="#">CONTACT</a>
+<a class="text-on-surface-variant hover:text-on-surface text-label-bold font-label-bold uppercase italic transition-all duration-300 focus:ring-2 focus:ring-secondary outline-none" href="#">CAREERS</a>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant opacity-60">© 2024 ELEVENTH ROUND ACADEMY. ALL RIGHTS RESERVED.</p>
+</footer>
+</body></html>
