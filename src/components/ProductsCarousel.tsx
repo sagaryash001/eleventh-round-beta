@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 interface Detail    { title:string; desc:string; features:string[]; cta:string; ctaRoute:string }
 interface ChildNode { id:string; label:string; point:string; detail:Detail }
@@ -38,35 +40,33 @@ const ROOTS: TreeNode[] = [
   },
 ]
 
-// Tooltip that flips side based on screen position
-function Tooltip({ text, visible, nodeX, containerW }: { text:string; visible:boolean; nodeX:number; containerW:number }) {
-  const flipRight = nodeX < containerW * 0.35
-  const flipLeft  = nodeX > containerW * 0.65
-  const style: React.CSSProperties = flipRight
-    ? { left:'110%', top:'50%', transform:`translateY(-50%) translateY(${visible?0:4}px)`, whiteSpace:'nowrap' }
-    : flipLeft
-    ? { right:'110%', top:'50%', transform:`translateY(-50%) translateY(${visible?0:4}px)`, whiteSpace:'nowrap' }
-    : { bottom:'110%', left:'50%', transform:`translateX(-50%) translateY(${visible?0:5}px)`, whiteSpace:'nowrap' }
-
+// Tooltip — always above the node to avoid overlapping adjacent nodes
+function Tooltip({ text, visible }: { text:string; visible:boolean }) {
   return (
-    <div className="absolute pointer-events-none z-50" style={{...style, opacity:visible?1:0, transition:'opacity 0.18s, transform 0.18s'}}>
-      <div className="font-condensed font-semibold text-off-white px-3 py-1.5 bg-charcoal border border-blood/50"
-        style={{fontSize:11,letterSpacing:'0.04em'}}>
+    <div className="absolute pointer-events-none z-50 whitespace-nowrap" style={{
+      top:'calc(100% + 10px)',
+      left:'50%',
+      transform:`translateX(-50%) translateY(${visible?0:-4}px)`,
+      opacity:visible?1:0,
+      transition:'opacity 0.2s, transform 0.2s',
+    }}>
+      <span className="font-condensed italic text-gray-2"
+        style={{fontSize:11, letterSpacing:'0.05em'}}>
         {text}
-      </div>
+      </span>
     </div>
   )
 }
 
-function CircleNode({ label, sublabel, point, active, hovered, onEnter, onLeave, onClick, size, color, nodeX, containerW }:{
+function CircleNode({ label, sublabel, point, active, hovered, onEnter, onLeave, onClick, size, color }:{
   label:string; sublabel?:string; point:string; active:boolean; hovered:boolean
   onEnter:()=>void; onLeave:()=>void; onClick:()=>void
-  size:number; color:string; nodeX:number; containerW:number
+  size:number; color:string
 }) {
   return (
     <div className="relative flex flex-col items-center cursor-pointer select-none"
       style={{minWidth:size}} onMouseEnter={onEnter} onMouseLeave={onLeave} onClick={onClick}>
-      <Tooltip text={point} visible={hovered&&!active} nodeX={nodeX} containerW={containerW} />
+      <Tooltip text={point} visible={hovered} />
       <div className="rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0"
         style={{
           width:size, height:size,
@@ -127,17 +127,45 @@ function DetailModal({ node, color, onClose }:{ node:ChildNode|TreeNode; color:s
 
 export default function ProductsSection() {
   const containerRef  = useRef<HTMLDivElement>(null)
-  const [cw, setCw]   = useState(1100) // container width
+  const sectionRef    = useRef<HTMLElement>(null)
+  const headerRef     = useRef<HTMLDivElement>(null)
+  const line1Ref      = useRef<HTMLSpanElement>(null)
+  const line2Ref      = useRef<HTMLSpanElement>(null)
+  const leaveTimer    = useRef<ReturnType<typeof setTimeout>|null>(null)
+  const [cw, setCw]   = useState(1100)
   const [activeRoot,  setActiveRoot]  = useState<string|null>(null)
   const [hovRoot,     setHovRoot]     = useState<string|null>(null)
   const [hovChild,    setHovChild]    = useState<string|null>(null)
   const [detail,      setDetail]      = useState<{node:ChildNode|TreeNode;color:string}|null>(null)
+
+  const cancelLeave = useCallback(() => {
+    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null }
+  }, [])
+
+  const scheduleLeave = useCallback(() => {
+    leaveTimer.current = setTimeout(() => { setHovRoot(null); setHovChild(null) }, 120)
+  }, [])
 
   useEffect(()=>{
     const obs=new ResizeObserver(e=>setCw(e[0].contentRect.width))
     if(containerRef.current) obs.observe(containerRef.current)
     return()=>obs.disconnect()
   },[])
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced || !headerRef.current) return
+    const ctx = gsap.context(() => {
+      gsap.from([line1Ref.current, line2Ref.current], {
+        y: '110%',
+        duration: 1.1,
+        stagger: 0.09,
+        ease: 'power4.out',
+        scrollTrigger: { trigger: headerRef.current, start: 'top 80%' },
+      })
+    }, headerRef)
+    return () => ctx.revert()
+  }, [])
 
   // ── Layout math ────────────────────────────────────────────
   // Tree is a compact centered group — NOT edge-to-edge
@@ -169,18 +197,21 @@ export default function ProductsSection() {
   const openData = openRoot ? ROOTS.find(r=>r.id===openRoot) : null
 
   return (
-    <section id="products" className="bg-black py-28 relative overflow-hidden">
+    <section ref={sectionRef} id="products" className="bg-black py-32 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none"
         style={{background:'radial-gradient(ellipse at 50% 70%,rgba(60,0,0,0.07) 0%,transparent 60%)'}}/>
 
       <div className="max-w-[1300px] mx-auto px-10">
-        <div className="sec-label reveal mb-4">The Ecosystem</div>
-        <h2 className="reveal font-display text-off-white uppercase mb-2"
-          style={{fontSize:'clamp(52px,7vw,108px)',lineHeight:0.88}}>
-          Built for<br/>Every Role.
-        </h2>
-        <p className="reveal font-condensed text-gray-3 mb-14 uppercase"
-          style={{fontSize:13,letterSpacing:'0.2em'}}>
+        <div ref={headerRef}>
+          <div className="sec-label reveal mb-5">The Ecosystem</div>
+          <h2 className="font-display text-off-white uppercase mb-2"
+            style={{fontSize:'clamp(52px,7.5vw,116px)',lineHeight:0.87,letterSpacing:'-0.02em'}}>
+            <div className="line-clip"><span ref={line1Ref} className="block">Built for</span></div>
+            <div className="line-clip"><span ref={line2Ref} className="block">Every Role.</span></div>
+          </h2>
+        </div>
+        <p className="reveal font-narrow italic text-gray-3 mb-14 uppercase"
+          style={{fontSize:12,letterSpacing:'0.2em',marginTop:'1rem'}}>
           Hover to preview · Click a node to expand
         </p>
       </div>
@@ -225,13 +256,15 @@ export default function ProductsSection() {
         {/* Root nodes */}
         {ROOTS.map((root,i)=>(
           <div key={root.id} className="absolute" style={{left:rootXs[i],top:ROOT_Y-ROOT_SIZE/2,transform:'translateX(-50%)',zIndex:10}}
-            onMouseEnter={()=>setHovRoot(root.id)} onMouseLeave={()=>setHovRoot(null)}>
+            onMouseEnter={()=>{ cancelLeave(); setHovRoot(root.id) }}
+            onMouseLeave={scheduleLeave}>
             <CircleNode
               label={root.label} sublabel={root.sublabel} point={root.point}
-              active={activeRoot===root.id} hovered={hovRoot===root.id&&activeRoot!==root.id}
-              onEnter={()=>setHovRoot(root.id)} onLeave={()=>setHovRoot(null)}
+              active={activeRoot===root.id || hovRoot===root.id}
+              hovered={false}
+              onEnter={()=>{ cancelLeave(); setHovRoot(root.id) }} onLeave={scheduleLeave}
               onClick={()=>setActiveRoot(p=>p===root.id?null:root.id)}
-              size={ROOT_SIZE} color={root.color} nodeX={rootXs[i]} containerW={cw}/>
+              size={ROOT_SIZE} color={root.color}/>
           </div>
         ))}
 
@@ -241,13 +274,13 @@ export default function ProductsSection() {
           const childXs=getChildXs(ri,openData.children.length)
           return openData.children.map((child,ci)=>(
             <div key={child.id} className="absolute" style={{left:childXs[ci],top:CHILD_Y-CHILD_SIZE/2,transform:'translateX(-50%)',zIndex:10,animation:`nodeAppear 0.32s cubic-bezier(.25,.46,.45,.94) ${ci*0.05}s both`}}
-              onMouseEnter={()=>setHovChild(child.id)} onMouseLeave={()=>setHovChild(null)}>
+              onMouseEnter={()=>{ cancelLeave(); setHovChild(child.id) }} onMouseLeave={()=>{ setHovChild(null); scheduleLeave() }}>
               <CircleNode
                 label={child.label} point={child.point}
                 active={false} hovered={hovChild===child.id}
                 onEnter={()=>setHovChild(child.id)} onLeave={()=>setHovChild(null)}
                 onClick={()=>setDetail({node:child,color:openData.color})}
-                size={CHILD_SIZE} color={openData.color} nodeX={childXs[ci]} containerW={cw}/>
+                size={CHILD_SIZE} color={openData.color}/>
             </div>
           ))
         })()}
@@ -258,8 +291,8 @@ export default function ProductsSection() {
         {openData&&(
           <div className="border border-charcoal-3 p-8 relative overflow-hidden"
             style={{borderLeft:`3px solid ${openData.color}`,background:'#0c0c0d',animation:'fadeIn 0.3s ease'}}
-            onMouseEnter={()=>openData&&setHovRoot(openData.id)}
-            onMouseLeave={()=>setHovRoot(null)}>
+            onMouseEnter={()=>{ cancelLeave(); setHovRoot(openData.id) }}
+            onMouseLeave={scheduleLeave}>
             <div className="absolute inset-0 pointer-events-none" style={{background:`radial-gradient(ellipse at 5% 50%,${openData.color}12 0%,transparent 50%)`}}/>
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
               <div>
@@ -290,8 +323,8 @@ export default function ProductsSection() {
         {/* Podcast */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24 reveal">
           <div>
-            <div className="sec-label mb-4">Ecosystem · Audio</div>
-            <h2 className="font-display text-off-white uppercase mb-5" style={{fontSize:'clamp(48px,6vw,96px)',lineHeight:0.88}}>
+            <div className="sec-label mb-5">Ecosystem · Audio</div>
+            <h2 className="font-display text-off-white uppercase mb-5" style={{fontSize:'clamp(48px,6.5vw,104px)',lineHeight:0.87,letterSpacing:'-0.02em'}}>
               The<br/>Podcast
             </h2>
             <p className="font-body font-light text-gray-1 leading-relaxed mb-4" style={{fontSize:15,maxWidth:480}}>
@@ -319,22 +352,37 @@ export default function ProductsSection() {
 
         {/* Apparel */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center reveal reveal-delay-1">
-          <div className="border border-charcoal-3 p-10 relative overflow-hidden order-last lg:order-first" style={{background:'#0c0c0d',borderLeft:'3px solid #2a1818'}}>
-            <div className="absolute inset-0 pointer-events-none" style={{background:'radial-gradient(ellipse at 20% 80%,rgba(40,10,10,0.2) 0%,transparent 60%)'}}/>
-            <div className="relative z-10">
-              <div style={{fontSize:56,opacity:0.15,lineHeight:1,marginBottom:16}}>◈</div>
-              <div className="font-display text-off-white uppercase mb-2" style={{fontSize:28,lineHeight:1}}>Collections Live Now</div>
-              <div className="font-condensed text-gray-3 mb-6" style={{fontSize:12,letterSpacing:'0.1em'}}>Wearable extension of the brand ethos.</div>
-              <div className="flex flex-wrap gap-2">
-                {['Resilience Line','MMA Collection','Boxing Collection','Premium Essentials'].map(c=>(
-                  <span key={c} className="font-condensed border border-charcoal-3 px-3 py-1 text-gray-3" style={{fontSize:11}}>{c}</span>
-                ))}
-              </div>
+          {/* Photo grid */}
+          <div className="order-last lg:order-first relative overflow-hidden" style={{borderLeft:'3px solid #2a1818'}}>
+            <div className="grid grid-cols-3 gap-1">
+              {[
+                '/apparel/IMG_4669.jpeg',
+                '/apparel/IMG_4670.jpeg',
+                '/apparel/IMG_4671.jpeg',
+                '/apparel/IMG_4672.jpeg',
+                '/apparel/IMG_4673 (2).jpeg',
+                '/apparel/IMG_4674.jpeg',
+              ].map((src, i) => (
+                <div key={i} className="relative overflow-hidden" style={{aspectRatio:'1/1',background:'#0c0c0d'}}>
+                  <img
+                    src={src}
+                    alt={`Eleventh Round apparel ${i + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                  {/* subtle dark overlay */}
+                  <div className="absolute inset-0 pointer-events-none" style={{background:'rgba(0,0,0,0.15)'}}/>
+                </div>
+              ))}
+            </div>
+            {/* bottom-left badge */}
+            <div className="absolute bottom-3 left-3 font-condensed font-bold uppercase px-3 py-1" style={{fontSize:9,letterSpacing:'0.4em',background:'rgba(8,8,8,0.82)',color:'#C41E3A',border:'1px solid #C41E3A44'}}>
+              Collections Live Now
             </div>
           </div>
+
           <div>
-            <div className="sec-label mb-4">Ecosystem · Apparel</div>
-            <h2 className="font-display text-off-white uppercase mb-5" style={{fontSize:'clamp(48px,6vw,96px)',lineHeight:0.88}}>
+            <div className="sec-label mb-5">Ecosystem · Apparel</div>
+            <h2 className="font-display text-off-white uppercase mb-5" style={{fontSize:'clamp(48px,6.5vw,104px)',lineHeight:0.87,letterSpacing:'-0.02em'}}>
               Apparel
             </h2>
             <p className="font-body font-light text-gray-1 leading-relaxed mb-4" style={{fontSize:15,maxWidth:480}}>

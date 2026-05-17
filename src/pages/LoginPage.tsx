@@ -151,9 +151,12 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              {/* Role detection note */}
+              {/* Sign up CTA */}
               <p className="font-condensed text-[10px] tracking-wide text-gray-3 mt-5 text-center">
-                Your dashboard role is auto-detected from your credentials.
+                Don't have an account?{' '}
+                <Link to="/register" className="text-blood-glow hover:text-off-white transition-colors no-underline font-bold">
+                  Create one →
+                </Link>
               </p>
             </div>
           </div>

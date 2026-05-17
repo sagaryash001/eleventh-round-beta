@@ -2,14 +2,23 @@ import React, { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
+const APPAREL_PHOTOS = [
+  '/apparel/IMG_4669.jpeg',
+  '/apparel/IMG_4670.jpeg',
+  '/apparel/IMG_4671.jpeg',
+  '/apparel/IMG_4672.jpeg',
+  '/apparel/IMG_4673 (2).jpeg',
+  '/apparel/IMG_4674.jpeg',
+]
+
 const COLLECTIONS = [
   {
     id: 'resilience',
     name: 'Resilience Line',
     tag: 'Signature Collection',
     desc: 'Built for the ones who keep going. Premium fabrics, minimal branding, maximum meaning. The Resilience Line is the foundation of the Eleventh Round apparel identity.',
-    items: ['Heavyweight Pullover', 'Training Tee', 'Camp Shorts', 'Quarter-Zip'],
-    colors: ['Onyx', 'Blood Red', 'Bone'],
+    items: ['Classic Joggers — Onyx', 'Classic Joggers — Bone', 'Heavyweight Hoodie — Onyx', 'Heavyweight Hoodie — Bone', 'Resilience Tee — White', 'Resilience Tee — Onyx'],
+    colors: ['Onyx', 'Bone', 'White'],
     sport: 'All Combat Sports',
   },
   {
@@ -137,32 +146,38 @@ export default function ApparelPage() {
               </div>
             </div>
 
-            {/* Right — items grid */}
-            <div className="bg-charcoal-2 p-12 border-l border-charcoal-3">
-              <div className="font-condensed text-[9px] font-bold tracking-[0.4em] uppercase text-gray-3 mb-6">Items in Collection</div>
-              <div className="grid grid-cols-2 gap-3">
-                {current.items.map((item, i) => (
-                  <div
-                    key={item}
-                    className="bg-charcoal border border-charcoal-3 p-5 aspect-square flex flex-col justify-between hover:border-blood/40 transition-colors group cursor-pointer"
-                  >
-                    <div
-                      className="w-12 h-12 border border-charcoal-3 flex items-center justify-center mb-4"
-                      style={{ borderColor: 'rgba(139,0,0,0.3)' }}
-                    >
-                      <span className="font-condensed text-[10px] font-bold tracking-widest text-blood-glow">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
+            {/* Right — photo grid (only for Resilience Line) or coming-soon placeholder */}
+            <div className="bg-charcoal-2 border-l border-charcoal-3 overflow-hidden">
+              {current.id === 'resilience' ? (
+                <div className="grid grid-cols-3" style={{ gridTemplateRows: 'repeat(2, 1fr)' }}>
+                  {APPAREL_PHOTOS.map((src, i) => (
+                    <div key={i} className="relative overflow-hidden group cursor-pointer" style={{ aspectRatio: '1/1' }}>
+                      <img
+                        src={src}
+                        alt={`Eleventh Round apparel ${i + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black opacity-20 group-hover:opacity-0 transition-opacity duration-300" />
+                      {current.items[i] && (
+                        <div className="absolute bottom-0 left-0 right-0 px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }}>
+                          <div className="font-condensed text-[11px] font-bold tracking-wide text-off-white">{current.items[i]}</div>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <div className="font-condensed text-[13px] font-bold tracking-wide text-gray-1 group-hover:text-off-white transition-colors">
-                        {item}
-                      </div>
-                      <div className="font-condensed text-[10px] tracking-wide text-gray-3 mt-1">Coming Soon</div>
-                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full min-h-[360px] gap-4">
+                  <div className="font-condensed font-bold uppercase text-gray-3 tracking-[0.3em]" style={{ fontSize: 10 }}>
+                    Images Coming Soon
                   </div>
-                ))}
-              </div>
+                  <div className="w-8 h-px bg-charcoal-3" />
+                  <div className="font-condensed text-gray-3 text-center px-8" style={{ fontSize: 12 }}>
+                    {current.name} visuals are being prepared.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

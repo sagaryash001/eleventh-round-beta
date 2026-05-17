@@ -50,7 +50,7 @@ export const PRODUCTS: ProductCard[] = [
       'SponsorForge Readiness Monitoring',
     ],
     offers: [
-      { name: 'Roster Management', desc: 'Full visibility into every fighter's status, progress, and obligations' },
+      { name: 'Roster Management', desc: "Full visibility into every fighter's status, progress, and obligations" },
       { name: 'Professionalism Ratings', desc: 'Event-by-event conduct tracking and accountability systems' },
       { name: 'NIL & Brand Education', desc: 'Help fighters build their digital footprint and personal brand value' },
       { name: 'Operational Playbooks', desc: 'Ready-to-use processes for every management scenario' },

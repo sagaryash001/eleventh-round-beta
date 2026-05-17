@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { HERO_FRAMES } from '../data/frames'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+// Generate frame URLs from public/frames/
+const TOTAL_FRAMES = 480
+const HERO_FRAMES = Array.from({ length: TOTAL_FRAMES }, (_, i) =>
+  `/frames/frame_${String(i).padStart(6, '0')}.webp`
+)
 
 const CHAPTERS = [
   { range:[0,0.18] as [number,number], eyebrow:'Career Infrastructure · Combat Sports', headline:['Build a Career.','Not Just','a Record.'], sub:'A premium ecosystem for fighter readiness, manager systems, and long-term career development.', cta1:{l:'Explore the Ecosystem',h:'#products'}, cta2:{l:'See the Platform',h:'#dashboard'} },
@@ -11,46 +16,188 @@ const CHAPTERS = [
   { range:[0.75,1.0] as [number,number], eyebrow:'The Eleventh Round', headline:['Become','Eleventh Round','Ready.'], sub:'Development is a system. Readiness is the differentiator.', cta1:{l:'Start for Fighters',h:'/login'}, cta2:{l:'Start for Managers',h:'/login'} },
 ]
 
-const POSITIONS = ['center','left','right','center','right'] as const
+const POSITIONS = ['center','left','left','center','right'] as const
 
-function AmbientCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imgsRef   = useRef<HTMLImageElement[]>([])
-  const frameRef  = useRef(0)
-  const rafRef    = useRef(0)
-  const ctxRef    = useRef<CanvasRenderingContext2D|null>(null)
-  const loadedRef = useRef(0)
+// How many frames to fetch before starting the animation loop
+const EAGER_FRAMES    = 30
+// Frames to prefetch ahead of + behind current scroll position
+const PREFETCH_WINDOW = 60
+// Frames to load per background batch (requestIdleCallback / setTimeout)
+const BG_BATCH_SIZE   = 8
+
+function AmbientCanvas({ sectionRef }: { sectionRef: React.RefObject<HTMLDivElement> }) {
+  const cvRef        = useRef<HTMLCanvasElement>(null)
+  const ctxRef       = useRef<CanvasRenderingContext2D | null>(null)
+  // GPU-resident decoded bitmaps — null until loaded
+  const bitmapsRef   = useRef<(ImageBitmap | null)[]>(Array(TOTAL_FRAMES).fill(null))
+  const fetchingRef  = useRef<Set<number>>(new Set())   // in-flight fetches
+  const targetRef    = useRef(0)   // target frame (float) from scroll
+  const currentRef   = useRef(0)   // smoothed current frame (float)
+  const rafRef       = useRef(0)
+  const loadedRef    = useRef(0)
+  const bgTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cover-fit a bitmap into the canvas, return draw params
+  const coverFit = (bm: ImageBitmap, w: number, h: number) => {
+    const s = Math.max(w / bm.width, h / bm.height)
+    return { x: (w - bm.width * s) / 2, y: (h - bm.height * s) / 2, s }
+  }
+
+  // Draw exact float index with sub-frame interpolation.
+  // Falls back to nearest loaded frame if the exact one isn't decoded yet.
+  const drawFrame = (exactIdx: number) => {
+    const cv  = cvRef.current
+    const ctx = ctxRef.current
+    if (!cv || !ctx) return
+
+    const loIdx = Math.floor(exactIdx)
+    const hiIdx = Math.min(loIdx + 1, TOTAL_FRAMES - 1)
+    const frac  = exactIdx - loIdx
+
+    // Nearest-loaded fallback — walk outward up to 30 frames
+    let lo = bitmapsRef.current[loIdx]
+    if (!lo) {
+      for (let r = 1; r <= 30; r++) {
+        lo = bitmapsRef.current[Math.max(0, loIdx - r)]
+          ?? bitmapsRef.current[Math.min(TOTAL_FRAMES - 1, loIdx + r)]
+          ?? null
+        if (lo) break
+      }
+    }
+    if (!lo) return
+
+    const { width: w, height: h } = cv
+
+    // Base frame at full opacity
+    const lc = coverFit(lo, w, h)
+    ctx.globalAlpha = 1
+    ctx.drawImage(lo, lc.x, lc.y, lo.width * lc.s, lo.height * lc.s)
+
+    // Blend next frame on top — silky sub-frame interpolation
+    if (frac > 0.005 && hiIdx !== loIdx) {
+      const hi = bitmapsRef.current[hiIdx]
+      if (hi) {
+        const hc = coverFit(hi, w, h)
+        ctx.globalAlpha = frac
+        ctx.drawImage(hi, hc.x, hc.y, hi.width * hc.s, hi.height * hc.s)
+        ctx.globalAlpha = 1
+      }
+    }
+  }
+
+  const resize = () => {
+    const cv = cvRef.current
+    if (!cv) return
+    const dpr = window.devicePixelRatio || 1
+    cv.width  = Math.round(window.innerWidth  * dpr)
+    cv.height = Math.round(window.innerHeight * dpr)
+    cv.style.width  = window.innerWidth  + 'px'
+    cv.style.height = window.innerHeight + 'px'
+    const ctx = cv.getContext('2d', { alpha: false }) as CanvasRenderingContext2D | null
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctxRef.current = ctx
+    }
+    drawFrame(currentRef.current)
+  }
+
+  const tick = () => {
+    rafRef.current = requestAnimationFrame(tick)
+    const diff = targetRef.current - currentRef.current
+    if (Math.abs(diff) < 0.001) return
+    currentRef.current += diff * 0.22
+    drawFrame(currentRef.current)
+  }
+
+  const updateFromScroll = () => {
+    const sec = sectionRef.current
+    if (!sec) return
+    const rect     = sec.getBoundingClientRect()
+    const scrollable = sec.offsetHeight - window.innerHeight
+    const prog     = Math.max(0, Math.min(1, -rect.top / scrollable))
+    targetRef.current = prog * (TOTAL_FRAMES - 1)
+  }
+
+  // ── Lazy loading helpers ──────────────────────────────────────────────────
+
+  // Fetch & decode a single frame; noop if already loaded or in-flight
+  const loadFrame = (i: number, onReady?: (bm: ImageBitmap, i: number) => void) => {
+    if (i < 0 || i >= TOTAL_FRAMES) return
+    if (bitmapsRef.current[i] || fetchingRef.current.has(i)) return
+    fetchingRef.current.add(i)
+
+    const handle = (bm: ImageBitmap) => {
+      bitmapsRef.current[i] = bm
+      loadedRef.current++
+      onReady?.(bm, i)
+    }
+
+    fetch(HERO_FRAMES[i])
+      .then(r => r.blob())
+      .then(blob => createImageBitmap(blob, { premultiplyAlpha:'none', colorSpaceConversion:'none' }))
+      .then(handle)
+      .catch(() => {
+        const img = new Image()
+        img.onload = () => createImageBitmap(img).then(handle).catch(() => {})
+        img.src = HERO_FRAMES[i]
+      })
+  }
+
+  // Prefetch PREFETCH_WINDOW frames around the current scroll target
+  const prefetchAroundTarget = () => {
+    const center = Math.round(targetRef.current)
+    const lo = Math.max(0, center - PREFETCH_WINDOW / 2)
+    const hi = Math.min(TOTAL_FRAMES - 1, center + PREFETCH_WINDOW / 2)
+    for (let i = lo; i <= hi; i++) loadFrame(i)
+  }
+
+  // Load remaining frames in small idle batches so we never block the main thread
+  const scheduleBgLoad = (startIdx: number) => {
+    if (startIdx >= TOTAL_FRAMES) return
+    bgTimerRef.current = setTimeout(() => {
+      const end = Math.min(TOTAL_FRAMES, startIdx + BG_BATCH_SIZE)
+      for (let i = startIdx; i < end; i++) loadFrame(i)
+      scheduleBgLoad(end)
+    }, 50)   // 50 ms gap keeps the main thread breathing
+  }
 
   useEffect(() => {
-    const cv = canvasRef.current; if (!cv) return
-    ctxRef.current = cv.getContext('2d')
-    const resize = () => { cv.width=window.innerWidth; cv.height=window.innerHeight; draw(frameRef.current) }
     resize()
     window.addEventListener('resize', resize)
-    imgsRef.current = HERO_FRAMES.map(src => {
-      const img = new Image()
-      img.onload = () => { loadedRef.current++; if (loadedRef.current===1) loop() }
-      img.src = `data:image/jpeg;base64,${src}`
-      return img
-    })
-    return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(rafRef.current) }
+    window.addEventListener('scroll', updateFromScroll, { passive: true })
+    window.addEventListener('scroll', prefetchAroundTarget, { passive: true })
+
+    // Called each time a bitmap finishes decoding
+    const onEagerReady = (bm: ImageBitmap, i: number) => {
+      if (i === 0) drawFrame(0)   // paint instantly when frame 0 arrives
+      if (loadedRef.current === EAGER_FRAMES) {
+        updateFromScroll()
+        rafRef.current = requestAnimationFrame(tick)
+        // Hand off the rest to background loading
+        scheduleBgLoad(EAGER_FRAMES)
+      }
+    }
+
+    // Eagerly load only the first N frames — animation starts as soon as they're ready
+    for (let i = 0; i < EAGER_FRAMES; i++) loadFrame(i, onEagerReady)
+
+    return () => {
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('scroll', updateFromScroll)
+      window.removeEventListener('scroll', prefetchAroundTarget)
+      cancelAnimationFrame(rafRef.current)
+      if (bgTimerRef.current !== null) clearTimeout(bgTimerRef.current)
+      bitmapsRef.current.forEach(bm => bm?.close())
+    }
   }, [])
 
-  function draw(idx: number) {
-    const ctx=ctxRef.current, cv=canvasRef.current, img=imgsRef.current[idx]
-    if (!ctx||!cv||!img?.complete) return
-    const s=Math.max(cv.width/img.naturalWidth, cv.height/img.naturalHeight)
-    ctx.clearRect(0,0,cv.width,cv.height)
-    ctx.drawImage(img,(cv.width-img.naturalWidth*s)/2,(cv.height-img.naturalHeight*s)/2,img.naturalWidth*s,img.naturalHeight*s)
-  }
-
-  function loop() {
-    let last=0
-    const tick=(now:number)=>{ rafRef.current=requestAnimationFrame(tick); if(now-last<240)return; last=now; frameRef.current=(frameRef.current+1)%HERO_FRAMES.length; draw(frameRef.current) }
-    rafRef.current=requestAnimationFrame(tick)
-  }
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+  return (
+    <div className="absolute inset-0 w-full h-full">
+      {/* No w-full/h-full on canvas — JS sets exact pixel dimensions for HiDPI */}
+      <canvas ref={cvRef} className="absolute inset-0" />
+    </div>
+  )
 }
 
 export default function HeroSection() {
@@ -115,13 +262,13 @@ export default function HeroSection() {
 
   const wrapStyle: React.CSSProperties =
     pos==='center' ? { left:'50%', transform:'translateX(-50%)', alignItems:'center', textAlign:'center', maxWidth:860 } :
-    pos==='right'  ? { right:0, paddingRight:'clamp(40px,8vw,120px)', alignItems:'flex-end', textAlign:'right', maxWidth:680 } :
-                     { left:0, paddingLeft:'clamp(40px,8vw,120px)', alignItems:'flex-start', textAlign:'left', maxWidth:680 }
+    pos==='right'  ? { right:0, paddingRight:'clamp(40px,8vw,120px)', alignItems:'flex-end', textAlign:'right', maxWidth:700 } :
+                     { left:0, paddingLeft:'clamp(40px,8vw,120px)', alignItems:'flex-start', textAlign:'left', maxWidth:'min(92vw, 1000px)' }
 
   return (
     <section ref={sectionRef} id="hero" style={{height:'600vh'}}>
       <div className="sticky top-0 h-screen overflow-hidden">
-        <AmbientCanvas />
+        <AmbientCanvas sectionRef={sectionRef} />
 
         {/* ── Layered atmospheric overlays ── */}
 
@@ -154,8 +301,8 @@ export default function HeroSection() {
 
           {/* Eyebrow */}
           <div
-            className="font-condensed font-bold uppercase text-blood-glow mb-5"
-            style={{ fontSize:'clamp(10px,1.1vw,13px)', letterSpacing:'0.5em', ...baseStyle(0.05) }}
+            className="eyebrow mb-5"
+            style={{ ...baseStyle(0.05) }}
           >
             {chapter.eyebrow}
           </div>
@@ -163,12 +310,12 @@ export default function HeroSection() {
           {/* Headline — each line clips from overflow:hidden */}
           <div className="mb-7">
             {chapter.headline.map((line,i) => (
-              <div key={`${ch}-${i}`} style={{ overflow:'hidden', lineHeight:0.87 }}>
+              <div key={`${ch}-${i}`} style={{ overflow:'hidden', lineHeight:0.86 }}>
                 <span className="block font-display uppercase" style={{
-                  fontSize: 'clamp(56px,8.2vw,128px)',
-                  letterSpacing: '0.01em',
-                  color: i===1 ? '#c00000' : '#f0ece4',
-                  textShadow: '0 2px 60px rgba(0,0,0,0.98)',
+                  fontSize: 'clamp(64px,9.2vw,144px)',
+                  letterSpacing: '-0.02em',
+                  color: i===1 ? '#C41E3A' : '#f0ece4',
+                  textShadow: '0 2px 80px rgba(0,0,0,0.98)',
                   opacity: revealed&&!exiting ? 1 : 0,
                   transform: revealed&&!exiting ? 'translateY(0)' : exiting ? 'translateY(-105%)' : 'translateY(105%)',
                   transition: exiting
@@ -184,8 +331,8 @@ export default function HeroSection() {
 
           {/* Sub */}
           <p
-            className="font-condensed font-light text-gray-1 mb-10"
-            style={{ fontSize:'clamp(14px,1.55vw,19px)', letterSpacing:'0.04em', lineHeight:1.65, maxWidth:460, ...baseStyle(0.30) }}
+            className="font-narrow text-gray-1 mb-10"
+            style={{ fontSize:'clamp(14px,1.5vw,18px)', lineHeight:1.7, maxWidth:460, ...baseStyle(0.30) }}
           >
             {chapter.sub}
           </p>

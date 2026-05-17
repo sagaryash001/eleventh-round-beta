@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import HeroSection from '../components/HeroSection'
 import ProblemsSection from '../components/ProblemsSection'
 import ProductsCarousel from '../components/ProductsCarousel'
+import TestimonialsSection from '../components/TestimonialsSection'
 import DashboardPreview from '../components/DashboardPreview'
 import FinalCTA from '../components/FinalCTA'
 import Footer from '../components/Footer'
@@ -44,6 +45,7 @@ export default function HomePage() {
             <HeroSection />
             <ProblemsSection />
             <ProductsCarousel />
+            <TestimonialsSection />
             <DashboardPreview />
             <FinalCTA />
           </main>

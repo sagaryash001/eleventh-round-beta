@@ -45,17 +45,12 @@ export default function Navbar() {
     }, 400)
   }
 
-  const homeLinks = isHome
-    ? [
-        { href: '#problems', label: 'The Problem' },
-        { href: '#products', label: 'Products' },
-        { href: '#dashboard', label: 'Platform' },
-      ]
-    : []
+  const homeLinks: { href: string; label: string }[] = []
 
   const globalLinks = [
-    { to: '/podcast', label: 'Podcast' },
-    { to: '/apparel', label: 'Apparel' },
+    { to: '/team',    label: 'The Team' },
+    { to: '/podcast', label: 'Podcast'  },
+    { to: '/apparel', label: 'Apparel'  },
   ]
 
   const allMobileLinks = [
@@ -81,22 +76,22 @@ export default function Navbar() {
           {/* ── Logo ── */}
           <Link
             to="/"
-            className="flex items-baseline gap-2 no-underline whitespace-nowrap"
+            className="flex items-baseline gap-2.5 no-underline whitespace-nowrap"
             aria-label="The Eleventh Round — Home"
           >
             <span
-              className="font-display text-blood-glow leading-none"
+              className="font-display text-crimson leading-none"
               style={{
-                fontSize: 'clamp(20px,2.2vw,26px)',
+                fontSize: 'clamp(22px,2.4vw,30px)',
                 letterSpacing: '-0.01em',
-                textShadow: '0 0 20px rgba(139,0,0,0.55)',
+                textShadow: '0 0 24px rgba(196,30,58,0.5)',
               }}
             >
               XI
             </span>
             <span
-              className="font-condensed font-extrabold uppercase text-off-white"
-              style={{ fontSize: 'clamp(12px,1.1vw,15px)', letterSpacing: '0.1em', opacity: 0.88 }}
+              className="font-narrow font-bold uppercase text-off-white italic"
+              style={{ fontSize: 'clamp(11px,1vw,14px)', letterSpacing: '0.12em', opacity: 0.92 }}
             >
               Eleventh Round
             </span>
@@ -272,10 +267,11 @@ export default function Navbar() {
       <style>{`
         .er-nav-link {
           position: relative;
-          font-family: 'Barlow Condensed', sans-serif;
+          font-family: 'Archivo Narrow', 'Barlow Condensed', sans-serif;
           font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.22em;
+          font-weight: 700;
+          font-style: italic;
+          letter-spacing: 0.18em;
           text-transform: uppercase;
           color: #7a7672;
           text-decoration: none;
@@ -288,7 +284,7 @@ export default function Navbar() {
           left: 0;
           right: 100%;
           height: 1px;
-          background: #c00000;
+          background: #C41E3A;
           transition: right 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .er-nav-link:hover { color: #f0ece4; }

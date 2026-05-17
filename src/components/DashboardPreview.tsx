@@ -1,5 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 type Role = 'command' | 'fighter' | 'manager' | 'promo'
 
@@ -11,14 +14,14 @@ function ReadinessRing({ pct, size = 96 }: { pct: number; size?: number }) {
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#222226" strokeWidth={size * 0.06} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#c00000" strokeWidth={size * 0.06}
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#C41E3A" strokeWidth={size * 0.06}
           strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
           style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.25,0.46,0.45,0.94)' }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
         <span className="font-display text-off-white leading-none" style={{ fontSize: size * 0.24 }}>{pct}</span>
-        <span className="font-condensed text-gray-3 font-bold tracking-widest uppercase" style={{ fontSize: size * 0.09 }}>Score</span>
+        <span className="font-narrow font-bold italic text-gray-3 uppercase tracking-widest" style={{ fontSize: size * 0.09 }}>Score</span>
       </div>
     </div>
   )
@@ -27,9 +30,9 @@ function ReadinessRing({ pct, size = 96 }: { pct: number; size?: number }) {
 function MiniBar({ label, pct }: { label: string; pct: number }) {
   return (
     <div className="bg-charcoal-2 p-3 border border-charcoal-3">
-      <div className="font-condensed text-[10px] font-medium tracking-wide text-gray-2 mb-1.5">{label}</div>
+      <div className="font-narrow italic text-[10px] font-medium tracking-wide text-gray-2 mb-1.5">{label}</div>
       <div className="h-[2px] bg-charcoal-3 rounded overflow-hidden">
-        <div className="h-full bg-blood-glow rounded" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded" style={{ width: `${pct}%`, background: '#C41E3A' }} />
       </div>
     </div>
   )
@@ -44,7 +47,6 @@ function DashItem({ name, badge, type }: { name: string; badge: string; type: 'g
   )
 }
 
-/* ── Command Center ─── */
 function CommandUI() {
   return (
     <div className="grid gap-3.5" style={{ gridTemplateColumns: '250px 1fr 1fr' }}>
@@ -69,9 +71,9 @@ function CommandUI() {
       </div>
       <div className="dash-card">
         <div className="dash-label">Obligations Due</div>
-        <div className="dash-stat text-blood-glow">3</div>
+        <div className="dash-stat" style={{ color: '#C41E3A' }}>3</div>
         <div className="dash-sub">Overdue this week</div>
-        <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '22%', background: '#c00000' }} /></div>
+        <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '22%', background: '#C41E3A' }} /></div>
         <div className="dash-sub">2 sponsor · 1 media</div>
       </div>
       <div className="dash-card" style={{ gridColumn: 'span 3' }}>
@@ -88,7 +90,6 @@ function CommandUI() {
   )
 }
 
-/* ── Fighter View ─── */
 function FighterUI() {
   return (
     <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
@@ -110,9 +111,9 @@ function FighterUI() {
       <div className="dash-card">
         <div className="dash-label">Upcoming Obligations</div>
         <ul className="dc-list">
-          <DashItem name="Post-Fight Media"    badge="3 Days"   type="yellow" />
-          <DashItem name="Sponsor Content"     badge="Overdue"  type="red"    />
-          <DashItem name="Consultation"        badge="Scheduled" type="green" />
+          <DashItem name="Post-Fight Media"    badge="3 Days"    type="yellow" />
+          <DashItem name="Sponsor Content"     badge="Overdue"   type="red"    />
+          <DashItem name="Consultation"        badge="Scheduled" type="green"  />
         </ul>
       </div>
       <div className="dash-card">
@@ -141,7 +142,6 @@ function FighterUI() {
   )
 }
 
-/* ── Manager View ─── */
 function ManagerUI() {
   return (
     <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -177,16 +177,15 @@ function ManagerUI() {
       <div className="dash-card">
         <div className="dash-label">Operational Alerts</div>
         <ul className="dc-list">
-          <DashItem name="Jordan K. — Conduct Flag"      badge="Review"     type="red"    />
-          <DashItem name="Camp Budget — 2 Events Unplan" badge="Attention"  type="yellow" />
-          <DashItem name="Anya S. — Onboarding Stalled"  badge="Follow Up"  type="red"    />
+          <DashItem name="Jordan K. — Conduct Flag"      badge="Review"    type="red"    />
+          <DashItem name="Camp Budget — 2 Events Unplan" badge="Attention" type="yellow" />
+          <DashItem name="Anya S. — Onboarding Stalled"  badge="Follow Up" type="red"    />
         </ul>
       </div>
     </div>
   )
 }
 
-/* ── Promotions View ─── */
 function PromoUI() {
   return (
     <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
@@ -219,7 +218,7 @@ function PromoUI() {
       <div className="dash-card">
         <div className="dash-label">Operational Flags</div>
         <ul className="dc-list">
-          <DashItem name="Late Media Check-In"      badge="1 Fighter"  type="yellow" />
+          <DashItem name="Late Media Check-In"       badge="1 Fighter"  type="yellow" />
           <DashItem name="Sponsor Obligation Missed" badge="2 Fighters" type="red"    />
           <DashItem name="Conduct Violations"        badge="None"       type="green"  />
         </ul>
@@ -227,15 +226,14 @@ function PromoUI() {
       <div className="dash-card">
         <div className="dash-label">Upcoming Reporting</div>
         <ul className="dc-list">
-          <DashItem name="Q1 Compliance Report"   badge="Due Apr 15" type="yellow" />
-          <DashItem name="Event Summary — Apr 5"  badge="Pending"    type="yellow" />
+          <DashItem name="Q1 Compliance Report"  badge="Due Apr 15" type="yellow" />
+          <DashItem name="Event Summary — Apr 5" badge="Pending"    type="yellow" />
         </ul>
       </div>
     </div>
   )
 }
 
-/* ── Main Section ─── */
 const TABS: { id: Role; label: string }[] = [
   { id: 'command', label: 'Command Center' },
   { id: 'fighter', label: 'Fighter View' },
@@ -243,27 +241,54 @@ const TABS: { id: Role; label: string }[] = [
   { id: 'promo',   label: 'Promotions' },
 ]
 
+const tabVariants = {
+  enter: { opacity: 0, y: 18 },
+  center: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+  exit: { opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+}
+
 export default function DashboardPreview() {
   const [role, setRole] = useState<Role>('command')
+  const sectionRef  = useRef<HTMLElement>(null)
+  const headerRef   = useRef<HTMLDivElement>(null)
+  const line1Ref    = useRef<HTMLSpanElement>(null)
+  const line2Ref    = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced || !headerRef.current) return
+    const ctx = gsap.context(() => {
+      gsap.from([line1Ref.current, line2Ref.current], {
+        y: '110%',
+        duration: 1.1,
+        stagger: 0.09,
+        ease: 'power4.out',
+        scrollTrigger: { trigger: headerRef.current, start: 'top 80%' },
+      })
+    }, headerRef)
+    return () => ctx.revert()
+  }, [])
 
   return (
-    <section id="dashboard" className="bg-near-black py-28 px-10 relative overflow-hidden">
+    <section ref={sectionRef} id="dashboard" className="bg-near-black py-32 px-10 relative overflow-hidden">
       <div className="red-rule absolute top-0 left-0 right-0" />
 
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-end mb-16">
-          <div>
-            <div className="sec-label reveal mb-4">The Platform</div>
-            <h2
-              className="reveal font-display text-off-white uppercase"
-              style={{ fontSize: 'clamp(52px,7vw,104px)', lineHeight: 0.88 }}
-            >
-              The Operating<br />
-              <span className="text-blood-glow">System.</span>
+          <div ref={headerRef}>
+            <div className="sec-label reveal mb-5">The Platform</div>
+            <h2 className="font-display text-off-white uppercase"
+              style={{ fontSize: 'clamp(52px,7.5vw,116px)', lineHeight: 0.87, letterSpacing: '-0.02em' }}>
+              <div className="line-clip"><span ref={line1Ref} className="block">The Operating</span></div>
+              <div className="line-clip">
+                <span ref={line2Ref} className="block">
+                  <span className="text-crimson">System.</span>
+                </span>
+              </div>
             </h2>
           </div>
-          <p className="reveal font-body font-light text-gray-1 text-[14px] leading-relaxed">
+          <p className="reveal font-narrow text-gray-1 text-[15px] leading-relaxed">
             The dashboard is where people are managed, readiness is tracked, obligations
             are monitored, development is guided, and opportunities are unlocked. This is
             the infrastructure behind every promise.
@@ -276,10 +301,10 @@ export default function DashboardPreview() {
             <button
               key={t.id}
               onClick={() => setRole(t.id)}
-              className="font-condensed text-[11px] font-bold tracking-[0.22em] uppercase px-7 py-3.5 cursor-pointer border-0 bg-transparent whitespace-nowrap transition-all duration-200"
+              className="font-narrow text-[11px] font-bold italic tracking-[0.18em] uppercase px-7 py-3.5 cursor-pointer border-0 bg-transparent whitespace-nowrap transition-all duration-200"
               style={{
                 color: role === t.id ? '#f0ece4' : '#4a4846',
-                borderBottom: role === t.id ? '2px solid #c00000' : '2px solid transparent',
+                borderBottom: role === t.id ? '2px solid #C41E3A' : '2px solid transparent',
                 marginBottom: -1,
               }}
             >
@@ -288,18 +313,28 @@ export default function DashboardPreview() {
           ))}
         </div>
 
-        {/* Dashboard UI */}
-        <div className="reveal reveal-delay-2">
-          {role === 'command'  && <CommandUI />}
-          {role === 'fighter'  && <FighterUI />}
-          {role === 'manager'  && <ManagerUI />}
-          {role === 'promo'    && <PromoUI   />}
+        {/* Dashboard UI — Framer Motion tab transitions */}
+        <div className="reveal reveal-delay-2" style={{ minHeight: 320 }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={role}
+              variants={tabVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+            >
+              {role === 'command'  && <CommandUI />}
+              {role === 'fighter'  && <FighterUI />}
+              {role === 'manager'  && <ManagerUI />}
+              {role === 'promo'    && <PromoUI   />}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* CTA to full dashboard */}
+        {/* CTA */}
         <div className="reveal reveal-delay-3 mt-10 flex items-center gap-5">
           <Link to="/login" className="btn-primary">Access Full Dashboard</Link>
-          <span className="font-condensed text-[11px] tracking-[0.2em] uppercase text-gray-3">
+          <span className="font-narrow italic text-[11px] tracking-[0.2em] uppercase text-gray-3">
             Fighter · Manager · Admin roles
           </span>
         </div>

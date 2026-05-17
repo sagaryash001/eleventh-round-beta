@@ -4,16 +4,19 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 export default function FinalCTA() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const ghostRef   = useRef<HTMLDivElement>(null)
+  const sectionRef  = useRef<HTMLElement>(null)
+  const ghostRef    = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const line1Ref    = useRef<HTMLSpanElement>(null)
+  const line2Ref    = useRef<HTMLSpanElement>(null)
+  const line3Ref    = useRef<HTMLSpanElement>(null)
 
-  // GSAP parallax on ghost XI + reveal
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReduced || !sectionRef.current) return
 
     const ctx = gsap.context(() => {
-      // Ghost XI moves upward as section enters viewport — cinematic depth
+      // Ghost XI parallax
       if (ghostRef.current) {
         gsap.to(ghostRef.current, {
           yPercent: -22,
@@ -27,7 +30,19 @@ export default function FinalCTA() {
         })
       }
 
-      // Stats stagger in on scroll
+      // Headline lines clip in
+      gsap.from([line1Ref.current, line2Ref.current, line3Ref.current], {
+        y: '110%',
+        duration: 1.1,
+        stagger: 0.09,
+        ease: 'power4.out',
+        scrollTrigger: {
+          trigger: headlineRef.current,
+          start: 'top 82%',
+        },
+      })
+
+      // Stats stagger
       gsap.from('.cta-stat-item', {
         opacity: 0,
         y: 28,
@@ -44,7 +59,7 @@ export default function FinalCTA() {
     return () => ctx.revert()
   }, [])
 
-  // CSS reveal observer (same pattern as rest of site)
+  // CSS reveal observer
   useEffect(() => {
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => {
@@ -64,19 +79,19 @@ export default function FinalCTA() {
     <section
       ref={sectionRef}
       id="cta"
-      className="bg-black py-36 px-10 relative overflow-hidden text-center"
+      className="bg-black py-40 px-10 relative overflow-hidden text-center"
     >
       <div className="fight-rule absolute top-0 left-0 right-0" />
 
-      {/* Layered atmospheric background */}
+      {/* Layered atmosphere */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse at 50% 60%, rgba(80,0,0,0.18) 0%, transparent 60%)',
+        background: 'radial-gradient(ellipse at 50% 60%, rgba(196,30,58,0.12) 0%, transparent 60%)',
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse at 20% 80%, rgba(100,0,0,0.1) 0%, transparent 45%)',
+        background: 'radial-gradient(ellipse at 20% 80%, rgba(139,0,0,0.08) 0%, transparent 45%)',
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse at 80% 20%, rgba(80,0,0,0.08) 0%, transparent 40%)',
+        background: 'radial-gradient(ellipse at 80% 20%, rgba(80,0,0,0.06) 0%, transparent 40%)',
       }} />
 
       {/* Ghost background XI — parallaxed */}
@@ -87,7 +102,7 @@ export default function FinalCTA() {
         style={{
           fontSize: 'clamp(180px,28vw,520px)',
           color: 'transparent',
-          WebkitTextStroke: '1px rgba(255,255,255,0.04)',
+          WebkitTextStroke: '1px rgba(255,255,255,0.03)',
           letterSpacing: '-0.02em',
         }}
         aria-hidden
@@ -95,27 +110,41 @@ export default function FinalCTA() {
         XI
       </div>
 
-      <div className="relative z-10 max-w-[860px] mx-auto">
+      <div className="relative z-10 max-w-[900px] mx-auto">
 
         {/* Eyebrow */}
-        <div className="reveal font-condensed text-[11px] font-bold tracking-[0.5em] uppercase text-blood-glow mb-6">
+        <div className="reveal eyebrow justify-center mb-7" style={{ display: 'flex' }}>
           The Eleventh Round
         </div>
 
-        {/* Headline */}
+        {/* Headline — Stitch-inspired skewed treatment */}
         <h2
-          className="reveal font-display text-off-white uppercase mb-8"
-          style={{ fontSize:'clamp(60px,9.5vw,164px)', lineHeight:0.87 }}
+          ref={headlineRef}
+          className="font-display text-off-white uppercase mb-10"
+          style={{
+            fontSize: 'clamp(64px,10vw,172px)',
+            lineHeight: 0.85,
+            letterSpacing: '-0.03em',
+            transform: 'skewX(-2deg)',
+          }}
         >
-          <span className="text-blood-glow">Become</span><br />
-          Eleventh Round<br />
-          Ready.
+          <div className="line-clip">
+            <span ref={line1Ref} className="block">
+              <span className="text-crimson italic">Become</span>
+            </span>
+          </div>
+          <div className="line-clip">
+            <span ref={line2Ref} className="block italic">Eleventh Round</span>
+          </div>
+          <div className="line-clip">
+            <span ref={line3Ref} className="block italic">Ready.</span>
+          </div>
         </h2>
 
         {/* Sub */}
         <p
-          className="reveal font-condensed font-light text-gray-1 max-w-lg mx-auto mb-14"
-          style={{ fontSize:'clamp(15px,1.9vw,22px)', letterSpacing:'0.06em', lineHeight:1.65 }}
+          className="reveal font-narrow text-gray-1 max-w-lg mx-auto mb-14"
+          style={{ fontSize:'clamp(15px,1.8vw,20px)', lineHeight:1.7 }}
         >
           Professionalism creates opportunity. Development is a system.
           Readiness is the differentiator.
@@ -141,17 +170,17 @@ export default function FinalCTA() {
           ].map(p => (
             <div key={p.l} className="cta-stat-item flex flex-col items-center gap-2">
               <span
-                className="font-display text-blood-glow"
+                className="font-display text-crimson italic"
                 style={{
-                  fontSize:48,
-                  lineHeight:1,
-                  textShadow:'0 0 30px rgba(192,0,0,0.4)',
+                  fontSize: 48,
+                  lineHeight: 1,
+                  textShadow: '0 0 30px rgba(196,30,58,0.4)',
                 }}
               >
                 {p.n}
               </span>
               <span
-                className="font-condensed font-bold uppercase text-gray-3"
+                className="font-narrow font-bold italic uppercase text-gray-3"
                 style={{ fontSize:10, letterSpacing:'0.3em' }}
               >
                 {p.l}

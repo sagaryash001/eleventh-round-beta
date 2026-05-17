@@ -60,11 +60,8 @@ export default function DashShell({ navItems, children, title, subtitle }: Props
                 borderLeft: active===item.id ? '3px solid #c00000' : '3px solid transparent',
                 color: active===item.id ? '#f0ece4' : '#4a4846',
               }}>
-              <span style={{ fontSize: 18, lineHeight:1, flexShrink:0 }}>{item.icon}</span>
-              {sideOpen && (
-                <span className="font-condensed font-semibold uppercase whitespace-nowrap"
-                  style={{ fontSize: 12, letterSpacing:'0.1em' }}>{item.label}</span>
-              )}
+              <span className="font-condensed font-semibold uppercase whitespace-nowrap"
+                style={{ fontSize: 12, letterSpacing:'0.1em' }}>{item.label}</span>
             </button>
           ))}
         </nav>

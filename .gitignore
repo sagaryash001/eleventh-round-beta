@@ -5,3 +5,6 @@ dist
 .graphify
 graphify-out
 
+
+server/node_modules
+server/er.db

@@ -39,18 +39,27 @@
 /* ─── Section label ─────────────────────────────────────────── */
 .sec-label {
   @apply font-condensed font-bold uppercase text-blood-glow flex items-center gap-3;
-  font-size: 10px; letter-spacing: 0.45em;
+  font-size: 10px; letter-spacing: 0.45em; font-style: italic;
 }
 .sec-label::before {
   content: ''; display: block; width: 20px; height: 1px; background: #c00000;
 }
+
+/* ─── Eyebrow (Stitch-style italic label above headline) ─────── */
+.eyebrow {
+  @apply font-narrow font-bold uppercase text-crimson italic;
+  font-size: 12px; letter-spacing: 0.22em;
+}
+
+/* ─── GSAP line clip wrapper ────────────────────────────────── */
+.line-clip { overflow: hidden; line-height: 0.93; }
 
 /* ─── Buttons ────────────────────────────────────────────────── */
 .btn-primary {
   @apply font-condensed font-bold uppercase text-off-white bg-blood inline-block cursor-pointer relative overflow-hidden border-0;
   font-size: 11px; letter-spacing: 0.25em; padding: 14px 34px;
   transition: background 0.2s, box-shadow 0.2s;
-  text-decoration: none;
+  text-decoration: none; font-style: italic;
 }
 .btn-primary::before {
   content: ''; position: absolute; inset: 0;

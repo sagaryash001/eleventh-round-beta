@@ -4,6 +4,9 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import PodcastPage from './pages/PodcastPage'
 import ApparelPage from './pages/ApparelPage'
+import TeamPage from './pages/TeamPage'
+import RegisterPage from './pages/RegisterPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 import FighterDashboard from './pages/dashboards/FighterDashboard'
 import ManagerDashboard from './pages/dashboards/ManagerDashboard'
 import AdminDashboard from './pages/dashboards/AdminDashboard'
@@ -20,9 +23,12 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/"          element={<HomePage />} />
-      <Route path="/login"     element={<LoginPage />} />
+      <Route path="/login"        element={<LoginPage />} />
+      <Route path="/register"     element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/podcast"   element={<PodcastPage />} />
       <Route path="/apparel"   element={<ApparelPage />} />
+      <Route path="/team"      element={<TeamPage />} />
       <Route path="/dashboard/fighter" element={
         <ProtectedRoute role="fighter"><FighterDashboard /></ProtectedRoute>
       } />
