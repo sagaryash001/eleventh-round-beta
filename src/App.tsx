@@ -1,5 +1,13 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+  return null
+}
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import PodcastPage from './pages/PodcastPage'
@@ -47,6 +55,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ScrollToTop />
         <div className="noise-overlay" />
         <AppRoutes />
       </AuthProvider>
