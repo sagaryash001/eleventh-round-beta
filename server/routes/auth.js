@@ -1,158 +1,251 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth routes — Supabase Auth + branded SendGrid emails
+//
+// Flow:
+//   1. POST /register
+//        → admin API creates user with email_confirm=false
+//        → insert profiles + onboarding rows
+//        → generate a verification link via admin.generateLink
+//        → send branded verification email via SendGrid (not Supabase's default)
+//   2. GET  /verify?token_hash=...&type=signup       (link from email)
+//        → frontend exchanges via supabase.auth.verifyOtp on the client
+//        → backend just sends welcome email (POST /post-verify)
+//   3. POST /login
+//        → frontend uses supabase.auth.signInWithPassword directly
+//        → this endpoint is here only for backward compatibility/server-side login
+//   4. GET  /me                          → returns merged profile (requires auth)
+//   5. GET  /check-subdomain/:slug       → availability check (public)
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { Router } from 'express'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { v4 as uuid } from 'uuid'
-import db from '../db.js'
-import { requireAuth } from '../middleware/auth.js'
+import { adminSupabase, requireSupabase } from '../db/supabase.js'
+import { requireAuth }   from '../middleware/auth.js'
+import { validate, RegisterSchema, LoginSchema, SubdomainSchema } from '../lib/validate.js'
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.js'
+import { childLogger } from '../lib/logger.js'
 
 const router = Router()
-const SECRET  = process.env.JWT_SECRET || 'dev-secret-change-in-production'
-const EXPIRES = '30d'
+const log    = childLogger('auth')
 
-function sign(user) {
-  return jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name, subdomain: user.subdomain ?? null },
-    SECRET,
-    { expiresIn: EXPIRES },
-  )
-}
-
-function publicUser(u) {
-  return { id: u.id, email: u.email, name: u.name, role: u.role, subdomain: u.subdomain ?? null }
-}
-
-// ── POST /api/auth/register ───────────────────────────────────────────────────
-router.post('/register', async (req, res) => {
+// ═════════════════════════════════════════════════════════════════════════════
+// POST /api/auth/register
+// ═════════════════════════════════════════════════════════════════════════════
+router.post('/register', validate(RegisterSchema), async (req, res) => {
   try {
-    const {
-      name, email, password,
-      accountType,            // 'fighter' | 'management' | 'promotion'
-      teamName, subdomain,
-      onboarding,             // { q1, q2, q3, q4, q5 }
-    } = req.body
+    const sb = requireSupabase()
+    const { name, email, password, accountType, teamName, subdomain, onboarding } = req.valid
 
-    // Validation
-    if (!name?.trim() || !email?.trim() || !password || !accountType) {
-      return res.status(400).json({ error: 'Missing required fields.' })
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' })
-    }
-
-    const normalEmail = email.toLowerCase().trim()
-
-    // Unique email
-    if (db.prepare('SELECT id FROM users WHERE email = ?').get(normalEmail)) {
-      return res.status(409).json({ error: 'An account with this email already exists.' })
+    // 1. Uniqueness checks
+    if (subdomain) {
+      const { data: existingSub } = await sb
+        .from('profiles')
+        .select('id')
+        .eq('subdomain', subdomain)
+        .maybeSingle()
+      if (existingSub) {
+        return res.status(409).json({ error: 'That subdomain is already taken. Choose another.' })
+      }
     }
 
-    // Unique subdomain
-    const slug = subdomain?.toLowerCase().trim() || null
-    if (slug && db.prepare('SELECT id FROM users WHERE subdomain = ?').get(slug)) {
-      return res.status(409).json({ error: 'That subdomain is already taken. Choose another.' })
+    // 2. Create the auth user (email NOT auto-confirmed — we'll confirm via our own flow)
+    const { data: created, error: createErr } = await sb.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+      user_metadata: { name, account_type: accountType, team_name: teamName, subdomain },
+    })
+
+    if (createErr) {
+      if (/already (registered|exists)/i.test(createErr.message)) {
+        return res.status(409).json({ error: 'An account with this email already exists.' })
+      }
+      log.error({ err: createErr, email }, 'auth.admin.createUser failed')
+      return res.status(500).json({ error: 'Registration failed. Please try again.' })
     }
 
-    // Map account type → internal role
-    const role = accountType === 'fighter' ? 'fighter' : 'manager'
+    const userId = created.user.id
+    const role   = accountType === 'fighter' ? 'fighter' : 'manager'
 
-    const id           = uuid()
-    const passwordHash = await bcrypt.hash(password, 12)
-    const verifyToken  = uuid()
+    // 3. Insert profile (service role bypasses RLS)
+    const { error: profileErr } = await sb.from('profiles').insert({
+      id:           userId,
+      email,
+      name,
+      role,
+      account_type: accountType,
+      team_name:    teamName || null,
+      subdomain:    subdomain || null,
+      onboarding_complete: !!onboarding,
+    })
 
-    // Insert user
-    db.prepare(`
-      INSERT INTO users (id, email, password_hash, name, role, account_type, team_name, subdomain, verify_token)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, normalEmail, passwordHash, name.trim(), role, accountType, teamName?.trim() || null, slug, verifyToken)
+    if (profileErr) {
+      // Roll back the auth user so the next try has a clean slate
+      log.error({ err: profileErr, userId }, 'profile insert failed — rolling back auth user')
+      await sb.auth.admin.deleteUser(userId).catch(() => {})
+      return res.status(500).json({ error: 'Registration failed. Please try again.' })
+    }
 
-    // Insert onboarding answers
+    // 4. Insert onboarding answers
     if (onboarding) {
-      db.prepare(`
-        INSERT INTO onboarding (user_id, q1_role, q2_goal, q3_common_problem, q4_end_goal, q5_upcoming_event)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(id, onboarding.q1 ?? null, onboarding.q2 ?? null, onboarding.q3 ?? null, onboarding.q4 ?? null, onboarding.q5 ?? null)
-
-      db.prepare('UPDATE users SET onboarding_complete = 1 WHERE id = ?').run(id)
+      const { error: obErr } = await sb.from('onboarding').insert({
+        user_id:           userId,
+        q1_role:           onboarding.q1 ?? null,
+        q2_goal:           onboarding.q2 ?? null,
+        q3_common_problem: onboarding.q3 ?? null,
+        q4_end_goal:       onboarding.q4 ?? null,
+        q5_upcoming_event: onboarding.q5 ?? null,
+      })
+      if (obErr) log.warn({ err: obErr, userId }, 'onboarding insert failed (non-fatal)')
     }
 
-    // Send verification email (non-blocking — don't fail registration if email fails)
-    sendVerificationEmail(normalEmail, name.trim(), verifyToken).catch(err =>
-      console.error('[Email] Verification send failed:', err.message),
+    // 5. Generate a Supabase verification link, then send our branded email
+    const clientUrl   = process.env.CLIENT_URL || 'http://localhost:5173'
+    const { data: linkData, error: linkErr } = await sb.auth.admin.generateLink({
+      type:    'signup',
+      email,
+      password,
+      options: { redirectTo: `${clientUrl}/verify-email` },
+    })
+
+    if (linkErr) {
+      log.error({ err: linkErr, userId }, 'generateLink failed')
+      // Continue anyway — user can request resend
+    }
+
+    // Supabase returns a full action_link the user clicks. We pass it
+    // through SendGrid so the email matches our brand.
+    const verifyUrl = linkData?.properties?.action_link || `${clientUrl}/verify-email`
+
+    sendVerificationEmail(email, name, verifyUrl).catch(err =>
+      log.error({ err, email }, 'sendVerificationEmail failed'),
     )
 
     return res.status(201).json({
-      ok: true,
+      ok:      true,
       message: 'Account created — check your email to verify and unlock your dashboard.',
     })
   } catch (err) {
-    console.error('[Register]', err)
-    return res.status(500).json({ error: 'Registration failed. Please try again.' })
+    log.error({ err }, '/register threw')
+    return res.status(500).json({ error: err.message || 'Registration failed. Please try again.' })
   }
 })
 
-// ── GET /api/auth/verify/:token ───────────────────────────────────────────────
-router.get('/verify/:token', (req, res) => {
+// ═════════════════════════════════════════════════════════════════════════════
+// POST /api/auth/post-verify
+//
+// Called by the frontend AFTER it has exchanged the verification link for a
+// session via supabase.auth.verifyOtp. Requires a valid session JWT. We use
+// this hook to send the welcome email and any post-verify side effects.
+// ═════════════════════════════════════════════════════════════════════════════
+router.post('/post-verify', requireAuth, async (req, res) => {
   try {
-    const user = db.prepare('SELECT * FROM users WHERE verify_token = ?').get(req.params.token)
-    if (!user) return res.status(400).json({ error: 'Invalid or expired verification link.' })
-
-    db.prepare('UPDATE users SET verified = 1, verify_token = NULL WHERE id = ?').run(user.id)
-
-    // Send welcome email (non-blocking)
-    sendWelcomeEmail(user.email, user.name, user.role, user.subdomain).catch(err =>
-      console.error('[Email] Welcome send failed:', err.message),
+    const { id, email, name, role, subdomain } = req.user
+    sendWelcomeEmail(email, name || 'Fighter', role, subdomain).catch(err =>
+      log.error({ err, userId: id }, 'sendWelcomeEmail failed'),
     )
-
-    // Return JWT so frontend can log the user in immediately
-    const token = sign(user)
-    return res.json({ ok: true, token, user: publicUser(user) })
+    return res.json({ ok: true })
   } catch (err) {
-    console.error('[Verify]', err)
-    return res.status(500).json({ error: 'Verification failed.' })
+    log.error({ err }, '/post-verify threw')
+    return res.status(500).json({ error: 'Post-verify step failed.' })
   }
 })
 
-// ── POST /api/auth/login ──────────────────────────────────────────────────────
-router.post('/login', async (req, res) => {
+// ═════════════════════════════════════════════════════════════════════════════
+// POST /api/auth/login
+//
+// Server-side login is optional — the frontend uses supabase.auth
+// .signInWithPassword directly so it can manage its own session. This route
+// is kept for non-browser clients and integration tests.
+// ═════════════════════════════════════════════════════════════════════════════
+router.post('/login', validate(LoginSchema), async (req, res) => {
   try {
-    const { email, password } = req.body
-    if (!email || !password) return res.status(400).json({ error: 'Email and password required.' })
+    const sb = requireSupabase()
+    const { email, password } = req.valid
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim())
-    if (!user) return res.status(401).json({ error: 'Invalid credentials.' })
-
-    const match = await bcrypt.compare(password, user.password_hash)
-    if (!match) return res.status(401).json({ error: 'Invalid credentials.' })
-
-    if (!user.verified) {
-      return res.status(403).json({
-        error: 'Email not verified — check your inbox and click the verification link.',
-      })
+    const { data, error } = await sb.auth.signInWithPassword({ email, password })
+    if (error) {
+      const code = /not confirmed/i.test(error.message) ? 403 : 401
+      return res.status(code).json({ error: error.message })
     }
 
-    return res.json({ ok: true, token: sign(user), user: publicUser(user) })
+    return res.json({ ok: true, session: data.session, user: data.user })
   } catch (err) {
-    console.error('[Login]', err)
-    return res.status(500).json({ error: 'Login failed. Please try again.' })
+    log.error({ err }, '/login threw')
+    return res.status(500).json({ error: err.message || 'Login failed.' })
   }
 })
 
-// ── GET /api/auth/me ──────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// GET /api/auth/me — current user's merged profile
+// ═════════════════════════════════════════════════════════════════════════════
 router.get('/me', requireAuth, (req, res) => {
-  const u = db.prepare(
-    'SELECT id, email, name, role, account_type, team_name, subdomain, onboarding_complete FROM users WHERE id = ?',
-  ).get(req.user.id)
-  if (!u) return res.status(404).json({ error: 'User not found.' })
-  return res.json(u)
+  return res.json(req.user)
 })
 
-// ── GET /api/auth/check-subdomain/:slug ───────────────────────────────────────
-router.get('/check-subdomain/:slug', (req, res) => {
-  const slug    = req.params.slug.toLowerCase().trim()
-  const taken   = !!db.prepare('SELECT id FROM users WHERE subdomain = ?').get(slug)
-  const invalid = !/^[a-z0-9-]{3,32}$/.test(slug)
-  return res.json({ available: !taken && !invalid, taken, invalid })
+// ═════════════════════════════════════════════════════════════════════════════
+// GET /api/auth/check-subdomain/:slug
+// ═════════════════════════════════════════════════════════════════════════════
+router.get('/check-subdomain/:slug', async (req, res) => {
+  try {
+    const parsed = SubdomainSchema.safeParse(req.params.slug)
+    if (!parsed.success) {
+      return res.json({ available: false, taken: false, invalid: true })
+    }
+
+    const sb = requireSupabase()
+    const { data, error } = await sb
+      .from('profiles')
+      .select('id')
+      .eq('subdomain', parsed.data)
+      .maybeSingle()
+
+    if (error) {
+      log.error({ err: error, slug: parsed.data }, 'check-subdomain query failed')
+      return res.status(500).json({ error: 'Could not check subdomain.' })
+    }
+
+    return res.json({ available: !data, taken: !!data, invalid: false })
+  } catch (err) {
+    log.error({ err }, '/check-subdomain threw')
+    return res.status(500).json({ error: err.message || 'Check failed.' })
+  }
+})
+
+// ═════════════════════════════════════════════════════════════════════════════
+// POST /api/auth/resend-verification
+// ═════════════════════════════════════════════════════════════════════════════
+router.post('/resend-verification', validate(LoginSchema.pick({ email: true }).extend({}).strip()), async (req, res) => {
+  try {
+    const sb = requireSupabase()
+    const { email } = req.valid
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+
+    const { data: linkData, error } = await sb.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      options: { redirectTo: `${clientUrl}/verify-email` },
+    })
+
+    if (error) {
+      log.warn({ err: error, email }, 'resend generateLink failed')
+      // Don't leak whether the email exists — just return ok.
+      return res.json({ ok: true })
+    }
+
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('name')
+      .eq('email', email)
+      .maybeSingle()
+
+    sendVerificationEmail(email, profile?.name || 'Fighter', linkData?.properties?.action_link)
+      .catch(err => log.error({ err, email }, 'resend send failed'))
+
+    return res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, '/resend-verification threw')
+    return res.status(500).json({ error: 'Resend failed.' })
+  }
 })
 
 export default router

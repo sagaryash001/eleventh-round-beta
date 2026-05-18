@@ -40,8 +40,17 @@ function shell(body) {
 }
 
 // ── Verification email ────────────────────────────────────────────────────────
-export async function sendVerificationEmail(to, name, token) {
-  const url = `${CLIENT}/verify-email?token=${token}`
+// `verifyUrlOrToken` accepts either:
+//   - a full URL (Supabase action_link, recommended)
+//   - a legacy token string (for backward compat — wraps as /verify-email?token=...)
+export async function sendVerificationEmail(to, name, verifyUrlOrToken) {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY missing — skipping verification email to', to)
+    return
+  }
+  const url = verifyUrlOrToken?.startsWith('http')
+    ? verifyUrlOrToken
+    : `${CLIENT}/verify-email?token=${verifyUrlOrToken}`
   await sgMail.send({
     to,
     from: { email: FROM, name: 'The Eleventh Round' },
@@ -70,9 +79,13 @@ export async function sendVerificationEmail(to, name, token) {
 
 // ── Welcome email (post-verification) ────────────────────────────────────────
 export async function sendWelcomeEmail(to, name, role, subdomain) {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY missing — skipping welcome email to', to)
+    return
+  }
   const dashUrl = subdomain
     ? `https://${subdomain}.eleventh-rnd.com`
-    : `${CLIENT}/dashboard/${role}`
+    : `${CLIENT}/dashboard/${role || 'fighter'}`
 
   await sgMail.send({
     to,

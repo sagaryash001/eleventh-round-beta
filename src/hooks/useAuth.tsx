@@ -1,4 +1,17 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+// ─────────────────────────────────────────────────────────────────────────────
+// useAuth — Supabase-backed auth context
+//
+// External API is unchanged from the previous JWT version, so RegisterPage,
+// LoginPage, Navbar, ProtectedRoute, DashShell, and VerifyEmailPage all
+// continue to work without modification.
+//
+// Demo credentials still work for local development (skip Supabase entirely
+// when the email matches one of the DEMO accounts). This is intentional —
+// it lets you tour the dashboards without setting up Supabase first.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { supabase } from '../lib/supabase'
 
 export type UserRole = 'fighter' | 'manager' | 'admin'
 
@@ -30,9 +43,10 @@ export interface RegisterData {
 interface AuthContextValue {
   user: AuthUser | null
   token: string | null
+  loading: boolean
   login:    (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
   register: (data: RegisterData) => Promise<{ ok: boolean; error?: string }>
-  logout:   () => void
+  logout:   () => Promise<void>
 }
 
 // ── Demo credentials kept for development convenience ────────────────────────
@@ -44,7 +58,8 @@ const DEMO: Record<string, AuthUser & { password: string }> = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function load(): { user: AuthUser | null; token: string | null } {
+// ── localStorage helpers (for demo accounts only) ────────────────────────────
+function loadLocal(): { user: AuthUser | null; token: string | null } {
   try {
     const token = localStorage.getItem('er_token')
     const raw   = localStorage.getItem('er_user')
@@ -52,47 +67,119 @@ function load(): { user: AuthUser | null; token: string | null } {
   } catch { return { token: null, user: null } }
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const init = load()
-  const [user,  setUser]  = useState<AuthUser | null>(init.user)
-  const [token, setToken] = useState<string | null>(init.token)
-
-  const persist = (u: AuthUser | null, t: string | null) => {
-    setUser(u); setToken(t)
-    if (u && t) {
-      localStorage.setItem('er_user',  JSON.stringify(u))
-      localStorage.setItem('er_token', t)
-    } else {
-      localStorage.removeItem('er_user')
-      localStorage.removeItem('er_token')
-    }
+function persistLocal(u: AuthUser | null, t: string | null) {
+  if (u && t) {
+    localStorage.setItem('er_user',  JSON.stringify(u))
+    localStorage.setItem('er_token', t)
+  } else {
+    localStorage.removeItem('er_user')
+    localStorage.removeItem('er_token')
   }
+}
 
+// ── Map a Supabase user + profile row into our AuthUser shape ────────────────
+async function fetchProfile(userId: string): Promise<AuthUser | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, name, role, subdomain')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error || !data) return null
+  return {
+    id:        data.id,
+    email:     data.email,
+    name:      data.name,
+    role:      data.role as UserRole,
+    subdomain: data.subdomain,
+  }
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const init = loadLocal()
+  const [user,    setUser]    = useState<AuthUser | null>(init.user)
+  const [token,   setToken]   = useState<string | null>(init.token)
+  const [loading, setLoading] = useState(true)
+
+  // Subscribe to Supabase auth state on mount
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    // 1. Hydrate from current Supabase session
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled) return
+      if (data.session?.user) {
+        const profile = await fetchProfile(data.session.user.id)
+        if (profile) {
+          setUser(profile)
+          setToken(data.session.access_token)
+        }
+      }
+      setLoading(false)
+    })
+
+    // 2. Listen for future changes (sign-in, sign-out, refresh)
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        // Don't clobber a demo session — those don't have a real Supabase session.
+        const local = loadLocal()
+        if (local.token !== 'demo-token') {
+          setUser(null); setToken(null)
+        }
+        return
+      }
+      const profile = await fetchProfile(session.user.id)
+      if (profile) {
+        setUser(profile)
+        setToken(session.access_token)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      sub.subscription.unsubscribe()
+    }
+  }, [])
+
+  // ── login ─────────────────────────────────────────────────────────────────
   const login = useCallback(async (email: string, password: string) => {
-    // Demo shortcut — works without the backend running
+    // Demo shortcut — works without Supabase
     const demo = DEMO[email.toLowerCase()]
     if (demo && demo.password === password) {
       await new Promise(r => setTimeout(r, 700))
       const { password: _pw, ...u } = demo
-      persist(u, 'demo-token')
+      persistLocal(u, 'demo-token')
+      setUser(u); setToken('demo-token')
       return { ok: true }
     }
 
-    try {
-      const res  = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) return { ok: false, error: data.error ?? 'Login failed.' }
-      persist(data.user as AuthUser, data.token)
-      return { ok: true }
-    } catch {
-      return { ok: false, error: 'Cannot reach the server. Is it running?' }
+    if (!supabase) {
+      return { ok: false, error: 'Auth is not configured. Try a demo account.' }
     }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      if (/not confirmed/i.test(error.message)) {
+        return { ok: false, error: 'Email not verified — check your inbox.' }
+      }
+      return { ok: false, error: error.message || 'Login failed.' }
+    }
+
+    const profile = await fetchProfile(data.user.id)
+    if (!profile) {
+      return { ok: false, error: 'Logged in, but profile not found. Contact support.' }
+    }
+    setUser(profile)
+    setToken(data.session.access_token)
+    return { ok: true }
   }, [])
 
+  // ── register ──────────────────────────────────────────────────────────────
   const register = useCallback(async (data: RegisterData) => {
     try {
       const res  = await fetch('/api/auth/register', {
@@ -108,10 +195,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const logout = useCallback(() => persist(null, null), [])
+  // ── logout ────────────────────────────────────────────────────────────────
+  const logout = useCallback(async () => {
+    persistLocal(null, null)
+    setUser(null); setToken(null)
+    if (supabase) {
+      await supabase.auth.signOut().catch(() => {})
+    }
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )

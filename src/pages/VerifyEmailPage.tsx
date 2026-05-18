@@ -1,44 +1,70 @@
 import React, { useEffect, useState } from 'react'
-import { useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
 type Status = 'verifying' | 'success' | 'error'
 
 export default function VerifyEmailPage() {
-  const [params]        = useSearchParams()
-  const { user }        = useAuth()
+  const { user } = useAuth()
   const navigate        = useNavigate()
   const [status, setStatus] = useState<Status>('verifying')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const token = params.get('token')
-    if (!token) { setStatus('error'); setMessage('No verification token found in the URL.'); return }
+    // Supabase auto-handles the verification redirect (detectSessionInUrl=true).
+    // We just wait for the session to materialize, then trigger the welcome-email hook.
+    if (!supabase) {
+      setStatus('error')
+      setMessage('Auth backend not configured. Contact support.')
+      return
+    }
 
-    fetch(`/api/auth/verify/${token}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!data.ok) { setStatus('error'); setMessage(data.error ?? 'Verification failed.'); return }
+    let cancelled = false
+    const start = Date.now()
+    const MAX_WAIT_MS = 8000
 
-        // Persist the JWT so the user is instantly logged in
-        localStorage.setItem('er_token', data.token)
-        localStorage.setItem('er_user',  JSON.stringify(data.user))
+    const poll = async () => {
+      const { data } = await supabase!.auth.getSession()
+      if (cancelled) return
+
+      if (data.session?.user) {
+        // Fire welcome-email hook (server picks up role/subdomain from profile)
+        fetch('/api/auth/post-verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${data.session.access_token}`,
+          },
+        }).catch(() => { /* non-fatal */ })
+
         setStatus('success')
 
-        // Auto-redirect after 2.5 s
+        // Redirect after 2.5s — useAuth will have populated `user` by then
         setTimeout(() => {
-          const role = data.user?.role
+          const role = user?.role
           navigate(
-            role === 'fighter' ? '/dashboard/fighter' :
             role === 'manager' ? '/dashboard/manager' :
-            '/dashboard/admin',
+            role === 'admin'   ? '/dashboard/admin'   :
+            '/dashboard/fighter',
             { replace: true }
           )
         }, 2500)
-      })
-      .catch(() => { setStatus('error'); setMessage('Network error — please try again.') })
-  }, [])
+        return
+      }
+
+      if (Date.now() - start > MAX_WAIT_MS) {
+        setStatus('error')
+        setMessage('Verification link invalid or expired. Try requesting a new one.')
+        return
+      }
+      setTimeout(poll, 400)
+    }
+
+    poll()
+    return () => { cancelled = true }
+  }, [navigate, user?.role])
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
