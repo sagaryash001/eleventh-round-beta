@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -7,6 +7,22 @@ const TOTAL_FRAMES = 480
 const HERO_FRAMES = Array.from({ length: TOTAL_FRAMES }, (_, i) =>
   `/frames/frame_${String(i).padStart(6, '0')}.webp`
 )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile detection
+//
+// The 480-frame WebP canvas sequence (~67MB, hundreds of decoded ImageBitmaps
+// living in GPU memory) reliably crashes iOS Safari past the ~250MB tab cap.
+// On any touch-primary or narrow-viewport device, we render a single static
+// hero image instead. Desktop keeps the full cinematic experience.
+// ─────────────────────────────────────────────────────────────────────────────
+function detectMobile(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
+}
+
+// One representative frame to show on mobile (pick something atmospheric)
+const STATIC_HERO_FRAME = '/frames/frame_000060.webp'
 
 const CHAPTERS = [
   { range:[0,0.18] as [number,number], eyebrow:'Career Infrastructure · Combat Sports', headline:['Build a Career.','Not Just','a Record.'], sub:'A premium ecosystem for fighter readiness, manager systems, and long-term career development.', cta1:{l:'Explore the Ecosystem',h:'#products'}, cta2:{l:'See the Platform',h:'#dashboard'} },
@@ -208,11 +224,13 @@ export default function HeroSection() {
   const [exiting, setExiting] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout>|null>(null)
+  const isMobile   = useMemo(detectMobile, [])
 
-  // GSAP parallax on the atmospheric red light layer
+  // GSAP parallax on the atmospheric red light layer (desktop only — mobile
+  // doesn't have the canvas underneath and we don't want extra paint cost)
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReduced || !redLightRef.current || !sectionRef.current) return
+    if (prefersReduced || isMobile || !redLightRef.current || !sectionRef.current) return
 
     const ctx = gsap.context(() => {
       gsap.to(redLightRef.current, {
@@ -228,7 +246,7 @@ export default function HeroSection() {
     }, sectionRef)
 
     return () => ctx.revert()
-  }, [])
+  }, [isMobile])
 
   useEffect(() => {
     const onScroll = () => {
@@ -265,10 +283,28 @@ export default function HeroSection() {
     pos==='right'  ? { right:0, paddingRight:'clamp(40px,8vw,120px)', alignItems:'flex-end', textAlign:'right', maxWidth:700 } :
                      { left:0, paddingLeft:'clamp(40px,8vw,120px)', alignItems:'flex-start', textAlign:'left', maxWidth:'min(92vw, 1000px)' }
 
+  // Mobile: shorter section (just enough to cycle through all chapters at a
+  // pleasant pace). Desktop: keep the full 600vh for canvas scroll.
+  const sectionHeight = isMobile ? `${CHAPTERS.length * 100}vh` : '600vh'
+
   return (
-    <section ref={sectionRef} id="hero" style={{height:'600vh'}}>
+    <section ref={sectionRef} id="hero" style={{ height: sectionHeight }}>
       <div className="sticky top-0 h-screen overflow-hidden">
-        <AmbientCanvas sectionRef={sectionRef} />
+        {isMobile ? (
+          // Static hero image — zero JS, zero canvas, zero memory pressure.
+          // Picks one representative frame from the sequence so the look
+          // still matches the desktop hero.
+          <img
+            src={STATIC_HERO_FRAME}
+            alt=""
+            className="absolute inset-0 w-full h-full"
+            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            decoding="async"
+            fetchPriority="high"
+          />
+        ) : (
+          <AmbientCanvas sectionRef={sectionRef} />
+        )}
 
         {/* ── Layered atmospheric overlays ── */}
 
