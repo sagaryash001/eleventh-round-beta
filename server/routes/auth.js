@@ -56,10 +56,19 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     })
 
     if (createErr) {
-      if (/already (registered|exists)/i.test(createErr.message)) {
+      const msg  = (createErr.message || '').toLowerCase()
+      const code = String(createErr.code || '').toLowerCase()
+      const isDuplicate =
+        msg.includes('already')          ||
+        msg.includes('duplicate')        ||
+        msg.includes('exists')           ||
+        code === 'email_exists'          ||
+        code === 'user_already_exists'   ||
+        createErr.status === 422
+      if (isDuplicate) {
         return res.status(409).json({ error: 'An account with this email already exists.' })
       }
-      log.error({ err: createErr, email }, 'auth.admin.createUser failed')
+      log.error({ err: createErr, code, status: createErr.status, email }, 'auth.admin.createUser failed')
       return res.status(500).json({ error: 'Registration failed. Please try again.' })
     }
 
