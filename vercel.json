@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+
+  "rewrites": [
+    {
+      "source": "/((?!api/|assets/|frames/|team/|apparel/|testimonials/|favicon\\.ico|robots\\.txt|sitemap\\.xml|logo\\.jpeg|.*\\.(?:js|css|map|png|jpe?g|webp|svg|ico|woff2?|ttf|json|mp4|webm)).*)",
+      "destination": "/index.html"
+    }
+  ],
+
+  "headers": [
+    {
+      "source": "/frames/(.*).webp",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(assets|team|apparel|testimonials)/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
