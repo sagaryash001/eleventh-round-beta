@@ -21,8 +21,10 @@ function detectMobile(): boolean {
   return window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
 }
 
-// One representative frame to show on mobile (pick something atmospheric)
-const STATIC_HERO_FRAME = '/frames/frame_000060.webp'
+// One representative frame to show on mobile. We pick the brightest
+// glove-on-fire shot (around frame 330) — frame 60 reads as black-on-black
+// once the cinematic vignette and bottom gradient overlay land on top.
+const STATIC_HERO_FRAME = '/frames/frame_000330.webp'
 
 const CHAPTERS = [
   { range:[0,0.18] as [number,number], eyebrow:'Career Infrastructure · Combat Sports', headline:['Build a Career.','Not Just','a Record.'], sub:'A premium ecosystem for fighter readiness, manager systems, and long-term career development.', cta1:{l:'Explore the Ecosystem',h:'#products'}, cta2:{l:'See the Platform',h:'#dashboard'} },
@@ -298,7 +300,11 @@ export default function HeroSection() {
             src={STATIC_HERO_FRAME}
             alt=""
             className="absolute inset-0 w-full h-full"
-            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            style={{
+              objectFit:     'cover',
+              objectPosition: '50% 40%',   // keep the bright glove in the upper-middle,
+                                           // out of the dark bottom-gradient zone
+            }}
             decoding="async"
             fetchPriority="high"
           />
