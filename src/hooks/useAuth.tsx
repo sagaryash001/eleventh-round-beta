@@ -12,6 +12,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 
 export type UserRole = 'fighter' | 'manager' | 'admin'
 
@@ -182,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── register ──────────────────────────────────────────────────────────────
   const register = useCallback(async (data: RegisterData) => {
     try {
-      const res  = await fetch('/api/auth/register', {
+      const res  = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

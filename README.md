@@ -246,3 +246,67 @@ proposal in this PR's history for the full Phase 1–8 plan.
 - Pino redacts `authorization`, `cookie`, `password`, and `token` fields
   from logs automatically.
 
+---
+
+## Deployment
+
+The app deploys to **two services**:
+
+| Service | Hosts | Provider |
+|---|---|---|
+| Frontend (Vite SPA) | `eleventh-round-beta.vercel.app` | Vercel |
+| Backend (Express API) | `er-api.onrender.com` | Render |
+
+### Vercel (frontend)
+
+Already connected. `vercel.json` handles SPA fallback so deep links to
+`/team`, `/login`, etc. don't 404. Add these env vars in
+*Vercel Dashboard → Project → Settings → Environment Variables*:
+
+```
+VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
+VITE_API_BASE_URL=https://er-api.onrender.com
+VITE_GA4_MEASUREMENT_ID=G-XXXXXXXXXX           # Phase 7
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...        # Phase 3
+```
+
+Redeploy after adding env vars (Vercel doesn't rebuild automatically when
+they change).
+
+### Render (backend)
+
+The repo has a `render.yaml` Blueprint, so setup is one click:
+
+1. Go to https://dashboard.render.com → **New → Blueprint**
+2. Connect this GitHub repo → Render reads `render.yaml` and proposes a
+   service called `er-api`
+3. Click **Apply**. Render builds and starts. You'll get a URL like
+   `https://er-api.onrender.com`
+4. In *Service → Environment*, paste the values for the variables marked
+   `sync: false` in `render.yaml`. At minimum for Phase 1 you need:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_JWT_SECRET`
+   - `SENDGRID_API_KEY` (or leave blank — emails just skip)
+5. Render redeploys with the new env vars. Smoke-test:
+   ```bash
+   curl https://er-api.onrender.com/api/health
+   # { "ok": true, "supabase": true, "sendgrid": true, ... }
+   ```
+6. Back in Vercel, set `VITE_API_BASE_URL=https://er-api.onrender.com` and
+   redeploy the frontend.
+
+**Free-tier caveat:** Render's free plan sleeps the service after 15 min
+idle. First request after sleep takes ~30s to spin up. Bump to the $7/mo
+"Starter" plan for always-on production. Not a problem during development.
+
+### Frontend ↔ backend wiring
+
+The frontend uses `src/lib/api.ts` → `apiFetch()` for every backend call.
+In development, `VITE_API_BASE_URL` is unset and Vite's dev proxy forwards
+`/api/*` to `localhost:3001`. In production, `VITE_API_BASE_URL` points
+at Render and the same calls go cross-origin (CORS allow-list in
+`server/index.js` already permits `*.vercel.app` and `*.eleventh-rnd.com`).
+

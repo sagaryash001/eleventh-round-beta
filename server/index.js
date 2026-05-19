@@ -28,13 +28,22 @@ app.use(pinoHttp({
 }))
 
 // ── CORS ────────────────────────────────────────────────────────────────────
+// Allow-list:
+//   • the configured CLIENT_URL (dev: http://localhost:5173)
+//   • any *.eleventh-rnd.com production subdomain
+//   • any *.vercel.app preview/production deployment for this project
+//   • additional comma-separated origins in CORS_EXTRA_ORIGINS
+const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
+  .split(',').map(s => s.trim()).filter(Boolean)
+
 app.use(cors({
   origin: (origin, cb) => {
-    // Allow same-origin (no Origin header) + configured client URL +
-    // any *.eleventh-rnd.com subdomain in production.
-    const allowed = process.env.CLIENT_URL || 'http://localhost:5173'
-    if (!origin || origin === allowed) return cb(null, true)
-    if (/^https:\/\/[a-z0-9-]+\.eleventh-rnd\.com$/.test(origin)) return cb(null, true)
+    if (!origin) return cb(null, true)                                  // server-to-server, curl, etc.
+    if (origin === (process.env.CLIENT_URL || 'http://localhost:5173')) return cb(null, true)
+    if (/^https:\/\/[a-z0-9-]+\.eleventh-rnd\.com$/.test(origin))       return cb(null, true)
+    if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin))             return cb(null, true)
+    if (extraOrigins.includes(origin))                                  return cb(null, true)
+    logger.warn({ origin }, 'CORS blocked')
     cb(new Error(`CORS blocked: ${origin}`))
   },
   credentials: true,

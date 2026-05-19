@@ -1,0 +1,94 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render — Infrastructure as Code
+#
+# How to use:
+#   1. Push this file to GitHub (already done if you can see it on main).
+#   2. Go to https://dashboard.render.com → New → Blueprint.
+#   3. Select this repo. Render reads this file and creates the service.
+#   4. Set the env vars in the dashboard (Render shows you which are missing).
+#   5. Every git push to main auto-deploys.
+#
+# Service spec:
+#   • Web service running the Express API at /server
+#   • Free plan (sleeps after 15 min idle on free tier — fine for early
+#     production. Bump to "starter" ($7/mo) for always-on.)
+#   • Region: oregon (change to 'singapore' or 'frankfurt' if closer to you)
+#   • Health check on /api/health
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: er-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000              # Render injects PORT; we honor process.env.PORT
+      - key: LOG_LEVEL
+        value: info
+
+      # --- Frontend origin (Vercel) ---
+      - key: CLIENT_URL
+        value: https://eleventh-round-beta.vercel.app
+      - key: CORS_EXTRA_ORIGINS
+        sync: false               # TODO: set in dashboard if you add a custom domain
+
+      # --- Supabase (Phase 1+) ---
+      - key: SUPABASE_URL
+        sync: false               # TODO: paste in Render dashboard
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+
+      # --- SendGrid (Phase 2+) ---
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        value: contact@eleventh-rnd.us
+      - key: TEAM_NOTIFY_EMAIL
+        value: contact@eleventh-rnd.us
+
+      # --- Stripe (Phase 3) ---
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_MEMBERSHIP_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_MEMBERSHIP_ANNUAL
+        sync: false
+
+      # --- Calendly (Phase 4) ---
+      - key: CALENDLY_PERSONAL_ACCESS_TOKEN
+        sync: false
+      - key: CALENDLY_WEBHOOK_SIGNING_KEY
+        sync: false
+      - key: CALENDLY_ORGANIZATION_URI
+        sync: false
+      - key: CALENDLY_EVENT_URL
+        sync: false
+
+      # --- Shopify / Spotify / GA4 (later phases) ---
+      - key: SHOPIFY_STORE_URL
+        sync: false
+      - key: SPOTIFY_SHOW_ID
+        sync: false
+      - key: GA4_API_SECRET
+        sync: false
+
+      # --- Misc ---
+      - key: RATE_LIMIT_PUBLIC_PER_MIN
+        value: 20
+      - key: OVERDUE_SCAN_INTERVAL_MIN
+        value: 15

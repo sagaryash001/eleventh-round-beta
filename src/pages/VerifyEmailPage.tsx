@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 import Navbar from '../components/Navbar'
 
 type Status = 'verifying' | 'success' | 'error'
@@ -31,7 +32,7 @@ export default function VerifyEmailPage() {
 
       if (data.session?.user) {
         // Fire welcome-email hook (server picks up role/subdomain from profile)
-        fetch('/api/auth/post-verify', {
+        apiFetch('/api/auth/post-verify', {
           method: 'POST',
           headers: {
             'Content-Type':  'application/json',

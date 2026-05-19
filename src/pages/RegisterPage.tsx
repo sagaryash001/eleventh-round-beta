@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, RegisterData } from '../hooks/useAuth'
+import { apiFetch } from '../lib/api'
 import Navbar from '../components/Navbar'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ export default function RegisterPage() {
     setSubStatus('checking')
     subTimer.current = setTimeout(async () => {
       try {
-        const res  = await fetch(`/api/auth/check-subdomain/${form.subdomain}`)
+        const res  = await apiFetch(`/api/auth/check-subdomain/${form.subdomain}`)
         const data = await res.json()
         setSubStatus(data.available ? 'ok' : 'taken')
       } catch { setSubStatus('idle') }
