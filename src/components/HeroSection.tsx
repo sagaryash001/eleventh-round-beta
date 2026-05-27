@@ -269,6 +269,16 @@ export default function HeroSection() {
 
   useEffect(()=>{ const t=setTimeout(()=>setRevealed(true),150); return()=>clearTimeout(t) },[])
 
+  const handleCta = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!href.startsWith('#')) return
+    e.preventDefault()
+    const el = document.querySelector(href)
+    if (!el) return
+    const lenis = (window as any).__lenis
+    if (lenis) lenis.scrollTo(el, { offset: -80 })
+    else el.scrollIntoView({ behavior: 'smooth' })
+  }
+
   const chapter = CHAPTERS[ch]
   const pos     = POSITIONS[ch]
 
@@ -316,7 +326,7 @@ export default function HeroSection() {
 
         {/* Base dark gradient — top and bottom vignette */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'linear-gradient(to bottom, rgba(8,8,8,0.6) 0%, rgba(8,8,8,0.18) 25%, rgba(8,8,8,0.22) 60%, rgba(8,8,8,0.97) 100%)',
+          background: 'linear-gradient(to bottom, rgba(8,8,8,0.22) 0%, rgba(8,8,8,0.05) 20%, rgba(8,8,8,0.12) 55%, rgba(8,8,8,0.97) 100%)',
         }} />
 
         {/* Cinematic vignette — pushes edges dark */}
@@ -384,8 +394,8 @@ export default function HeroSection() {
             className={`flex gap-3 flex-wrap ${pos==='center'?'justify-center':pos==='right'?'justify-end':''}`}
             style={baseStyle(0.42)}
           >
-            <a href={chapter.cta1.h} className="btn-primary">{chapter.cta1.l}</a>
-            <a href={chapter.cta2.h} className="btn-ghost">{chapter.cta2.l}</a>
+            <a href={chapter.cta1.h} className="btn-primary" onClick={e => handleCta(e, chapter.cta1.h)}>{chapter.cta1.l}</a>
+            <a href={chapter.cta2.h} className="btn-ghost"  onClick={e => handleCta(e, chapter.cta2.h)}>{chapter.cta2.l}</a>
           </div>
         </div>
 

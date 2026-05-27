@@ -16,7 +16,7 @@
     --dash-sub:      13px;   /* sub text */
   }
 
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: auto; }
 
   body {
     @apply bg-black text-off-white font-body overflow-x-hidden;

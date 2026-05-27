@@ -1,13 +1,5 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-
-function ScrollToTop() {
-  const { pathname } = useLocation()
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [pathname])
-  return null
-}
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import PodcastPage from './pages/PodcastPage'
@@ -19,6 +11,35 @@ import FighterDashboard from './pages/dashboards/FighterDashboard'
 import ManagerDashboard from './pages/dashboards/ManagerDashboard'
 import AdminDashboard from './pages/dashboards/AdminDashboard'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { CartProvider } from './context/CartContext'
+
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', color: '#ff4444', background: '#0d0d0d', minHeight: '100vh' }}>
+          <h2 style={{ color: '#ff4444' }}>App crashed</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#ccc', fontSize: 13 }}>
+            {(this.state.error as Error).message}
+            {'\n\n'}
+            {(this.state.error as Error).stack}
+          </pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+  return null
+}
 
 function ProtectedRoute({ children, role }: { children: React.ReactNode; role: string }) {
   const { user } = useAuth()
@@ -53,12 +74,16 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ScrollToTop />
-        <div className="noise-overlay" />
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
+            <ScrollToTop />
+            <div className="noise-overlay" />
+            <AppRoutes />
+          </CartProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

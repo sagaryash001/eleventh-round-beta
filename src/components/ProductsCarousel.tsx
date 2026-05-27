@@ -100,8 +100,9 @@ function DetailModal({ node, color, onClose }:{ node:ChildNode|TreeNode; color:s
       style={{background:`rgba(0,0,0,${vis?0.8:0})`,backdropFilter:vis?'blur(10px)':'none',transition:'background 0.3s,backdrop-filter 0.3s'}}
       onClick={onClose}>
       <div className="relative bg-charcoal border border-charcoal-3 overflow-hidden w-full max-w-[540px]"
-        style={{borderLeft:`3px solid ${color}`,transform:vis?'translateY(0)':'translateY(24px)',opacity:vis?1:0,transition:'transform 0.35s cubic-bezier(.25,.46,.45,.94),opacity 0.3s'}}
+        style={{transform:vis?'translateY(0)':'translateY(24px)',opacity:vis?1:0,transition:'transform 0.35s cubic-bezier(.25,.46,.45,.94),opacity 0.3s'}}
         onClick={e=>e.stopPropagation()}>
+        <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:color,opacity:0.9}} />
         <div className="absolute inset-0 pointer-events-none" style={{background:`radial-gradient(ellipse at 85% 10%,${color}18 0%,transparent 55%)`}} />
         <div className="relative z-10 p-10">
           <button onClick={onClose} className="absolute top-5 right-5 text-gray-3 hover:text-off-white transition-colors bg-transparent border-0 cursor-pointer" style={{fontSize:22,lineHeight:1}}>×</button>
@@ -290,9 +291,10 @@ export default function ProductsSection() {
       <div className="max-w-[1300px] mx-auto px-10 mt-2" style={{minHeight:openData?'auto':0}}>
         {openData&&(
           <div className="border border-charcoal-3 p-8 relative overflow-hidden"
-            style={{borderLeft:`3px solid ${openData.color}`,background:'#0c0c0d',animation:'fadeIn 0.3s ease'}}
+            style={{background:'#0c0c0d',animation:'fadeIn 0.3s ease'}}
             onMouseEnter={()=>{ cancelLeave(); setHovRoot(openData.id) }}
             onMouseLeave={scheduleLeave}>
+            <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:openData.color,opacity:0.85}} />
             <div className="absolute inset-0 pointer-events-none" style={{background:`radial-gradient(ellipse at 5% 50%,${openData.color}12 0%,transparent 50%)`}}/>
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
               <div>
@@ -335,7 +337,8 @@ export default function ProductsSection() {
             </p>
             <Link to="/podcast" className="btn-primary">Browse Episodes →</Link>
           </div>
-          <div className="border border-charcoal-3 p-10 relative overflow-hidden" style={{background:'#0c0c0d',borderLeft:'3px solid #3a2020'}}>
+          <div className="border border-charcoal-3 p-10 relative overflow-hidden" style={{background:'#0c0c0d'}}>
+            <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:'linear-gradient(90deg,#6a0000,transparent)'}} />
             <div className="absolute inset-0 pointer-events-none" style={{background:'radial-gradient(ellipse at 80% 20%,rgba(60,20,20,0.18) 0%,transparent 60%)'}}/>
             <div className="relative z-10">
               <div style={{fontSize:56,opacity:0.15,lineHeight:1,marginBottom:16}}>🎙</div>
@@ -353,7 +356,7 @@ export default function ProductsSection() {
         {/* Apparel */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center reveal reveal-delay-1">
           {/* Photo grid */}
-          <div className="order-last lg:order-first relative overflow-hidden" style={{borderLeft:'3px solid #2a1818'}}>
+          <div className="order-last lg:order-first relative overflow-hidden">
             <div className="grid grid-cols-3 gap-1">
               {[
                 '/apparel/IMG_4669.jpeg',

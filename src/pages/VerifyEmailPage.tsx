@@ -76,8 +76,8 @@ export default function VerifyEmailPage() {
 
           {/* Logo */}
           <div className="text-center mb-10">
-            <Link to="/" className="font-condensed font-extrabold text-[22px] tracking-[0.08em] uppercase text-off-white no-underline">
-              <span className="text-blood-glow">XI</span> Eleventh Round
+            <Link to="/" className="no-underline font-display text-off-white uppercase tracking-widest" style={{ fontSize: 22 }}>
+              Eleventh Round
             </Link>
           </div>
 

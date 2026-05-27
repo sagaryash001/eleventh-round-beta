@@ -3,12 +3,15 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [linksIn,  setLinksIn]  = useState(false)
-  const { user, logout }        = useAuth()
-  const location                = useLocation()
-  const isHome                  = location.pathname === '/'
+  const [scrolled,    setScrolled]    = useState(false)
+  const [heroDone,    setHeroDone]    = useState(false)
+  const [menuOpen,    setMenuOpen]    = useState(false)
+  const [linksIn,     setLinksIn]     = useState(false)
+  const { user, logout }              = useAuth()
+  const location                      = useLocation()
+  const isHome                        = location.pathname === '/'
+
+  const showLinks = !isHome || heroDone
 
   const dashPath = user
     ? `/dashboard/${user.role === 'admin' ? 'admin' : user.role}`
@@ -19,6 +22,23 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Show nav links only after the hero section has fully scrolled past
+  // IntersectionObserver doesn't work with GSAP-pinned elements — use scroll listener instead
+  useEffect(() => {
+    if (!isHome) { setHeroDone(true); return }
+    setHeroDone(false)
+    const check = () => {
+      const hero = document.getElementById('hero')
+      if (!hero) { setHeroDone(true); return }
+      // GSAP wraps pinned sections in a .pin-spacer div — track that if present
+      const trackEl = (hero.parentElement?.classList.contains('pin-spacer') ? hero.parentElement : hero)
+      setHeroDone(trackEl.getBoundingClientRect().bottom <= 0)
+    }
+    window.addEventListener('scroll', check, { passive: true })
+    check()
+    return () => window.removeEventListener('scroll', check)
+  }, [isHome])
 
   useEffect(() => {
     if (menuOpen) {
@@ -63,42 +83,37 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-[1000]"
         style={{
-          padding: `${scrolled ? 12 : 20}px clamp(20px,5vw,56px)`,
-          background: scrolled ? 'rgba(8,8,8,0.97)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(20px) saturate(1.3)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(139,0,0,0.16)' : 'none',
-          boxShadow: scrolled ? '0 2px 40px rgba(0,0,0,0.6)' : 'none',
+          // While the hero is in view, stay fully transparent — don't let scrolled state cut across the animation
+          padding: `${scrolled && showLinks ? 12 : 20}px 40px`,
+          background: scrolled && showLinks ? 'rgba(8,8,8,0.97)' : 'transparent',
+          backdropFilter: scrolled && showLinks ? 'blur(20px) saturate(1.3)' : 'none',
+          borderBottom: scrolled && showLinks ? '1px solid rgba(139,0,0,0.16)' : 'none',
+          boxShadow: scrolled && showLinks ? '0 2px 40px rgba(0,0,0,0.6)' : 'none',
           transition: 'padding 0.4s cubic-bezier(.25,.46,.45,.94), background 0.4s, box-shadow 0.4s, border-color 0.4s',
         }}
       >
-        <div className="flex items-center justify-between max-w-[1440px] mx-auto">
+        <div className="flex items-center justify-between w-full relative">
 
           {/* ── Logo ── */}
-          <Link
-            to="/"
-            className="flex items-baseline gap-2.5 no-underline whitespace-nowrap"
-            aria-label="The Eleventh Round — Home"
-          >
-            <span
-              className="font-display text-crimson leading-none"
-              style={{
-                fontSize: 'clamp(22px,2.4vw,30px)',
-                letterSpacing: '-0.01em',
-                textShadow: '0 0 24px rgba(196,30,58,0.5)',
-              }}
-            >
-              XI
-            </span>
-            <span
-              className="font-narrow font-bold uppercase text-off-white italic"
-              style={{ fontSize: 'clamp(11px,1vw,14px)', letterSpacing: '0.12em', opacity: 0.92 }}
-            >
-              Eleventh Round
-            </span>
+          <Link to="/" className="no-underline flex-shrink-0" aria-label="The Eleventh Round — Home">
+            <img
+              src="/logo-white.png"
+              alt="Eleventh Round"
+              style={{ height: scrolled ? 44 : 52, width: 'auto', transition: 'height 0.4s cubic-bezier(.25,.46,.45,.94)' }}
+            />
           </Link>
 
-          {/* ── Desktop nav ── */}
-          <ul className="hidden md:flex gap-8 list-none m-0 p-0" role="list">
+          {/* ── Desktop nav — absolutely centered, hidden on home until hero exits ── */}
+          <ul
+            className="hidden md:flex gap-8 list-none m-0 p-0 absolute left-1/2 -translate-x-1/2"
+            style={{
+              opacity:       showLinks ? 1 : 0,
+              transform:     showLinks ? 'translateX(-50%)' : 'translateX(-50%) translateY(-6px)',
+              pointerEvents: showLinks ? 'all' : 'none',
+              transition: 'opacity 0.5s ease, transform 0.5s ease',
+            }}
+            role="list"
+          >
             {homeLinks.map(({ href, label }) => (
               <li key={href}>
                 <a href={href} className="er-nav-link">{label}</a>
@@ -117,32 +132,17 @@ export default function Navbar() {
               <>
                 <Link
                   to={dashPath}
-                  className="font-condensed text-[11px] font-bold tracking-[0.22em] uppercase text-off-white
-                             bg-charcoal border px-5 py-2.5 no-underline transition-colors duration-200"
+                  className="font-condensed text-[13px] font-bold tracking-[0.22em] uppercase text-off-white
+                             bg-charcoal border px-7 py-3 no-underline transition-colors duration-200"
                   style={{ borderColor: 'rgba(240,236,228,0.1)' }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(139,0,0,0.5)')}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(240,236,228,0.1)')}
                 >
                   Dashboard
                 </Link>
-                <button
-                  onClick={logout}
-                  className="font-condensed text-[11px] font-bold tracking-[0.22em] uppercase
-                             text-gray-2 hover:text-off-white bg-transparent border-0 cursor-pointer
-                             transition-colors duration-200"
-                >
-                  Sign Out
-                </button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="font-condensed text-[11px] font-bold tracking-[0.22em] uppercase
-                             text-gray-2 hover:text-off-white no-underline transition-colors duration-200"
-                >
-                  Sign In
-                </Link>
                 <Link to="/login" className="btn-primary" style={{ fontSize: 10, padding: '10px 22px' }}>
                   Join the Ecosystem
                 </Link>

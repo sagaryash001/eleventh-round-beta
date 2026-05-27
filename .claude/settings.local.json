@@ -11,7 +11,31 @@
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_resize",
-      "mcp__playwright__browser_click"
+      "mcp__playwright__browser_click",
+      "Bash(python -c \"import graphify\")",
+      "Bash(pip install *)",
+      "Bash(python *)",
+      "Bash(New-Item -ItemType Directory -Force -Path graphify-out)",
+      "Bash(Out-Null)",
+      "Bash(dir graphify-out/)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(npx tsc *)",
+      "Bash(node *)",
+      "Bash(npm start *)",
+      "Bash(curl -s http://localhost:3001/api/health)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3001/api/health\" -UseBasicParsing | Select-Object -ExpandProperty Content)",
+      "mcp__claude_ai_Supabase__get_publishable_keys",
+      "mcp__claude_ai_Supabase__get_project_url",
+      "PowerShell(curl.exe -s -X POST http://localhost:3001/api/stripe/checkout -H \"Content-Type: application/json\" -d '{\"items\":[]}')",
+      "PowerShell(curl.exe -s -X POST http://localhost:3001/api/stripe/checkout -H \"Content-Type: application/json\" -d '{\"items\":[{\"name\":\"Hoodie Onyx / L\",\"price\":95,\"quantity\":1}]}')",
+      "PowerShell(netstat *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\public\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object FullName, Name | Format-Table -AutoSize)",
+      "Bash(Read \"C:\\\\Users\\\\athar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-athar-eleventh-round-beta\\\\34ee9d58-080f-4dfd-a233-3bc74640f030\\\\tasks\\\\b90jbp58e.output\")",
+      "Bash(Remove-Item \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\process_images.py\" -ErrorAction SilentlyContinue)"
     ]
   }
 }

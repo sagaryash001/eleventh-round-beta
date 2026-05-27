@@ -26,9 +26,8 @@ export default function DashShell({ navItems, children, title, subtitle }: Props
         {/* Logo row */}
         <div className="px-5 py-5 border-b border-charcoal-3 flex items-center justify-between">
           {sideOpen && (
-            <Link to="/" className="font-condensed font-extrabold uppercase text-off-white no-underline"
-              style={{ fontSize: 16, letterSpacing: '0.08em' }}>
-              <span className="text-blood-glow">XI</span> ER
+            <Link to="/" className="no-underline inline-block">
+              <img src="/logo-white.png" alt="Eleventh Round" style={{ height: 28, width: 'auto' }} />
             </Link>
           )}
           <button onClick={() => setSideOpen(v => !v)}

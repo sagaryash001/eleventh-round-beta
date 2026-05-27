@@ -12,7 +12,11 @@ import pinoHttp    from 'pino-http'
 dotenv.config({ path: new URL('../.env', import.meta.url).pathname })
 
 import { logger } from './lib/logger.js'
-import authRoutes from './routes/auth.js'
+import authRoutes    from './routes/auth.js'
+import fighterRoutes from './routes/fighter.js'
+import managerRoutes from './routes/manager.js'
+import adminRoutes   from './routes/admin.js'
+import stripeRoutes  from './routes/stripe.js'
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -68,7 +72,11 @@ app.use('/api/auth', publicLimiter)
 // Apply to other public routes as they get added (leads, etc.)
 
 // ── Routes ──────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes)
+app.use('/api/auth',    authRoutes)
+app.use('/api/fighter', fighterRoutes)
+app.use('/api/manager', managerRoutes)
+app.use('/api/admin',   adminRoutes)
+app.use('/api/stripe',  stripeRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({

@@ -66,8 +66,8 @@ export default function LoginPage() {
         <div className="w-full max-w-[440px]">
           {/* Logo */}
           <div className="text-center mb-10">
-            <Link to="/" className="font-condensed font-extrabold text-[22px] tracking-[0.08em] uppercase text-off-white no-underline">
-              <span className="text-blood-glow">XI</span> Eleventh Round
+            <Link to="/" className="no-underline font-display text-off-white uppercase tracking-widest" style={{ fontSize: 22 }}>
+              Eleventh Round
             </Link>
             <p className="font-condensed text-[11px] tracking-[0.3em] uppercase text-gray-3 mt-2">
               Career Infrastructure · Combat Sports
