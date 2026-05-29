@@ -46,7 +46,7 @@ interface AuthContextValue {
   token: string | null
   loading: boolean
   login:    (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
-  register: (data: RegisterData) => Promise<{ ok: boolean; error?: string }>
+  register: (data: RegisterData) => Promise<{ ok: boolean; error?: string; autoConfirmed?: boolean }>
   logout:   () => Promise<void>
 }
 
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       const json = await res.json()
       if (!res.ok) return { ok: false, error: json.error ?? 'Registration failed.' }
-      return { ok: true }
+      return { ok: true, autoConfirmed: !!json.autoConfirmed }
     } catch {
       return { ok: false, error: 'Cannot reach the server. Is it running?' }
     }

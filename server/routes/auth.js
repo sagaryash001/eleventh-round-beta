@@ -27,6 +27,14 @@ import { childLogger } from '../lib/logger.js'
 const router = Router()
 const log    = childLogger('auth')
 
+// When true, new users are confirmed instantly and can log in without an email.
+// Defaults to ON whenever SendGrid isn't configured, so registration works
+// out of the box. Set AUTH_AUTOCONFIRM=false to force the real email flow
+// even before SendGrid is wired up, or =true to always skip email.
+const AUTO_CONFIRM =
+  process.env.AUTH_AUTOCONFIRM === 'true' ||
+  (process.env.AUTH_AUTOCONFIRM !== 'false' && !process.env.SENDGRID_API_KEY)
+
 // ═════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/register
 // ═════════════════════════════════════════════════════════════════════════════
@@ -47,11 +55,13 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       }
     }
 
-    // 2. Create the auth user (email NOT auto-confirmed — we'll confirm via our own flow)
+    // 2. Create the auth user.
+    //    - AUTO_CONFIRM on  → email_confirm:true, user can log in immediately
+    //    - AUTO_CONFIRM off → email_confirm:false, we send a verification link
     const { data: created, error: createErr } = await sb.auth.admin.createUser({
       email,
       password,
-      email_confirm: false,
+      email_confirm: AUTO_CONFIRM,
       user_metadata: { name, account_type: accountType, team_name: teamName, subdomain },
     })
 
@@ -107,7 +117,17 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       if (obErr) log.warn({ err: obErr, userId }, 'onboarding insert failed (non-fatal)')
     }
 
-    // 5. Generate a Supabase verification link, then send our branded email
+    // 5. Email verification — skipped entirely when AUTO_CONFIRM is on.
+    if (AUTO_CONFIRM) {
+      log.info({ userId, email }, 'user auto-confirmed (no email verification)')
+      return res.status(201).json({
+        ok:            true,
+        autoConfirmed: true,
+        message:       'Account created — you can sign in now.',
+      })
+    }
+
+    // Generate a Supabase verification link, then send our branded email.
     const clientUrl   = process.env.CLIENT_URL || 'http://localhost:5173'
     const { data: linkData, error: linkErr } = await sb.auth.admin.generateLink({
       type:    'signup',
@@ -130,8 +150,9 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     )
 
     return res.status(201).json({
-      ok:      true,
-      message: 'Account created — check your email to verify and unlock your dashboard.',
+      ok:            true,
+      autoConfirmed: false,
+      message:       'Account created — check your email to verify and unlock your dashboard.',
     })
   } catch (err) {
     log.error({ err }, '/register threw')

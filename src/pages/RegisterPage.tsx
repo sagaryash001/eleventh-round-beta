@@ -132,7 +132,7 @@ function Progress({ current, total }: { current: number; total: number }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function RegisterPage() {
-  const { register, user } = useAuth()
+  const { register, login, user } = useAuth()
   const navigate           = useNavigate()
   const [step, setStep]    = useState<Step>('account')
   const [error, setError]  = useState('')
@@ -250,8 +250,19 @@ export default function RegisterPage() {
       },
     }
     const result = await register(payload)
+    if (!result.ok) { setLoading(false); return setError(result.error ?? 'Registration failed.') }
+
+    // Auto-confirm mode: no email step — log the user straight in.
+    // The redirect-if-logged-in effect will take them to their dashboard.
+    if (result.autoConfirmed) {
+      const loginResult = await login(form.email.trim(), form.password)
+      setLoading(false)
+      if (loginResult.ok) return            // effect handles dashboard redirect
+      // Account exists but auto-login hiccuped — send them to sign in manually.
+      return navigate('/login', { replace: true })
+    }
+
     setLoading(false)
-    if (!result.ok) return setError(result.error ?? 'Registration failed.')
     setStep('done')
   }
 
