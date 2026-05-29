@@ -101,7 +101,16 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       // Roll back the auth user so the next try has a clean slate
       log.error({ err: profileErr, userId }, 'profile insert failed — rolling back auth user')
       await sb.auth.admin.deleteUser(userId).catch(() => {})
-      return res.status(500).json({ error: 'Registration failed. Please try again.' })
+      // TEMP DEBUG: surface the real PostgREST/DB error to diagnose in prod.
+      return res.status(500).json({
+        error: 'Registration failed. Please try again.',
+        debug: {
+          message: profileErr.message,
+          code:    profileErr.code,
+          details: profileErr.details,
+          hint:    profileErr.hint,
+        },
+      })
     }
 
     // 4. Insert onboarding answers
