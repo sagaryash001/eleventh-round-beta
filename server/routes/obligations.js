@@ -7,11 +7,23 @@ import { assertObligationTransition } from '../lib/state-machines.js'
 const router = Router()
 const log    = childLogger('obligations')
 
+const OBLIGATION_COLS = [
+  'id', 'owner_id', 'contract_id', 'title', 'description',
+  'due_date', 'status', 'priority', 'category',
+  'deliverable_type', 'recurrence', 'proof_required',
+  'overdue_notified_at', 'created_at', 'updated_at',
+].join(', ')
+
+const PROOF_COLS = [
+  'id', 'obligation_id', 'submitted_by', 'proof_type', 'proof_value',
+  'caption', 'reviewed_by', 'review_status', 'review_notes', 'reviewed_at', 'created_at',
+].join(', ')
+
 // ── GET /api/obligations/:id ──────────────────────────────────────────────────
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { data: ob, error } = await adminSupabase
-      .from('obligations').select('*').eq('id', req.params.id).maybeSingle()
+      .from('obligations').select(OBLIGATION_COLS).eq('id', req.params.id).maybeSingle()
     if (error) throw error
     if (!ob) return res.status(404).json({ error: 'Not found.' })
 
@@ -31,7 +43,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 
     const { data: proofs } = await adminSupabase
       .from('obligation_proofs')
-      .select('*')
+      .select(PROOF_COLS)
       .eq('obligation_id', req.params.id)
       .order('created_at', { ascending: false })
 
@@ -49,7 +61,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (!newStatus) return res.status(400).json({ error: 'status required.' })
 
     const { data: ob, error: fErr } = await adminSupabase
-      .from('obligations').select('*').eq('id', req.params.id).maybeSingle()
+      .from('obligations').select(OBLIGATION_COLS).eq('id', req.params.id).maybeSingle()
     if (fErr) throw fErr
     if (!ob) return res.status(404).json({ error: 'Not found.' })
 
@@ -66,7 +78,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .from('obligations').update({ status: newStatus }).eq('id', req.params.id)
     if (uErr) throw uErr
 
-    const { data } = await adminSupabase.from('obligations').select('*').eq('id', req.params.id).maybeSingle()
+    const { data } = await adminSupabase.from('obligations').select(OBLIGATION_COLS).eq('id', req.params.id).maybeSingle()
     res.json({ ok: true, obligation: data })
   } catch (err) {
     log.error({ err }, 'PATCH /obligations/:id threw')
@@ -78,7 +90,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 router.post('/:id/proof', requireAuth, async (req, res) => {
   try {
     const { data: ob, error: fErr } = await adminSupabase
-      .from('obligations').select('*').eq('id', req.params.id).maybeSingle()
+      .from('obligations').select(OBLIGATION_COLS).eq('id', req.params.id).maybeSingle()
     if (fErr) throw fErr
     if (!ob) return res.status(404).json({ error: 'Not found.' })
     if (ob.owner_id !== req.user.id && req.user.role !== 'admin') {
@@ -101,7 +113,7 @@ router.post('/:id/proof', requireAuth, async (req, res) => {
         caption:       caption?.trim() || null,
         review_status: 'pending',
       })
-      .select()
+      .select(PROOF_COLS)
       .maybeSingle()
     if (error) throw error
 
@@ -142,7 +154,7 @@ router.post('/:id/proof/:pid/review', requireAuth, async (req, res) => {
 
     const { data: proof, error: pErr } = await adminSupabase
       .from('obligation_proofs')
-      .select('*')
+      .select(PROOF_COLS)
       .eq('id', req.params.pid)
       .eq('obligation_id', req.params.id)
       .maybeSingle()
@@ -166,7 +178,7 @@ router.post('/:id/proof/:pid/review', requireAuth, async (req, res) => {
       }
     }
 
-    const { data } = await adminSupabase.from('obligation_proofs').select('*').eq('id', req.params.pid).maybeSingle()
+    const { data } = await adminSupabase.from('obligation_proofs').select(PROOF_COLS).eq('id', req.params.pid).maybeSingle()
     res.json({ ok: true, proof: data })
   } catch (err) {
     log.error({ err }, 'POST /obligations/:id/proof/:pid/review threw')

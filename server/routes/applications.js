@@ -7,6 +7,17 @@ import { computeMatchScore } from '../lib/matching.js'
 const router = Router()
 const log    = childLogger('applications')
 
+const APPLICATION_COLS = [
+  'id', 'opportunity_id', 'fighter_id', 'sponsor_id', 'direction', 'status',
+  'cover_message', 'match_score', 'price_proposed_usd',
+  'reviewed_by', 'reviewed_at', 'decided_at', 'rejection_reason',
+  'metadata', 'created_at', 'updated_at',
+].join(', ')
+
+// Only the fields computeMatchScore() actually reads
+const FIGHTER_PROFILE_MATCH_COLS = 'user_id, weight_class, current_promotion, nationality, sponsorship_interests'
+const SOCIAL_MATCH_COLS          = 'user_id, follower_count, engagement_rate_bps'
+
 // Legal status transitions for each actor
 const FIGHTER_TRANSITIONS = { applied: ['withdrawn'], under_review: ['withdrawn'], shortlisted: ['withdrawn'] }
 const SPONSOR_TRANSITIONS  = { applied: ['under_review','rejected'], under_review: ['shortlisted','rejected'], shortlisted: ['accepted','rejected'] }
@@ -32,8 +43,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Compute match score to cache on the application row
     const [{ data: fp }, { data: socials }] = await Promise.all([
-      adminSupabase.from('fighter_profiles').select('*').eq('user_id', req.user.id).maybeSingle(),
-      adminSupabase.from('social_accounts').select('*').eq('user_id', req.user.id),
+      adminSupabase.from('fighter_profiles').select(FIGHTER_PROFILE_MATCH_COLS).eq('user_id', req.user.id).maybeSingle(),
+      adminSupabase.from('social_accounts').select(SOCIAL_MATCH_COLS).eq('user_id', req.user.id),
     ])
     const { score } = computeMatchScore(opp, fp ?? {}, socials ?? [])
 
@@ -48,7 +59,7 @@ router.post('/', requireAuth, async (req, res) => {
         cover_message: cover_message?.trim() || null,
         match_score:   score,
       })
-      .select()
+      .select(APPLICATION_COLS)
       .maybeSingle()
 
     if (error) {
@@ -79,7 +90,7 @@ router.get('/mine', requireAuth, async (req, res) => {
 
     let q = adminSupabase
       .from('applications')
-      .select('*')
+      .select(APPLICATION_COLS)
       .eq('fighter_id', req.user.id)
       .order('created_at', { ascending: false })
       .limit(limit + 1)
@@ -118,7 +129,7 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { data, error } = await adminSupabase
       .from('applications')
-      .select('*')
+      .select(APPLICATION_COLS)
       .eq('id', req.params.id)
       .maybeSingle()
     if (error) throw error
@@ -141,7 +152,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
     const { data: app, error: fetchErr } = await adminSupabase
       .from('applications')
-      .select('*')
+      .select(APPLICATION_COLS)
       .eq('id', req.params.id)
       .maybeSingle()
     if (fetchErr) throw fetchErr
@@ -187,7 +198,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
     const { data, error: refetchErr } = await adminSupabase
       .from('applications')
-      .select('*')
+      .select(APPLICATION_COLS)
       .eq('id', req.params.id)
       .maybeSingle()
     if (refetchErr) throw refetchErr
@@ -230,7 +241,7 @@ router.post('/invite', requireAuth, async (req, res) => {
         status:        'applied',
         cover_message: cover_message?.trim() || null,
       })
-      .select()
+      .select(APPLICATION_COLS)
       .maybeSingle()
 
     if (error) {
@@ -240,7 +251,7 @@ router.post('/invite', requireAuth, async (req, res) => {
 
     // Re-fetch to guarantee full row (avoid PostgREST .select() chain null issue)
     const { data } = inserted
-      ? await adminSupabase.from('applications').select('*').eq('id', inserted.id).maybeSingle()
+      ? await adminSupabase.from('applications').select(APPLICATION_COLS).eq('id', inserted.id).maybeSingle()
       : { data: inserted }
 
     res.status(201).json({ ok: true, application: data })

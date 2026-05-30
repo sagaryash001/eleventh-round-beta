@@ -7,6 +7,36 @@ import { assertContractTransition } from '../lib/state-machines.js'
 const router = Router()
 const log    = childLogger('contracts')
 
+// Explicit column lists — never SELECT * so we don't pull large JSONB columns
+// (deliverables_snapshot, metadata, terms_markdown) on auth checks or list views.
+const CONTRACT_COLS = [
+  'id', 'opportunity_id', 'application_id', 'sponsor_id', 'fighter_id',
+  'value_usd', 'platform_fee_bps', 'payment_schedule',
+  'start_date', 'end_date', 'deliverables_snapshot', 'terms_markdown',
+  'status', 'sponsor_accepted_at', 'sponsor_accepted_ip',
+  'fighter_accepted_at', 'fighter_accepted_ip',
+  'terminated_by', 'termination_reason', 'completed_at', 'terminated_at',
+  'metadata', 'created_at', 'updated_at',
+].join(', ')
+
+// Lightweight version for list endpoints — omits large text/JSONB fields
+const CONTRACT_LIST_COLS = [
+  'id', 'opportunity_id', 'application_id', 'sponsor_id', 'fighter_id',
+  'value_usd', 'platform_fee_bps', 'payment_schedule',
+  'start_date', 'end_date', 'status',
+  'sponsor_accepted_at', 'fighter_accepted_at',
+  'terminated_at', 'completed_at', 'created_at', 'updated_at',
+].join(', ')
+
+const OBLIGATION_COLS = [
+  'id', 'owner_id', 'contract_id', 'title', 'description',
+  'due_date', 'status', 'priority', 'category',
+  'deliverable_type', 'recurrence', 'proof_required',
+  'overdue_notified_at', 'created_at', 'updated_at',
+].join(', ')
+
+const MILESTONE_COLS = 'id, contract_id, name, amount_usd, due_date, status, sequence, created_at, updated_at'
+
 // ── POST /api/contracts — create from accepted application ────────────────────
 router.post('/', requireAuth, async (req, res) => {
   try {
@@ -68,13 +98,13 @@ router.post('/', requireAuth, async (req, res) => {
         terms_markdown:       terms_markdown?.trim() || null,
         status:               'draft',
       })
-      .select()
+      .select(CONTRACT_COLS)
       .maybeSingle()
 
     if (cErr) throw cErr
 
     // Re-fetch (PostgREST service-role quirk)
-    const { data } = await adminSupabase.from('contracts').select('*').eq('id', contract.id).maybeSingle()
+    const { data } = await adminSupabase.from('contracts').select(CONTRACT_COLS).eq('id', contract.id).maybeSingle()
 
     res.status(201).json({ ok: true, contract: data })
   } catch (err) {
@@ -93,8 +123,8 @@ router.get('/', requireAuth, async (req, res) => {
     const before = req.query.before
 
     let q = req.user.role === 'admin'
-      ? adminSupabase.from('contracts').select('*').is('deleted_at', null)
-      : adminSupabase.from('contracts').select('*').eq(col, uid).is('deleted_at', null)
+      ? adminSupabase.from('contracts').select(CONTRACT_LIST_COLS).is('deleted_at', null)
+      : adminSupabase.from('contracts').select(CONTRACT_LIST_COLS).eq(col, uid).is('deleted_at', null)
 
     q = q.order('created_at', { ascending: false }).limit(limit + 1)
     if (before) q = q.lt('created_at', before)
@@ -115,7 +145,7 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { data: contract, error } = await adminSupabase
       .from('contracts')
-      .select('*')
+      .select(CONTRACT_COLS)
       .eq('id', req.params.id)
       .is('deleted_at', null)
       .maybeSingle()
@@ -131,7 +161,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     // Enrich with obligations
     const { data: obligations } = await adminSupabase
       .from('obligations')
-      .select('*')
+      .select(OBLIGATION_COLS)
       .eq('contract_id', req.params.id)
       .order('due_date', { ascending: true })
 
@@ -146,7 +176,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
     const { data: contract, error: fErr } = await adminSupabase
-      .from('contracts').select('*').eq('id', req.params.id).maybeSingle()
+      .from('contracts').select('id, sponsor_id, status').eq('id', req.params.id).maybeSingle()
     if (fErr) throw fErr
     if (!contract) return res.status(404).json({ error: 'Not found.' })
     if (contract.sponsor_id !== req.user.id && req.user.role !== 'admin') {
@@ -166,7 +196,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     const { error: uErr } = await adminSupabase.from('contracts').update(updates).eq('id', req.params.id)
     if (uErr) throw uErr
 
-    const { data } = await adminSupabase.from('contracts').select('*').eq('id', req.params.id).maybeSingle()
+    const { data } = await adminSupabase.from('contracts').select(CONTRACT_COLS).eq('id', req.params.id).maybeSingle()
     res.json({ ok: true, contract: data })
   } catch (err) {
     log.error({ err }, 'PATCH /contracts/:id threw')
@@ -178,7 +208,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 router.post('/:id/accept', requireAuth, async (req, res) => {
   try {
     const { data: contract, error: fErr } = await adminSupabase
-      .from('contracts').select('*').eq('id', req.params.id).maybeSingle()
+      .from('contracts').select('id, sponsor_id, fighter_id, status, sponsor_accepted_at, fighter_accepted_at, deliverables_snapshot, end_date').eq('id', req.params.id).maybeSingle()
     if (fErr) throw fErr
     if (!contract) return res.status(404).json({ error: 'Not found.' })
 
@@ -209,7 +239,7 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     const { error: uErr } = await adminSupabase.from('contracts').update(updates).eq('id', req.params.id)
     if (uErr) throw uErr
 
-    const { data: updated } = await adminSupabase.from('contracts').select('*').eq('id', req.params.id).maybeSingle()
+    const { data: updated } = await adminSupabase.from('contracts').select(CONTRACT_COLS).eq('id', req.params.id).maybeSingle()
 
     // When contract becomes active, generate obligations from deliverables_snapshot
     if (updated.status === 'active' && Array.isArray(updated.deliverables_snapshot) && updated.deliverables_snapshot.length) {
@@ -254,7 +284,7 @@ router.post('/:id/terminate', requireAuth, async (req, res) => {
   try {
     const { termination_reason } = req.body
     const { data: contract, error: fErr } = await adminSupabase
-      .from('contracts').select('*').eq('id', req.params.id).maybeSingle()
+      .from('contracts').select('id, sponsor_id, fighter_id, status').eq('id', req.params.id).maybeSingle()
     if (fErr) throw fErr
     if (!contract) return res.status(404).json({ error: 'Not found.' })
 
@@ -274,7 +304,7 @@ router.post('/:id/terminate', requireAuth, async (req, res) => {
     }).eq('id', req.params.id)
     if (uErr) throw uErr
 
-    const { data } = await adminSupabase.from('contracts').select('*').eq('id', req.params.id).maybeSingle()
+    const { data } = await adminSupabase.from('contracts').select(CONTRACT_COLS).eq('id', req.params.id).maybeSingle()
     res.json({ ok: true, contract: data })
   } catch (err) {
     log.error({ err }, 'POST /contracts/:id/terminate threw')
@@ -298,7 +328,7 @@ router.get('/:id/obligations', requireAuth, async (req, res) => {
 
     const { data, error } = await adminSupabase
       .from('obligations')
-      .select('*')
+      .select(OBLIGATION_COLS)
       .eq('contract_id', req.params.id)
       .order('due_date', { ascending: true })
       .limit(limit)
@@ -342,7 +372,7 @@ router.post('/:id/obligations', requireAuth, async (req, res) => {
         proof_required,
         category:         'sponsor',
       })
-      .select()
+      .select(OBLIGATION_COLS)
       .maybeSingle()
     if (error) throw error
 
@@ -365,7 +395,7 @@ router.get('/:id/milestones', requireAuth, async (req, res) => {
     }
     const { data, error } = await adminSupabase
       .from('payment_milestones')
-      .select('*')
+      .select(MILESTONE_COLS)
       .eq('contract_id', req.params.id)
       .order('sequence', { ascending: true })
       .limit(200)
@@ -403,7 +433,7 @@ router.post('/:id/milestones', requireAuth, async (req, res) => {
     const { data, error } = await adminSupabase
       .from('payment_milestones')
       .insert({ contract_id: req.params.id, name: name.trim(), amount_usd: Number(amount_usd), due_date: due_date ?? null, sequence: seq })
-      .select().maybeSingle()
+      .select(MILESTONE_COLS).maybeSingle()
     if (error) {
       if (error.code === '23505') return res.status(409).json({ error: 'A milestone with that sequence already exists.' })
       throw error

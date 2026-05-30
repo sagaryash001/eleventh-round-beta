@@ -112,7 +112,7 @@ router.get('/dashboard', ...guard, async (req, res) => {
         .select('id, name, email, role, avatar_url')
         .eq('id', uid).maybeSingle(),
       adminSupabase.from('sponsor_profiles')
-        .select('*')
+        .select('user_id, company_name, logo_path, website_url, industry, company_size, hq_country, hq_region, description, budget_min_usd, budget_max_usd, preferred_demographics, preferred_weight_classes, preferred_promotions, campaign_goals, is_verified, visibility, total_active_contracts, public_slug')
         .eq('user_id', uid).maybeSingle(),
     ])
     res.json({ profile, sponsorProfile: sponsorProfile ?? null })

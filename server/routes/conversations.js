@@ -6,6 +6,9 @@ import { childLogger } from '../lib/logger.js'
 const router = Router()
 const log    = childLogger('conversations')
 
+const CONVERSATION_COLS = 'id, subject, context_type, context_id, created_by, last_message_at, created_at, updated_at, deleted_at'
+const MESSAGE_COLS      = 'id, conversation_id, sender_id, body, message_type, attachments, edited_at, deleted_at, created_at'
+
 // ── GET /api/conversations — list user's conversations ───────────────────────
 // ?limit=30&before=<ISO last_message_at> (cursor pagination)
 router.get('/', requireAuth, async (req, res) => {
@@ -30,7 +33,7 @@ router.get('/', requireAuth, async (req, res) => {
     // Fetch conversation rows with cursor + limit
     let convQ = adminSupabase
       .from('conversations')
-      .select('*')
+      .select(CONVERSATION_COLS)
       .in('id', convIds)
       .is('deleted_at', null)
       .order('last_message_at', { ascending: false, nullsFirst: false })
@@ -130,7 +133,7 @@ router.post('/', requireAuth, async (req, res) => {
       if (existing) {
         const { data: conv } = await adminSupabase
           .from('conversations')
-          .select('*')
+          .select(CONVERSATION_COLS)
           .eq('id', existing.id)
           .maybeSingle()
         return res.json({ ok: true, conversation: conv, existed: true })
@@ -147,7 +150,7 @@ router.post('/', requireAuth, async (req, res) => {
         created_by:   uid,
         last_message_at: initial_message ? new Date().toISOString() : null,
       })
-      .select()
+      .select(CONVERSATION_COLS)
       .maybeSingle()
 
     if (cErr) throw cErr
@@ -176,7 +179,7 @@ router.post('/', requireAuth, async (req, res) => {
           body:            initial_message.trim(),
           message_type:    'text',
         })
-        .select()
+        .select(MESSAGE_COLS)
         .maybeSingle()
 
       if (mErr) throw mErr
@@ -224,7 +227,7 @@ router.get('/:id/messages', requireAuth, async (req, res) => {
 
     let query = adminSupabase
       .from('messages')
-      .select('*')
+      .select(MESSAGE_COLS)
       .eq('conversation_id', id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -276,7 +279,7 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
         message_type:    'text',
         attachments:     attachments ?? [],
       })
-      .select()
+      .select(MESSAGE_COLS)
       .maybeSingle()
 
     if (mErr) throw mErr
@@ -284,7 +287,7 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
     // Re-fetch to guarantee full row (PostgREST quirk on service role)
     const { data: fullMsg } = await adminSupabase
       .from('messages')
-      .select('*')
+      .select(MESSAGE_COLS)
       .eq('id', msg.id)
       .maybeSingle()
 
