@@ -73,17 +73,28 @@ router.post('/', requireAuth, async (req, res) => {
 // ── GET /api/applications/mine — fighter's own applications ───────────────────
 router.get('/mine', requireAuth, async (req, res) => {
   try {
-    const { data, error } = await adminSupabase
+    const { data: apps, error } = await adminSupabase
       .from('applications')
-      .select(`
-        *,
-        opportunity:sponsorship_opportunities (id, title, campaign_type, budget_min_usd, budget_max_usd, status),
-        sponsor_detail:sponsor_profiles!sponsor_id (company_name, logo_path, is_verified)
-      `)
+      .select('*')
       .eq('fighter_id', req.user.id)
       .order('created_at', { ascending: false })
     if (error) throw error
-    res.json({ ok: true, applications: data ?? [] })
+
+    // Enrich with opportunity + sponsor detail
+    const oppIds     = [...new Set((apps ?? []).map(a => a.opportunity_id))]
+    const sponsorIds = [...new Set((apps ?? []).map(a => a.sponsor_id))]
+    let oppMap = {}, sponsorMap = {}
+    const fetches = []
+    if (oppIds.length)     fetches.push(adminSupabase.from('sponsorship_opportunities').select('id, title, campaign_type, budget_min_usd, budget_max_usd, status').in('id', oppIds).then(r => { for (const o of r.data ?? []) oppMap[o.id] = o }))
+    if (sponsorIds.length) fetches.push(adminSupabase.from('sponsor_profiles').select('user_id, company_name, logo_path, is_verified').in('user_id', sponsorIds).then(r => { for (const s of r.data ?? []) sponsorMap[s.user_id] = s }))
+    await Promise.all(fetches)
+
+    const data = (apps ?? []).map(a => ({
+      ...a,
+      opportunity:   oppMap[a.opportunity_id]  ?? null,
+      sponsor_detail: sponsorMap[a.sponsor_id] ?? null,
+    }))
+    res.json({ ok: true, applications: data })
   } catch (err) {
     log.error({ err }, 'GET /applications/mine threw')
     res.status(500).json({ error: err.message })

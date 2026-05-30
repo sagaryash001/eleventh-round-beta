@@ -44,8 +44,7 @@ router.get('/', async (req, res) => {
         budget_per_fighter_usd, max_fighters, deliverables, requirements,
         application_deadline, campaign_start, campaign_end, location_country,
         location_region, view_count, application_count, published_at, status, visibility,
-        sponsor:profiles!sponsor_id (id, name),
-        sponsor_detail:sponsor_profiles!inner (company_name, logo_path, is_verified, industry)
+        sponsor_id
       `)
       .eq('status', 'published')
       .eq('visibility', 'public')
@@ -62,10 +61,22 @@ router.get('/', async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, Number(lim)))
     q = q.range((pageNum - 1) * pageSize, pageNum * pageSize - 1)
 
-    const { data, error, count } = await q
+    const { data: opps, error } = await q
     if (error) throw error
 
-    res.json({ ok: true, data: data ?? [], page: pageNum, limit: pageSize })
+    // Enrich with sponsor detail in a second query
+    const sponsorIds = [...new Set((opps ?? []).map(o => o.sponsor_id))]
+    let sponsorMap = {}
+    if (sponsorIds.length) {
+      const { data: sps } = await sb
+        .from('sponsor_profiles')
+        .select('user_id, company_name, logo_path, is_verified, industry')
+        .in('user_id', sponsorIds)
+      for (const sp of (sps ?? [])) sponsorMap[sp.user_id] = sp
+    }
+    const data = (opps ?? []).map(o => ({ ...o, sponsor_detail: sponsorMap[o.sponsor_id] ?? null }))
+
+    res.json({ ok: true, data, page: pageNum, limit: pageSize })
   } catch (err) {
     log.error({ err }, 'GET /opportunities threw')
     res.status(500).json({ error: err.message })
@@ -266,18 +277,32 @@ router.get('/:id/applications', requireAuth, requireSponsor, async (req, res) =>
       return res.status(403).json({ error: 'Not your opportunity.' })
     }
 
-    const { data, error } = await adminSupabase
+    const { data: apps, error } = await adminSupabase
       .from('applications')
-      .select(`
-        *,
-        fighter:profiles!fighter_id (id, name, avatar_url),
-        fighter_detail:fighter_profiles (weight_class, current_promotion, pro_status, visibility)
-      `)
+      .select('*')
       .eq('opportunity_id', req.params.id)
       .order('match_score', { ascending: false })
     if (error) throw error
 
-    res.json({ ok: true, applications: data ?? [] })
+    // Enrich with fighter profile details
+    const fighterIds = (apps ?? []).map(a => a.fighter_id)
+    let fighterMap = {}
+    let profileMap = {}
+    if (fighterIds.length) {
+      const [{ data: fps }, { data: profs }] = await Promise.all([
+        adminSupabase.from('fighter_profiles').select('user_id, weight_class, current_promotion, pro_status').in('user_id', fighterIds),
+        adminSupabase.from('profiles').select('id, name, avatar_url').in('id', fighterIds),
+      ])
+      for (const fp of (fps ?? []))  fighterMap[fp.user_id] = fp
+      for (const p  of (profs ?? [])) profileMap[p.id] = p
+    }
+    const data = (apps ?? []).map(a => ({
+      ...a,
+      fighter:        profileMap[a.fighter_id]  ?? null,
+      fighter_detail: fighterMap[a.fighter_id]  ?? null,
+    }))
+
+    res.json({ ok: true, applications: data })
   } catch (err) {
     log.error({ err }, 'GET /opportunities/:id/applications threw')
     res.status(500).json({ error: err.message })
