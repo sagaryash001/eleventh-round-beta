@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 
@@ -18,6 +18,15 @@ export default function LoginPage() {
   const [focused,  setFocused]  = useState<string | null>(null)
   const { login, user }         = useAuth()
   const navigate                = useNavigate()
+  const location                = useLocation()
+  const demoState               = location.state as { demoEmail?: string; demoPass?: string } | null
+
+  // Auto-login when arriving from the register page demo links
+  useEffect(() => {
+    if (demoState?.demoEmail && demoState?.demoPass && !user) {
+      loginAsDemo(demoState.demoEmail, demoState.demoPass)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (user) {
