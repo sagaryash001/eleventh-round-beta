@@ -11,15 +11,20 @@ import pinoHttp    from 'pino-http'
 // Load .env from project root (one level up from /server)
 dotenv.config({ path: new URL('../.env', import.meta.url).pathname })
 
-import { logger } from './lib/logger.js'
+import { logger }    from './lib/logger.js'
 import authRoutes    from './routes/auth.js'
 import fighterRoutes from './routes/fighter.js'
 import managerRoutes from './routes/manager.js'
 import adminRoutes   from './routes/admin.js'
+import sponsorRoutes from './routes/sponsor.js'
 import stripeRoutes  from './routes/stripe.js'
 
 const app  = express()
 const PORT = process.env.PORT || 3001
+
+// Extra CORS origins (comma-separated) for custom domains, set in env.
+const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
+  .split(',').map(s => s.trim()).filter(Boolean)
 
 // ── Structured request logging ──────────────────────────────────────────────
 app.use(pinoHttp({
@@ -32,17 +37,9 @@ app.use(pinoHttp({
 }))
 
 // ── CORS ────────────────────────────────────────────────────────────────────
-// Allow-list:
-//   • the configured CLIENT_URL (dev: http://localhost:5173)
-//   • any *.eleventh-rnd.com production subdomain
-//   • any *.vercel.app preview/production deployment for this project
-//   • additional comma-separated origins in CORS_EXTRA_ORIGINS
-const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
-  .split(',').map(s => s.trim()).filter(Boolean)
-
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true)                                  // server-to-server, curl, etc.
+    if (!origin) return cb(null, true)
     if (origin === (process.env.CLIENT_URL || 'http://localhost:5173')) return cb(null, true)
     if (/^https:\/\/[a-z0-9-]+\.eleventh-rnd\.com$/.test(origin))       return cb(null, true)
     if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin))             return cb(null, true)
@@ -69,13 +66,13 @@ const publicLimiter = rateLimit({
   message: { error: 'Too many requests. Slow down and try again in a minute.' },
 })
 app.use('/api/auth', publicLimiter)
-// Apply to other public routes as they get added (leads, etc.)
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/api/auth',    authRoutes)
 app.use('/api/fighter', fighterRoutes)
 app.use('/api/manager', managerRoutes)
 app.use('/api/admin',   adminRoutes)
+app.use('/api/sponsor', sponsorRoutes)
 app.use('/api/stripe',  stripeRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
@@ -104,7 +101,4 @@ app.use((err, req, res, _next) => {
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   logger.info({ port: PORT, env: process.env.NODE_ENV }, 'Eleventh Round API listening')
-  console.log(`\n  ╔══════════════════════════════════════╗`)
-  console.log(`  ║  Eleventh Round API  → :${PORT}        ║`)
-  console.log(`  ╚══════════════════════════════════════╝\n`)
 })

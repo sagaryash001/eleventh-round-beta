@@ -51,7 +51,7 @@ export const RegisterSchema = z.object({
   name:        z.string().trim().min(1, 'Name is required.').max(120),
   email:       EmailSchema,
   password:    PasswordSchema,
-  accountType: z.enum(['fighter', 'management', 'promotion']),
+  accountType: z.enum(['fighter', 'management', 'promotion', 'sponsor']),
   teamName:    z.string().trim().max(120).optional().nullable(),
   subdomain:   SubdomainSchema.optional().nullable(),
   onboarding:  z.object({

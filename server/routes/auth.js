@@ -83,7 +83,9 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     }
 
     const userId = created.user.id
-    const role   = accountType === 'fighter' ? 'fighter' : 'manager'
+    const role   = accountType === 'fighter' ? 'fighter'
+                 : accountType === 'sponsor' ? 'sponsor'
+                 : 'manager'
 
     // 3. Insert profile (service role bypasses RLS)
     const { error: profileErr } = await sb.from('profiles').insert({

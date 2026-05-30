@@ -10,6 +10,9 @@ import VerifyEmailPage from './pages/VerifyEmailPage'
 import FighterDashboard from './pages/dashboards/FighterDashboard'
 import ManagerDashboard from './pages/dashboards/ManagerDashboard'
 import AdminDashboard from './pages/dashboards/AdminDashboard'
+import SponsorDashboard from './pages/dashboards/SponsorDashboard'
+import SponsorOnboardPage from './pages/sponsor/SponsorOnboardPage'
+import FighterProfileEditPage from './pages/fighter/FighterProfileEditPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './context/CartContext'
 
@@ -66,6 +69,15 @@ function AppRoutes() {
       } />
       <Route path="/dashboard/admin" element={
         <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
+      } />
+      <Route path="/dashboard/sponsor" element={
+        <ProtectedRoute role="sponsor"><SponsorDashboard /></ProtectedRoute>
+      } />
+      <Route path="/sponsor/onboard" element={
+        <ProtectedRoute role="sponsor"><SponsorOnboardPage /></ProtectedRoute>
+      } />
+      <Route path="/fighter/profile" element={
+        <ProtectedRoute role="fighter"><FighterProfileEditPage /></ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

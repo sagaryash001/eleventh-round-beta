@@ -14,7 +14,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 
-export type UserRole = 'fighter' | 'manager' | 'admin'
+export type UserRole = 'fighter' | 'manager' | 'admin' | 'sponsor'
 
 export interface AuthUser {
   id: string

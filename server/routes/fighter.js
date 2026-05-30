@@ -247,30 +247,43 @@ router.get('/mentorship', ...guard, async (req, res) => {
 router.get('/profile', ...guard, async (req, res) => {
   try {
     const uid = req.user.id
-    const [{ data: fp }, { data: mgr }] = await Promise.all([
+    const [{ data: fp }, { data: socials }] = await Promise.all([
       adminSupabase.from('fighter_profiles').select('*').eq('user_id', uid).maybeSingle(),
-      adminSupabase.from('fighter_profiles').select('manager_id').eq('user_id', uid).maybeSingle(),
+      adminSupabase.from('social_accounts').select('platform, handle, profile_url, follower_count').eq('user_id', uid),
     ])
 
     let managerName = null
-    if (mgr?.manager_id) {
-      const { data: m } = await adminSupabase.from('profiles').select('name').eq('id', mgr.manager_id).maybeSingle()
+    if (fp?.manager_id) {
+      const { data: m } = await adminSupabase.from('profiles').select('name').eq('id', fp.manager_id).maybeSingle()
       managerName = m?.name ?? null
     }
 
     const wins   = fp?.record_wins   ?? 0
     const losses = fp?.record_losses ?? 0
     const draws  = fp?.record_draws  ?? 0
-    const completeness = [fp?.division, fp?.base_city, req.user.name, req.user.email].filter(Boolean).length * 18
+    const completeness = [fp?.division, fp?.base_city, fp?.weight_class, fp?.current_promotion, (socials ?? []).length, req.user.name]
+      .filter(Boolean).length * 16
 
     res.json({
-      name:                req.user.name,
-      email:               req.user.email,
-      division:            fp?.division  ?? null,
-      record:              `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`,
-      base:                fp?.base_city ?? null,
-      manager:             managerName,
-      profile_completeness: Math.min(completeness, 100),
+      name:                  req.user.name,
+      email:                 req.user.email,
+      division:              fp?.division  ?? null,
+      record:                `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`,
+      record_wins:           wins,
+      record_losses:         losses,
+      record_draws:          draws,
+      base:                  fp?.base_city ?? null,
+      manager:               managerName,
+      // marketplace core fields
+      weight_class:          fp?.weight_class ?? null,
+      current_promotion:     fp?.current_promotion ?? null,
+      pro_status:            fp?.pro_status ?? null,
+      nationality:           fp?.nationality ?? null,
+      visibility:            fp?.visibility ?? 'sponsors_only',
+      is_open_to_sponsorship: fp?.is_open_to_sponsorship ?? true,
+      public_slug:           fp?.public_slug ?? null,
+      socials:               socials ?? [],
+      profile_completeness:  Math.min(completeness, 100),
     })
   } catch (err) {
     log.error({ err }, '/fighter/profile threw')
@@ -278,15 +291,30 @@ router.get('/profile', ...guard, async (req, res) => {
   }
 })
 
+// Fields a fighter may set on their own fighter_profiles row.
+const FIGHTER_WRITABLE = [
+  // existing
+  'division', 'base_city', 'record_wins', 'record_losses', 'record_draws',
+  // marketplace core (Phase 1)
+  'weight_class', 'current_promotion', 'pro_status', 'nationality',
+  'visibility', 'is_open_to_sponsorship',
+]
+
+function pick(body, keys) {
+  const out = {}
+  for (const k of keys) if (body[k] !== undefined) out[k] = body[k]
+  return out
+}
+
 // ── PATCH /api/fighter/profile ────────────────────────────────────────────────
 router.patch('/profile', ...guard, async (req, res) => {
   try {
-    const { division, base_city, record_wins, record_losses, record_draws } = req.body
     const uid = req.user.id
+    const row = { user_id: uid, ...pick(req.body, FIGHTER_WRITABLE), updated_at: new Date().toISOString() }
 
     const { error } = await adminSupabase
       .from('fighter_profiles')
-      .upsert({ user_id: uid, division, base_city, record_wins, record_losses, record_draws, updated_at: new Date().toISOString() })
+      .upsert(row, { onConflict: 'user_id' })
     if (error) throw error
 
     if (req.body.name) {
@@ -296,6 +324,51 @@ router.patch('/profile', ...guard, async (req, res) => {
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'PATCH /fighter/profile threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/fighter/socials ────────────────────────────────────────────────
+// Body: { socials: [{ platform, handle, profile_url, follower_count }] }
+// Upserts each by (user_id, platform). Empty handle removes that platform.
+router.patch('/socials', ...guard, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const socials = Array.isArray(req.body.socials) ? req.body.socials : []
+    const VALID = ['instagram', 'tiktok', 'youtube', 'x', 'facebook', 'twitch']
+
+    const toUpsert = []
+    const toDelete = []
+    for (const s of socials) {
+      if (!VALID.includes(s.platform)) continue
+      if (!s.handle || !String(s.handle).trim()) { toDelete.push(s.platform); continue }
+      toUpsert.push({
+        user_id:        uid,
+        platform:       s.platform,
+        handle:         String(s.handle).trim().replace(/^@/, ''),
+        profile_url:    s.profile_url || `https://${s.platform}.com/${String(s.handle).trim().replace(/^@/, '')}`,
+        follower_count: Number.isFinite(+s.follower_count) ? +s.follower_count : null,
+        updated_at:     new Date().toISOString(),
+      })
+    }
+
+    if (toUpsert.length) {
+      const { error } = await adminSupabase
+        .from('social_accounts')
+        .upsert(toUpsert, { onConflict: 'user_id,platform' })
+      if (error) throw error
+    }
+    if (toDelete.length) {
+      await adminSupabase
+        .from('social_accounts')
+        .delete()
+        .eq('user_id', uid)
+        .in('platform', toDelete)
+    }
+
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'PATCH /fighter/socials threw')
     res.status(500).json({ error: err.message })
   }
 })

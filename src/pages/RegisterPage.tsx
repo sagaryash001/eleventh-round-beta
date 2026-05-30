@@ -14,7 +14,7 @@ interface FormState {
   password: string
   confirm:  string
   // Step: role (Q1)
-  accountType: 'fighter' | 'management' | 'promotion' | ''
+  accountType: 'fighter' | 'management' | 'promotion' | 'sponsor' | ''
   // Step: goal (Q2)
   goal: string
   // Step: problems (Q3)
@@ -152,11 +152,13 @@ export default function RegisterPage() {
   const set = (key: keyof FormState) => (val: string) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
-  // Redirect if already logged in
+  // Redirect if already logged in. Sponsors go to onboarding (the onboard page
+  // itself bounces already-onboarded sponsors to their dashboard).
   useEffect(() => {
     if (user) navigate(
       user.role === 'fighter' ? '/dashboard/fighter' :
       user.role === 'manager' ? '/dashboard/manager' :
+      user.role === 'sponsor' ? '/sponsor/onboard'   :
       '/dashboard/admin', { replace: true }
     )
   }, [user, navigate])
@@ -184,9 +186,10 @@ export default function RegisterPage() {
   }, [form.subdomain])
 
   const stepIdx   = STEPS.indexOf(step)
-  const visibleSteps = form.accountType === 'fighter'
-    ? STEPS.filter(s => s !== 'team')
-    : STEPS
+  const visibleSteps =
+    form.accountType === 'sponsor' ? (['account', 'role', 'done'] as Step[]) :
+    form.accountType === 'fighter' ? STEPS.filter(s => s !== 'team') :
+    STEPS
   const visibleIdx = visibleSteps.indexOf(step)
 
   const goNext = (next: Step) => { setError(''); setStep(next) }
@@ -203,6 +206,9 @@ export default function RegisterPage() {
 
   const submitRole = () => {
     if (!form.accountType) return setError('Please select your role.')
+    // Sponsors skip the fighter/manager questionnaire — minimal signup, then
+    // they complete their company profile at /sponsor/onboard.
+    if (form.accountType === 'sponsor') return submitFinal()
     goNext('goal')
   }
 
@@ -339,6 +345,7 @@ export default function RegisterPage() {
                         { value:'fighter',    label:'Fighter',          desc:'I compete and want to build my career.' },
                         { value:'management', label:'Management Team',  desc:'I manage or support fighters and need better systems.' },
                         { value:'promotion',  label:'Promotion',        desc:'I run events and want to raise professionalism standards.' },
+                        { value:'sponsor',    label:'Sponsor / Brand',  desc:'I represent a brand and want to sponsor fighters.' },
                       ].map(o => (
                         <OptionCard key={o.value} label={o.label} desc={o.desc}
                           selected={form.accountType === o.value}
