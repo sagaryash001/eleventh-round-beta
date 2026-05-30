@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashShell from './DashShell'
 import { useApi } from '../../hooks/useApi'
+import { useAuth } from '../../hooks/useAuth'
 import { getSponsorDashboard, updateSponsorProfile, type SponsorProfile } from '../../lib/api/sponsors'
 
 const NAV = [
@@ -62,7 +63,19 @@ function Chips({ options, selected, onToggle }: { options: { value: string; labe
   )
 }
 
+const DEMO_PROFILE: SponsorProfile = {
+  user_id: 's1', company_name: 'Apex Sports', logo_path: null, website_url: 'https://apexsports.com',
+  industry: 'Sports & Fitness', company_size: 'small', hq_country: 'US', hq_region: 'California',
+  description: 'Demo sponsor account for exploring the Eleventh Round marketplace.',
+  budget_min_usd: 5000, budget_max_usd: 50000, preferred_demographics: {},
+  preferred_weight_classes: ['Lightweight', 'Welterweight'],
+  preferred_promotions: ['UFC', 'PFL'],
+  campaign_goals: ['awareness', 'content'],
+  is_verified: true, visibility: 'public', total_active_contracts: 0, public_slug: 'apex-sports',
+} as any
+
 export default function SponsorDashboard() {
+  const { token } = useAuth()
   const navigate = useNavigate()
   const [sp, setSp]         = useState<SponsorProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,6 +83,11 @@ export default function SponsorDashboard() {
   const [savedMsg, setSavedMsg] = useState('')
 
   useEffect(() => {
+    if (!token || token === 'demo-token') {
+      setSp(DEMO_PROFILE)
+      setLoading(false)
+      return
+    }
     getSponsorDashboard()
       .then(d => {
         if (!d.sponsorProfile) { navigate('/sponsor/onboard', { replace: true }); return }
@@ -77,7 +95,7 @@ export default function SponsorDashboard() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [navigate])
+  }, [navigate, token])
 
   const patch = (updates: Partial<SponsorProfile>) => setSp(p => p ? { ...p, ...updates } : p)
   const toggle = (k: 'preferred_weight_classes' | 'preferred_promotions' | 'campaign_goals', v: string) => {
