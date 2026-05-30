@@ -68,9 +68,10 @@ export default function Navbar() {
   const homeLinks: { href: string; label: string }[] = []
 
   const globalLinks = [
-    { to: '/team',    label: 'The Team' },
-    { to: '/podcast', label: 'Podcast'  },
-    { to: '/apparel', label: 'Apparel'  },
+    { to: '/opportunities', label: 'Opportunities' },
+    { to: '/team',          label: 'The Team'       },
+    { to: '/podcast',       label: 'Podcast'        },
+    { to: '/apparel',       label: 'Apparel'        },
   ]
 
   const allMobileLinks = [

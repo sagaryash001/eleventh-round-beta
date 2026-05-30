@@ -16,8 +16,10 @@ import authRoutes    from './routes/auth.js'
 import fighterRoutes from './routes/fighter.js'
 import managerRoutes from './routes/manager.js'
 import adminRoutes   from './routes/admin.js'
-import sponsorRoutes from './routes/sponsor.js'
-import stripeRoutes  from './routes/stripe.js'
+import sponsorRoutes      from './routes/sponsor.js'
+import opportunityRoutes  from './routes/opportunities.js'
+import applicationRoutes  from './routes/applications.js'
+import stripeRoutes       from './routes/stripe.js'
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -72,8 +74,10 @@ app.use('/api/auth',    authRoutes)
 app.use('/api/fighter', fighterRoutes)
 app.use('/api/manager', managerRoutes)
 app.use('/api/admin',   adminRoutes)
-app.use('/api/sponsor', sponsorRoutes)
-app.use('/api/stripe',  stripeRoutes)
+app.use('/api/sponsor',       sponsorRoutes)
+app.use('/api/opportunities', opportunityRoutes)
+app.use('/api/applications',  applicationRoutes)
+app.use('/api/stripe',        stripeRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({

@@ -12,7 +12,13 @@ import ManagerDashboard from './pages/dashboards/ManagerDashboard'
 import AdminDashboard from './pages/dashboards/AdminDashboard'
 import SponsorDashboard from './pages/dashboards/SponsorDashboard'
 import SponsorOnboardPage from './pages/sponsor/SponsorOnboardPage'
+import OpportunityFormPage from './pages/sponsor/OpportunityFormPage'
+import SponsorOpportunitiesPage from './pages/sponsor/OpportunitiesPage'
+import ApplicantsPage from './pages/sponsor/ApplicantsPage'
 import FighterProfileEditPage from './pages/fighter/FighterProfileEditPage'
+import MyApplicationsPage from './pages/fighter/MyApplicationsPage'
+import DiscoveryPage from './pages/opportunities/DiscoveryPage'
+import OpportunityDetailPage from './pages/opportunities/DetailPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './context/CartContext'
 
@@ -79,6 +85,25 @@ function AppRoutes() {
       <Route path="/fighter/profile" element={
         <ProtectedRoute role="fighter"><FighterProfileEditPage /></ProtectedRoute>
       } />
+      <Route path="/fighter/applications" element={
+        <ProtectedRoute role="fighter"><MyApplicationsPage /></ProtectedRoute>
+      } />
+      {/* Sponsor opportunity management */}
+      <Route path="/sponsor/opportunities" element={
+        <ProtectedRoute role="sponsor"><SponsorOpportunitiesPage /></ProtectedRoute>
+      } />
+      <Route path="/sponsor/opportunities/new" element={
+        <ProtectedRoute role="sponsor"><OpportunityFormPage /></ProtectedRoute>
+      } />
+      <Route path="/sponsor/opportunities/:id/edit" element={
+        <ProtectedRoute role="sponsor"><OpportunityFormPage /></ProtectedRoute>
+      } />
+      <Route path="/sponsor/opportunities/:id/applicants" element={
+        <ProtectedRoute role="sponsor"><ApplicantsPage /></ProtectedRoute>
+      } />
+      {/* Public discovery */}
+      <Route path="/opportunities" element={<DiscoveryPage />} />
+      <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
