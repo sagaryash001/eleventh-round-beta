@@ -164,13 +164,21 @@ router.patch('/:id', requireAuth, async (req, res) => {
       updates.rejection_reason = rejection_reason.trim()
     }
 
-    const { data, error } = await adminSupabase
+    // Update and then fetch separately — chained .select() after .update()
+    // returns null on tables with no explicit PostgREST SELECT grants,
+    // even with service role, due to a PostgREST RLS interaction.
+    const { error: updateErr } = await adminSupabase
       .from('applications')
       .update(updates)
       .eq('id', req.params.id)
-      .select()
+    if (updateErr) throw updateErr
+
+    const { data, error: refetchErr } = await adminSupabase
+      .from('applications')
+      .select('*')
+      .eq('id', req.params.id)
       .maybeSingle()
-    if (error) throw error
+    if (refetchErr) throw refetchErr
 
     res.json({ ok: true, application: data })
   } catch (err) {
@@ -200,7 +208,7 @@ router.post('/invite', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Not your opportunity.' })
     }
 
-    const { data, error } = await adminSupabase
+    const { data: inserted, error } = await adminSupabase
       .from('applications')
       .insert({
         opportunity_id,
@@ -217,6 +225,11 @@ router.post('/invite', requireAuth, async (req, res) => {
       if (error.code === '23505') return res.status(409).json({ error: 'This fighter has already been invited or applied.' })
       throw error
     }
+
+    // Re-fetch to guarantee full row (avoid PostgREST .select() chain null issue)
+    const { data } = inserted
+      ? await adminSupabase.from('applications').select('*').eq('id', inserted.id).maybeSingle()
+      : { data: inserted }
 
     res.status(201).json({ ok: true, application: data })
   } catch (err) {
