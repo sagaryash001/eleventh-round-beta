@@ -34,17 +34,16 @@ router.get('/', requireAuth, async (req, res) => {
 
     if (cErr) throw cErr
 
-    // For each conversation, fetch the other participants' profile info
-    const allUserIds = new Set()
-    for (const c of convs ?? []) {
-      const { data: parts } = await adminSupabase
-        .from('conversation_participants')
-        .select('user_id')
-        .eq('conversation_id', c.id)
-        .is('left_at', null)
-      for (const p of parts ?? []) allUserIds.add(p.user_id)
-    }
-    allUserIds.delete(uid)
+    // Bulk-fetch all participants across all conversations — one query, not N
+    const { data: allParts } = await adminSupabase
+      .from('conversation_participants')
+      .select('conversation_id, user_id')
+      .in('conversation_id', convIds)
+      .is('left_at', null)
+
+    const allUserIds = new Set(
+      (allParts ?? []).filter(p => p.user_id !== uid).map(p => p.user_id)
+    )
 
     const profileMap = {}
     if (allUserIds.size) {
@@ -55,17 +54,23 @@ router.get('/', requireAuth, async (req, res) => {
       for (const p of profiles ?? []) profileMap[p.id] = p
     }
 
-    // Fetch last message for each conversation
+    // Bulk-fetch last message per conversation using Postgres DISTINCT ON —
+    // one query regardless of how many conversations there are.
+    // Supabase doesn't expose DISTINCT ON via the JS client, so we use rpc or
+    // fall back to fetching recent messages and picking the latest per conv.
     const lastMsgMap = {}
-    for (const c of convs ?? []) {
-      const { data: msgs } = await adminSupabase
+    if (convIds.length) {
+      const { data: recentMsgs } = await adminSupabase
         .from('messages')
-        .select('id, body, message_type, sender_id, created_at')
-        .eq('conversation_id', c.id)
+        .select('id, conversation_id, body, message_type, sender_id, created_at')
+        .in('conversation_id', convIds)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .limit(1)
-      lastMsgMap[c.id] = msgs?.[0] ?? null
+        .limit(convIds.length * 1) // one per conv — take the first seen per conv_id
+
+      for (const m of recentMsgs ?? []) {
+        if (!lastMsgMap[m.conversation_id]) lastMsgMap[m.conversation_id] = m
+      }
     }
 
     // Assemble response

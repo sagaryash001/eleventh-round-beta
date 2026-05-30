@@ -50,9 +50,9 @@ async function handleMessageReceived(payload) {
     senderLabel = p?.name ?? 'Someone'
   }
 
-  for (const recipientId of recipient_ids) {
-    // Create in-app notification
-    await adminSupabase.from('notifications').insert({
+  // Bulk insert all in-app notifications in one query
+  await adminSupabase.from('notifications').insert(
+    recipient_ids.map(recipientId => ({
       recipient_id: recipientId,
       type:         'message.received',
       title:        `New message from ${senderLabel}`,
@@ -60,19 +60,20 @@ async function handleMessageReceived(payload) {
       action_url:   `${CLIENT}/inbox`,
       related_type: 'conversation',
       related_id:   conversation_id,
-    })
+    }))
+  )
 
-    // Send email (fire-and-forget — don't fail the event)
-    const { data: profile } = await adminSupabase
-      .from('profiles').select('email').eq('id', recipientId).maybeSingle()
-    if (profile?.email) {
-      await sendEmail(
-        profile.email,
-        `New message from ${senderLabel}`,
-        `${senderLabel} sent you a message:\n\n"${body_preview}"\n\nReply at ${CLIENT}/inbox`,
-      )
-    }
-  }
+  // Bulk fetch all recipient emails in one query, then send
+  const { data: profiles } = await adminSupabase
+    .from('profiles').select('id, email').in('id', recipient_ids)
+
+  await Promise.all((profiles ?? []).filter(p => p.email).map(p =>
+    sendEmail(
+      p.email,
+      `New message from ${senderLabel}`,
+      `${senderLabel} sent you a message:\n\n"${body_preview}"\n\nReply at ${CLIENT}/inbox`,
+    )
+  ))
 }
 
 async function handleApplicationReceived(payload) {
