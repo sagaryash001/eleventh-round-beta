@@ -1,16 +1,16 @@
 # Graph Report - er-app  (2026-05-31)
 
 ## Corpus Check
-- 96 files · ~5,208,459 words
+- 96 files · ~5,208,536 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 751 nodes · 1141 edges · 59 communities (53 shown, 6 thin omitted)
+- 755 nodes · 1151 edges · 54 communities (48 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e44a1383`
+- Built from commit: `e8cc5e59`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -64,12 +64,7 @@
 - [[_COMMUNITY_Community 46|Community 46]]
 - [[_COMMUNITY_Community 47|Community 47]]
 - [[_COMMUNITY_Community 48|Community 48]]
-- [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
-- [[_COMMUNITY_Community 51|Community 51]]
-- [[_COMMUNITY_Community 52|Community 52]]
-- [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 55|Community 55]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `useAuth()` - 33 edges
@@ -86,120 +81,120 @@
 ## Surprising Connections (you probably didn't know these)
 - `ProtectedRoute()` --calls--> `useAuth()`  [EXTRACTED]
   src/App.tsx → src/hooks/useAuth.tsx
-- `Navbar()` --calls--> `useAuth()`  [EXTRACTED]
-  src/components/Navbar.tsx → src/hooks/useAuth.tsx
 - `RegisterPage()` --calls--> `useAuth()`  [EXTRACTED]
   src/pages/RegisterPage.tsx → src/hooks/useAuth.tsx
 - `VerifyEmailPage()` --calls--> `useAuth()`  [EXTRACTED]
   src/pages/VerifyEmailPage.tsx → src/hooks/useAuth.tsx
 - `InboxPage()` --calls--> `useAuth()`  [EXTRACTED]
   src/pages/InboxPage.tsx → src/hooks/useAuth.tsx
+- `FighterProfileEditPage()` --calls--> `useAuth()`  [EXTRACTED]
+  src/pages/fighter/FighterProfileEditPage.tsx → src/hooks/useAuth.tsx
 
-## Communities (59 total, 6 thin omitted)
+## Communities (54 total, 6 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.06
-Nodes (46): apiGet(), apiPatch(), apiPost(), apiPut(), authHeader(), send(), acceptContract(), addContractObligation() (+38 more)
+Cohesion: 0.05
+Nodes (58): Application, getMyApplications(), inviteFighter(), updateApplicationStatus(), apiGet(), apiPatch(), apiPost(), apiPut() (+50 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.09
-Nodes (41): Content(), Marketplace(), Mentors(), NAV, Overview(), Packages(), Reports(), SponsorForgeAdmin() (+33 more)
+Cohesion: 0.08
+Nodes (45): Content(), Marketplace(), Mentors(), NAV, Overview(), Packages(), Reports(), SponsorForgeAdmin() (+37 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
-Nodes (32): 4.10 Migrations strategy, 4.1 Profile-extension tables, 4.2 Marketplace tables, 4.3 Obligations & deliverables, 4.4 Messaging, 4.5 Payments, 4.6 Notifications, 4.7 Reviews & reputation (+24 more)
+Nodes (31): computeMatchesForOpp(), computeMatchScore(), WEIGHTS, allowed, data, fetches, FIGHTER_TRANSITIONS, log (+23 more)
 
 ### Community 3 - "Community 3"
+Cohesion: 0.06
+Nodes (32): 4.10 Migrations strategy, 4.1 Profile-extension tables, 4.2 Marketplace tables, 4.3 Obligations & deliverables, 4.4 Messaging, 4.5 Payments, 4.6 Notifications, 4.7 Reviews & reputation (+24 more)
+
+### Community 4 - "Community 4"
 Cohesion: 0.07
 Nodes (28): Admin Dashboard, Backend, Backend setup, code:bash (npm install), code:block2 (src/), code:bash (# 1. Copy the example env and fill in the keys you have), code:bash (curl http://localhost:3001/api/health), code:block5 (server/) (+20 more)
 
-### Community 4 - "Community 4"
+### Community 5 - "Community 5"
 Cohesion: 0.09
 Nodes (20): CartDrawer(), Props, Action, CartContext, CartContextType, CartItem, CartProvider(), loadCart() (+12 more)
 
-### Community 5 - "Community 5"
+### Community 6 - "Community 6"
 Cohesion: 0.09
 Nodes (17): getSponsorDashboard(), getSponsorStatus(), onboardSponsor(), SponsorOnboardInput, SponsorProfile, GOALS, NAV, PROMOTIONS (+9 more)
 
-### Community 6 - "Community 6"
+### Community 7 - "Community 7"
 Cohesion: 0.08
 Nodes (23): actionItems, chartData, d, eligibility_progress, FIGHTER_WRITABLE, guard, log, media (+15 more)
 
-### Community 7 - "Community 7"
+### Community 8 - "Community 8"
+Cohesion: 0.11
+Nodes (15): applyToOpportunity(), createOpportunity(), getOpportunities(), getOpportunity(), OppInput, Opportunity, publishOpportunity(), updateOpportunity() (+7 more)
+
+### Community 9 - "Community 9"
 Cohesion: 0.08
 Nodes (20): actionItems, camps, fids, fighters, fpMap, fulfillmentByFighter, guard, log (+12 more)
 
-### Community 8 - "Community 8"
-Cohesion: 0.12
-Nodes (15): createOpportunity(), getMyOpportunities(), getOpportunities(), getOpportunity(), OppInput, Opportunity, publishOpportunity(), updateOpportunity() (+7 more)
-
-### Community 9 - "Community 9"
-Cohesion: 0.09
-Nodes (18): computeMatchesForOpp(), computeMatchScore(), WEIGHTS, data, fighterIds, fighterMap, log, OPP_WRITABLE (+10 more)
-
 ### Community 10 - "Community 10"
 Cohesion: 0.09
-Nodes (21): active, activity, alertItems, byStatus, closed, consultants, d, end (+13 more)
+Nodes (22): requireAdmin(), active, activity, alertItems, byStatus, closed, consultants, d (+14 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.14
-Nodes (17): EmailSchema, LeadSchema, LoginSchema, ObligationSchema, PasswordSchema, RegisterSchema, SubdomainSchema, validate() (+9 more)
+Nodes (19): EmailSchema, LeadSchema, LoginSchema, ObligationSchema, PasswordSchema, RegisterSchema, SubdomainSchema, validate() (+11 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.15
-Nodes (13): ApiState, AuthContext, AuthContextValue, AuthProvider(), AuthUser, DEMO, DEMO_USERS, loadLocal() (+5 more)
+Cohesion: 0.14
+Nodes (14): requireSupabase(), childLogger(), log, requireAuth(), limit, log, query, router (+6 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.13
-Nodes (8): BATCH_SIZE, HANDLERS, log, POLL_MS, startOutboxDispatcher(), app, extraOrigins, publicLimiter
+Cohesion: 0.12
+Nodes (14): AuthContext, AuthContextValue, AuthProvider(), AuthUser, DEMO, DEMO_USERS, loadLocal(), UserRole (+6 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.17
-Nodes (10): requireSupabase(), log, requireAdmin(), requireAuth(), limit, log, query, router (+2 more)
+Cohesion: 0.15
+Nodes (13): getMyOpportunities(), Navbar(), ContractsListPage(), STATUS_COLOR, STATUS_LABEL, MyApplicationsPage(), STATUS_COLOR, STATUS_LABEL (+5 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.13
 Nodes (14): allParticipants, allUserIds, convIds, lastMsgMap, limit, log, participantRows, pMap (+6 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.18
-Nodes (11): Application, applyToOpportunity(), getMyApplications(), inviteFighter(), updateApplicationStatus(), getOppApplications(), MyApplicationsPage(), STATUS_COLOR (+3 more)
+Cohesion: 0.19
+Nodes (10): FighterProfile, getFighterProfile(), SocialAccount, SocialPlatform, updateFighterProfile(), updateFighterSocials(), FighterProfileEditPage(), PLATFORMS (+2 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.21
-Nodes (13): Conversation, ConversationParticipant, createConversation(), getConversations(), getMessages(), markConversationRead(), Message, sendMessage() (+5 more)
-
-### Community 18 - "Community 18"
 Cohesion: 0.15
 Nodes (12): assertContractTransition(), assertObligationTransition(), CONTRACT_FIGHTER_TRANSITIONS, CONTRACT_SPONSOR_TRANSITIONS, OBLIGATION_ADMIN_TRANSITIONS, OBLIGATION_OWNER_TRANSITIONS, log, now (+4 more)
 
-### Community 19 - "Community 19"
+### Community 18 - "Community 18"
 Cohesion: 0.14
 Nodes (10): base, byStatus, company_name, guard, log, router, row, totalSpent (+2 more)
 
+### Community 19 - "Community 19"
+Cohesion: 0.18
+Nodes (9): BATCH_SIZE, getTransport(), handleMessageReceived(), handlePaymentSucceeded(), HANDLERS, log, POLL_MS, sendEmail() (+1 more)
+
 ### Community 20 - "Community 20"
 Cohesion: 0.14
-Nodes (13): allowed, data, fetches, FIGHTER_TRANSITIONS, log, oppIds, oppMap, router (+5 more)
+Nodes (5): EPISODES, TOPICS, ErrorBoundary, ProtectedRoute(), lenis
 
 ### Community 21 - "Community 21"
+Cohesion: 0.18
+Nodes (7): logger, log, router, stripe, app, extraOrigins, publicLimiter
+
+### Community 22 - "Community 22"
 Cohesion: 0.15
 Nodes (12): Brand & Style, Buttons, Cards, Colors, Components, Elevation & Depth, Input Fields, Layout & Spacing (+4 more)
 
-### Community 22 - "Community 22"
+### Community 23 - "Community 23"
 Cohesion: 0.23
 Nodes (3): Founder, Manager, MANAGERS
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.17
 Nodes (3): Role, TABS, tabVariants
 
-### Community 24 - "Community 24"
+### Community 25 - "Community 25"
 Cohesion: 0.18
 Nodes (6): RegisterData, FormState, GOAL_OPTIONS, RegisterPage(), Step, STEPS
-
-### Community 25 - "Community 25"
-Cohesion: 0.24
-Nodes (7): getNotifications(), markAllNotificationsRead(), markNotificationRead(), Notification, Navbar(), ANON, URL
 
 ### Community 26 - "Community 26"
 Cohesion: 0.18
@@ -207,91 +202,71 @@ Nodes (11): 5.1 Cross-cutting middleware, 5.2 Validation, 5.3 State machines (th
 
 ### Community 27 - "Community 27"
 Cohesion: 0.2
-Nodes (3): ErrorBoundary, ProtectedRoute(), lenis
-
-### Community 28 - "Community 28"
-Cohesion: 0.24
-Nodes (8): ContractDetailPage(), DashShell(), NavItem, Props, useAuth(), DEMO_CREDENTIALS, LoginPage(), OpportunityFormPage()
-
-### Community 29 - "Community 29"
-Cohesion: 0.2
 Nodes (9): 0. TL;DR for stakeholders, 15. Open questions / decisions — RESOLVED 2026-05-30, 16. Risks & mitigations, 17. What we are NOT changing, 18. Appendix — file map (where new code will land), 19. Acceptance for this TDD, code:block9 (server/), Eleventh Round — Sponsor ↔ Fighter Marketplace (+1 more)
 
-### Community 30 - "Community 30"
-Cohesion: 0.25
-Nodes (6): childLogger(), logger, line_items, log, router, stripe
-
-### Community 31 - "Community 31"
-Cohesion: 0.22
-Nodes (3): OpportunityDetailPage(), EPISODES, TOPICS
-
-### Community 32 - "Community 32"
-Cohesion: 0.25
-Nodes (4): CHAPTERS, HERO_FRAMES, POSITIONS, HERO_FRAMES
-
-### Community 33 - "Community 33"
+### Community 28 - "Community 28"
 Cohesion: 0.22
 Nodes (4): ChildNode, Detail, ROOTS, TreeNode
 
-### Community 34 - "Community 34"
+### Community 29 - "Community 29"
 Cohesion: 0.22
 Nodes (3): Flash, FLASH_ORIGINS, IntroSequenceProps
 
-### Community 35 - "Community 35"
+### Community 30 - "Community 30"
+Cohesion: 0.25
+Nodes (4): CHAPTERS, HERO_FRAMES, POSITIONS, HERO_FRAMES
+
+### Community 31 - "Community 31"
 Cohesion: 0.22
 Nodes (9): 14. Implementation roadmap (10-week target, single-dev cadence; double-up with Atharv to halve), Cross-phase: ops, Phase 1 — Profiles & roles (~2 weeks), Phase 2 — Opportunities + applications + matching (~2 weeks), Phase 3 — Messaging + notifications (~2 weeks), Phase 4 — Contracts + obligations (~2 weeks), Phase 5a — Stripe payments (~1.5 weeks), Phase 5b — Connect payout (~1 week, optional / can defer) (+1 more)
 
-### Community 36 - "Community 36"
+### Community 32 - "Community 32"
 Cohesion: 0.22
 Nodes (9): 7.1 Profile-extension tables, 7.2 Opportunities, 7.3 Applications, contracts, messages — the sensitive ones, 7.4 Notifications, audit_log, outbox, 7.5 Storage buckets to create, 7. Row Level Security policies, code:sql (-- sponsor_profiles), code:sql ("public reads published opps"             SELECT  USING (sta) (+1 more)
 
-### Community 37 - "Community 37"
-Cohesion: 0.29
-Nodes (3): log, router, stripe
-
-### Community 39 - "Community 39"
+### Community 34 - "Community 34"
 Cohesion: 0.33
-Nodes (4): log, platformFeeUsd, router, stripe
+Nodes (4): line_items, log, router, stripe
 
-### Community 41 - "Community 41"
+### Community 36 - "Community 36"
 Cohesion: 0.4
 Nodes (5): 13.1 Background work, 13.2 Observability, 13.3 Backups & disaster recovery, 13.4 Rate-limit buckets, 13. Operational concerns
 
-### Community 42 - "Community 42"
+### Community 37 - "Community 37"
 Cohesion: 0.4
 Nodes (5): 8.1 Inputs, 8.2 Scoring function (deterministic, transparent), 8.3 When recomputation runs, 8.4 Pluggability for ML v2, 8. Matching engine (v1 rule-based)
 
-### Community 43 - "Community 43"
+### Community 38 - "Community 38"
 Cohesion: 0.4
 Nodes (5): 9.1 v1 (Phases 1–5a): Direct card capture, manual payout, 9.2 v1b (Phase 5b): Stripe Connect Custom for fighter payouts, 9.3 Webhook safety, 9.4 Money invariants, 9. Payments architecture
 
-### Community 45 - "Community 45"
-Cohesion: 0.5
-Nodes (4): 6.1 What's published, 6.2 Patterns, 6.3 What's NOT realtime, 6. Realtime
-
-### Community 46 - "Community 46"
-Cohesion: 0.5
-Nodes (4): 1.1 What's already in production, 1.2 Existing 25 tables (today), 1.3 Architectural debt to acknowledge before we layer on more, 1. Existing system audit (what we're building on)
-
-### Community 47 - "Community 47"
+### Community 40 - "Community 40"
 Cohesion: 0.5
 Nodes (4): 12.1 What stays, 12.2 What's new, 12.3 Pattern, 12. Frontend impact
 
-### Community 48 - "Community 48"
+### Community 41 - "Community 41"
+Cohesion: 0.5
+Nodes (4): 6.1 What's published, 6.2 Patterns, 6.3 What's NOT realtime, 6. Realtime
+
+### Community 42 - "Community 42"
+Cohesion: 0.5
+Nodes (4): 1.1 What's already in production, 1.2 Existing 25 tables (today), 1.3 Architectural debt to acknowledge before we layer on more, 1. Existing system audit (what we're building on)
+
+### Community 43 - "Community 43"
 Cohesion: 0.5
 Nodes (4): 3.1 Actors (= `profiles.role` values, EXTENDED), 3.2 Why role-extension tables instead of one fat `profiles`?, 3. Domain model (conceptual), code:block1 (┌──────────┐)
 
-### Community 51 - "Community 51"
-Cohesion: 0.67
-Nodes (3): 2.1 Principles, 2.2 Explicit non-goals (v1), 2. Product principles & non-goals
-
-### Community 52 - "Community 52"
+### Community 46 - "Community 46"
 Cohesion: 0.67
 Nodes (3): 11.1 v1: Postgres-native, 11.2 v2 (when listings > ~50k), 11. Search & discovery
 
-### Community 53 - "Community 53"
+### Community 47 - "Community 47"
 Cohesion: 0.67
 Nodes (3): 10.1 Channels per event type, 10.2 Worker, 10. Notifications fan-out
+
+### Community 48 - "Community 48"
+Cohesion: 0.67
+Nodes (3): 2.1 Principles, 2.2 Explicit non-goals (v1), 2. Product principles & non-goals
 
 ## Knowledge Gaps
 - **360 isolated node(s):** `app`, `extraOrigins`, `publicLimiter`, `log`, `CONTRACT_SPONSOR_TRANSITIONS` (+355 more)
@@ -301,17 +276,17 @@ Nodes (3): 10.1 Channels per event type, 10.2 Worker, 10. Notifications fan-out
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useAuth()` connect `Community 28` to `Community 0`, `Community 1`, `Community 5`, `Community 8`, `Community 12`, `Community 16`, `Community 17`, `Community 24`, `Community 25`, `Community 27`, `Community 31`?**
+- **Why does `useAuth()` connect `Community 14` to `Community 0`, `Community 1`, `Community 6`, `Community 8`, `Community 13`, `Community 16`, `Community 20`, `Community 25`?**
   _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Why does `Eleventh Round — Sponsor ↔ Fighter Marketplace` connect `Community 29` to `Community 2`, `Community 35`, `Community 36`, `Community 41`, `Community 42`, `Community 43`, `Community 45`, `Community 46`, `Community 47`, `Community 48`, `Community 51`, `Community 52`, `Community 53`, `Community 26`?**
+- **Why does `Eleventh Round — Sponsor ↔ Fighter Marketplace` connect `Community 27` to `Community 32`, `Community 3`, `Community 36`, `Community 37`, `Community 38`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 46`, `Community 47`, `Community 48`, `Community 26`, `Community 31`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Why does `childLogger()` connect `Community 30` to `Community 37`, `Community 6`, `Community 39`, `Community 7`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 18`, `Community 19`, `Community 20`?**
+- **Why does `childLogger()` connect `Community 12` to `Community 2`, `Community 34`, `Community 7`, `Community 9`, `Community 10`, `Community 11`, `Community 15`, `Community 17`, `Community 18`, `Community 19`, `Community 21`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
 - **What connects `app`, `extraOrigins`, `publicLimiter` to the rest of the system?**
   _360 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.06 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.09 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.06 - nodes in this community are weakly interconnected._
