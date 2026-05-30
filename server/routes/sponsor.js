@@ -153,4 +153,47 @@ router.patch('/profile', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/sponsor/marketplace — sponsor's marketplace analytics ─────────────
+router.get('/marketplace', requireAuth, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const [
+      { data: opps },
+      { data: apps },
+      { data: contracts },
+      { data: payments },
+    ] = await Promise.all([
+      adminSupabase.from('sponsorship_opportunities').select('id, status').eq('sponsor_id', uid),
+      adminSupabase.from('applications').select('id, status').eq('sponsor_id', uid),
+      adminSupabase.from('contracts').select('id, status, value_usd').eq('sponsor_id', uid).is('deleted_at', null),
+      adminSupabase.from('sponsorship_payments').select('amount_usd, status').eq('sponsor_id', uid),
+    ])
+
+    const publishedOpps   = (opps ?? []).filter(o => o.status === 'published').length
+    const activeContracts = (contracts ?? []).filter(c => c.status === 'active').length
+    const totalSpent      = (payments ?? [])
+      .filter(p => p.status === 'succeeded')
+      .reduce((s, p) => s + (p.amount_usd ?? 0), 0)
+
+    const byStatus = {}
+    for (const a of (apps ?? [])) {
+      byStatus[a.status] = (byStatus[a.status] ?? 0) + 1
+    }
+
+    res.json({
+      total_opportunities:   (opps ?? []).length,
+      published_opportunities: publishedOpps,
+      total_applications:    (apps ?? []).length,
+      accepted_applications: byStatus.accepted ?? 0,
+      active_contracts:      activeContracts,
+      total_contracts:       (contracts ?? []).length,
+      total_spent_usd:       totalSpent,
+      applications_by_status: byStatus,
+    })
+  } catch (err) {
+    log.error({ err }, 'GET /sponsor/marketplace threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router

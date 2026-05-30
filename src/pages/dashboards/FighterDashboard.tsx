@@ -4,14 +4,15 @@ import { StatCard, ListCard, ReadinessRing, BarChart, SparkLine, RadarChart, Act
 import { useApi } from '../../hooks/useApi'
 
 const NAV = [
-  { id: 'overview',     label: 'Overview',      icon: '◈' },
-  { id: 'pipeline',     label: 'Pipeline',       icon: '▲' },
-  { id: 'obligations',  label: 'Obligations',    icon: '📋' },
-  { id: 'education',    label: 'Education',      icon: '📚' },
-  { id: 'sponsorforge', label: 'SponsorForge',   icon: '⚡' },
-  { id: 'mentorship',   label: 'Mentorship',     icon: '🎯' },
-  { id: 'transition',   label: 'Transition',     icon: '→' },
-  { id: 'profile',      label: 'Profile',        icon: '👤' },
+  { id: 'overview',      label: 'Overview',       icon: '◈' },
+  { id: 'sponsorships',  label: 'Sponsorships',   icon: '🤝' },
+  { id: 'pipeline',      label: 'Pipeline',        icon: '▲' },
+  { id: 'obligations',   label: 'Obligations',     icon: '📋' },
+  { id: 'education',     label: 'Education',       icon: '📚' },
+  { id: 'sponsorforge',  label: 'SponsorForge',    icon: '⚡' },
+  { id: 'mentorship',    label: 'Mentorship',       icon: '🎯' },
+  { id: 'transition',    label: 'Transition',       icon: '→' },
+  { id: 'profile',       label: 'Profile',          icon: '👤' },
 ]
 
 function Overview() {
@@ -350,8 +351,63 @@ function Transition() {
   )
 }
 
+function Sponsorships() {
+  const { data } = useApi<any>('/api/fighter/marketplace')
+
+  const totalApps    = data?.total_applications    ?? 0
+  const acceptedApps = data?.accepted_applications ?? 0
+  const acceptRate   = data?.acceptance_rate       ?? 0
+  const activeC      = data?.active_contracts      ?? 0
+  const totalC       = data?.total_contracts       ?? 0
+  const earnings     = data?.total_earnings_usd    ?? 0
+  const doneObs      = data?.completed_obligations ?? 0
+  const pendingObs   = data?.pending_obligations   ?? 0
+
+  const earningsDisplay = earnings >= 1000 ? `$${(earnings / 1000).toFixed(1)}K` : `$${earnings}`
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Sponsorship Stats</SectionHeading>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <StatCard label="Applications Sent"  value={String(totalApps)}    sub={`${acceptedApps} accepted`}  barPct={100} />
+        <StatCard label="Acceptance Rate"    value={`${acceptRate}%`}     sub="of all applications"         barPct={acceptRate} />
+        <StatCard label="Active Contracts"   value={String(activeC)}      sub={`${totalC} total`}           barPct={totalC > 0 ? Math.round(activeC / totalC * 100) : 0} />
+        <div className="dash-card text-center">
+          <div className="dash-label">Total Earnings</div>
+          <div className="font-display text-off-white" style={{ fontSize: 28 }}>{earningsDisplay}</div>
+          <div className="dash-sub">From succeeded payments</div>
+        </div>
+      </div>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="dash-card">
+          <div className="dash-label mb-3">Obligations</div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="dash-sub">Completed</span>
+            <span className="font-condensed text-off-white font-bold">{doneObs}</span>
+          </div>
+          <div className="dash-bar-track mb-3">
+            <div className="dash-bar-fill" style={{ width: `${doneObs + pendingObs > 0 ? Math.round(doneObs / (doneObs + pendingObs) * 100) : 0}%`, background: '#00c060' }} />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="dash-sub">Pending</span>
+            <span className="font-condensed text-off-white font-bold">{pendingObs}</span>
+          </div>
+        </div>
+        <div className="dash-card flex flex-col gap-3">
+          <div className="dash-label">Quick Links</div>
+          <a href="/opportunities" className="btn-ghost text-[11px] py-2 text-center block no-underline">Browse Opportunities</a>
+          <a href="/fighter/applications" className="btn-ghost text-[11px] py-2 text-center block no-underline">My Applications</a>
+          <a href="/contracts" className="btn-ghost text-[11px] py-2 text-center block no-underline">My Contracts</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const VIEWS: Record<string, React.FC> = {
-  overview:Overview, pipeline:Pipeline, obligations:Obligations,
+  overview:Overview, sponsorships:Sponsorships, pipeline:Pipeline, obligations:Obligations,
   education:Education, sponsorforge:SponsorForge, mentorship:Mentorship,
   transition:Transition, profile:Profile,
 }

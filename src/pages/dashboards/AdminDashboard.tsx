@@ -5,6 +5,7 @@ import { useApi } from '../../hooks/useApi'
 
 const NAV = [
   { id:'overview',    label:'Platform Overview',  icon:'◈' },
+  { id:'marketplace', label:'Marketplace',         icon:'🤝' },
   { id:'users',       label:'Users & Roles',      icon:'👥' },
   { id:'mentors',     label:'Mentors & Consults', icon:'🎯' },
   { id:'sponsorforge',label:'SponsorForge',       icon:'⚡' },
@@ -289,8 +290,72 @@ function Reports() {
   )
 }
 
+function Marketplace() {
+  const { data } = useApi<any>('/api/admin/marketplace')
+  const { data: analytics } = useApi<any>('/api/admin/analytics')
+
+  const gmv             = data?.gmv_usd             ?? 0
+  const activeContracts = data?.active_contracts     ?? 0
+  const totalContracts  = data?.total_contracts      ?? 0
+  const sponsorCount    = data?.sponsor_count        ?? 0
+  const verifiedSponsors = data?.verified_sponsors   ?? 0
+  const openDisputes    = data?.open_disputes        ?? 0
+  const totalApps       = data?.total_applications   ?? 0
+  const funnel          = data?.applications_funnel  ?? {}
+  const recent          = data?.recent_contracts     ?? []
+  const monthlyGmv      = analytics?.monthly_gmv    ?? []
+
+  const gmvDisplay = gmv >= 1000 ? `$${(gmv / 1000).toFixed(1)}K` : `$${gmv}`
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Marketplace Overview</SectionHeading>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <div className="dash-card text-center">
+          <div className="dash-label">GMV</div>
+          <div className="font-display text-off-white" style={{ fontSize: 28 }}>{gmvDisplay}</div>
+          <div className="dash-sub">Total payments succeeded</div>
+        </div>
+        <StatCard label="Active Contracts"  value={String(activeContracts)}  sub={`${totalContracts} total`}          barPct={totalContracts > 0 ? Math.round(activeContracts / totalContracts * 100) : 0} />
+        <StatCard label="Sponsors"          value={String(sponsorCount)}     sub={`${verifiedSponsors} verified`}      barPct={sponsorCount > 0 ? Math.round(verifiedSponsors / sponsorCount * 100) : 0} />
+        <div className="dash-card text-center" style={{ borderTop: openDisputes > 0 ? '2px solid #c00000' : undefined }}>
+          <div className="dash-label">Open Disputes</div>
+          <div className="font-display" style={{ fontSize: 28, color: openDisputes > 0 ? '#c00000' : '#f0ece4' }}>{openDisputes}</div>
+          <div className="dash-sub">Requires admin review</div>
+        </div>
+      </div>
+
+      {monthlyGmv.length > 0 && (
+        <div className="dash-card">
+          <div className="dash-label mb-3">Monthly GMV (6 months)</div>
+          <BarChart height={100} data={monthlyGmv} />
+        </div>
+      )}
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="dash-card">
+          <div className="dash-label mb-3">Applications Funnel ({totalApps} total)</div>
+          {Object.entries(funnel).map(([status, count]) => (
+            <div key={status} className="flex items-center justify-between mb-2">
+              <span className="dash-sub capitalize">{status.replace('_', ' ')}</span>
+              <div className="flex items-center gap-2">
+                <div className="dash-bar-track" style={{ width: 80 }}>
+                  <div className="dash-bar-fill" style={{ width: `${totalApps > 0 ? Math.round((count as number) / totalApps * 100) : 0}%` }} />
+                </div>
+                <span className="dash-sub w-6 text-right">{count as number}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <ListCard label="Recent Contracts" items={recent.length > 0 ? recent : [{ name: 'No contracts yet', badge: '—', type: 'yellow' }]} />
+      </div>
+    </div>
+  )
+}
+
 const VIEWS: Record<string,React.FC> = {
-  overview:Overview, users:Users, mentors:Mentors,
+  overview:Overview, marketplace:Marketplace, users:Users, mentors:Mentors,
   sponsorforge:SponsorForgeAdmin, packages:Packages, content:Content, reports:Reports,
 }
 

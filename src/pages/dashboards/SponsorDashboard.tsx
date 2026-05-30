@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashShell from './DashShell'
+import { useApi } from '../../hooks/useApi'
 import { getSponsorDashboard, updateSponsorProfile, type SponsorProfile } from '../../lib/api/sponsors'
 
 const NAV = [
   { id: 'overview',    label: 'Overview',    icon: '' },
+  { id: 'analytics',   label: 'Analytics',   icon: '📊' },
   { id: 'profile',     label: 'Company',     icon: '' },
   { id: 'preferences', label: 'Preferences', icon: '' },
 ]
@@ -197,8 +199,85 @@ export default function SponsorDashboard() {
           </div>
         )
 
+        if (tab === 'analytics') return <SponsorAnalytics />
+
         return null
       }}
     </DashShell>
+  )
+}
+
+function SponsorAnalytics() {
+  const { data } = useApi<any>('/api/sponsor/marketplace')
+
+  const totalOpps    = data?.total_opportunities      ?? 0
+  const pubOpps      = data?.published_opportunities  ?? 0
+  const totalApps    = data?.total_applications       ?? 0
+  const acceptedApps = data?.accepted_applications    ?? 0
+  const activeC      = data?.active_contracts         ?? 0
+  const totalC       = data?.total_contracts          ?? 0
+  const totalSpent   = data?.total_spent_usd          ?? 0
+  const byStatus     = data?.applications_by_status   ?? {}
+
+  const spentDisplay = totalSpent >= 1000 ? `$${(totalSpent / 1000).toFixed(1)}K` : `$${totalSpent}`
+
+  function statRow(label: string, value: number, total: number) {
+    const pct = total > 0 ? Math.round(value / total * 100) : 0
+    return (
+      <div key={label} className="flex items-center justify-between mb-2">
+        <span className="font-condensed text-[11px] text-gray-3 capitalize">{label.replace('_', ' ')}</span>
+        <div className="flex items-center gap-2">
+          <div style={{ width: 80, height: 4, background: '#222226', borderRadius: 2 }}>
+            <div style={{ width: `${pct}%`, height: '100%', background: '#8b0000', borderRadius: 2 }} />
+          </div>
+          <span className="font-condensed text-[12px] font-bold text-off-white w-5 text-right">{value}</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4 max-w-3xl">
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: 'Opportunities', value: pubOpps,      sub: `${totalOpps} total` },
+          { label: 'Applications',  value: totalApps,    sub: `${acceptedApps} accepted` },
+          { label: 'Active Contracts', value: activeC,   sub: `${totalC} total` },
+        ].map(s => (
+          <div key={s.label} className="dash-card text-center" style={{ borderTop: '2px solid #8b0000' }}>
+            <div className="font-condensed text-[10px] font-bold uppercase tracking-widest text-gray-3 mb-1">{s.label}</div>
+            <div className="font-display text-off-white" style={{ fontSize: 28 }}>{s.value}</div>
+            <div className="font-condensed text-[10px] text-gray-3 mt-0.5">{s.sub}</div>
+          </div>
+        ))}
+        <div className="dash-card text-center" style={{ borderTop: '2px solid #8b0000' }}>
+          <div className="font-condensed text-[10px] font-bold uppercase tracking-widest text-gray-3 mb-1">Total Spent</div>
+          <div className="font-display text-off-white" style={{ fontSize: 28 }}>{spentDisplay}</div>
+          <div className="font-condensed text-[10px] text-gray-3 mt-0.5">Payments succeeded</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="dash-card">
+          <div className="font-condensed text-[10px] font-bold uppercase tracking-[0.3em] text-gray-3 mb-3">Applications by Status</div>
+          {Object.entries(byStatus).map(([s, c]) => statRow(s, c as number, totalApps))}
+          {!Object.keys(byStatus).length && <p className="font-condensed text-[12px] text-gray-3">No applications yet.</p>}
+        </div>
+        <div className="dash-card flex flex-col gap-3">
+          <div className="font-condensed text-[10px] font-bold uppercase tracking-[0.3em] text-gray-3">Quick Links</div>
+          {[
+            { href: '/sponsor/opportunities', label: 'My Opportunities' },
+            { href: '/sponsor/opportunities/new', label: 'Post Opportunity' },
+            { href: '/contracts', label: 'My Contracts' },
+            { href: '/inbox', label: 'Inbox' },
+          ].map(l => (
+            <a key={l.href} href={l.href}
+              className="font-condensed text-[11px] font-bold uppercase tracking-[0.2em] text-center py-2 border border-charcoal-3 text-gray-2 no-underline transition-colors hover:border-blood hover:text-off-white block">
+              {l.label}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

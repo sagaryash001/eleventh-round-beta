@@ -373,4 +373,45 @@ router.patch('/socials', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/fighter/marketplace — fighter's marketplace analytics ────────────
+router.get('/marketplace', requireAuth, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const [
+      { data: apps },
+      { data: contracts },
+      { data: payments },
+      { data: obligations },
+    ] = await Promise.all([
+      adminSupabase.from('applications').select('id, status').eq('fighter_id', uid),
+      adminSupabase.from('contracts').select('id, status, value_usd').eq('fighter_id', uid).is('deleted_at', null),
+      adminSupabase.from('sponsorship_payments').select('amount_usd, status').eq('fighter_id', uid),
+      adminSupabase.from('obligations').select('id, status').eq('owner_id', uid).not('contract_id', 'is', null),
+    ])
+
+    const totalApps      = (apps ?? []).length
+    const acceptedApps   = (apps ?? []).filter(a => a.status === 'accepted').length
+    const activeContracts  = (contracts ?? []).filter(c => c.status === 'active').length
+    const totalEarnings  = (payments ?? [])
+      .filter(p => p.status === 'succeeded')
+      .reduce((s, p) => s + (p.amount_usd ?? 0), 0)
+    const completedObs   = (obligations ?? []).filter(o => o.status === 'completed').length
+    const pendingObs     = (obligations ?? []).filter(o => ['pending','in_progress'].includes(o.status)).length
+
+    res.json({
+      total_applications:   totalApps,
+      accepted_applications: acceptedApps,
+      acceptance_rate:      totalApps > 0 ? Math.round(acceptedApps / totalApps * 100) : 0,
+      active_contracts:     activeContracts,
+      total_contracts:      (contracts ?? []).length,
+      total_earnings_usd:   totalEarnings,
+      completed_obligations: completedObs,
+      pending_obligations:   pendingObs,
+    })
+  } catch (err) {
+    log.error({ err }, 'GET /fighter/marketplace threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router
