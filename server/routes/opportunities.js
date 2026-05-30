@@ -199,6 +199,7 @@ router.post('/:id/publish', requireAuth, requireSponsor, async (req, res) => {
       .from('sponsorship_opportunities')
       .select('*')
       .eq('id', req.params.id)
+      .is('deleted_at', null)
       .maybeSingle()
     if (fetchErr) throw fetchErr
     if (!opp) return res.status(404).json({ error: 'Not found.' })

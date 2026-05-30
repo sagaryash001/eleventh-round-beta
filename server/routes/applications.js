@@ -59,7 +59,7 @@ router.post('/', requireAuth, async (req, res) => {
     // Increment application_count
     adminSupabase
       .from('sponsorship_opportunities')
-      .update({ application_count: opp.application_count ?? 0 + 1 })
+      .update({ application_count: (opp.application_count ?? 0) + 1 })
       .eq('id', opportunity_id)
       .then(() => {}).catch(() => {})
 

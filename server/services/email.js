@@ -32,6 +32,11 @@ async function send(to, subject, html) {
   await t.sendMail({ from: `"The Eleventh Round" <${FROM}>`, to, subject, html })
 }
 
+// Generic plain-text/html email for outbox dispatcher use
+export async function sendEmail(to, subject, html) {
+  return send(to, subject, html)
+}
+
 // ── Shared HTML shell ─────────────────────────────────────────────────────────
 function shell(body) {
   return `

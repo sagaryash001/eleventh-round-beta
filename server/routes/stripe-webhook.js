@@ -59,7 +59,7 @@ router.post('/', express_raw_workaround, async (req, res) => {
 async function handlePaymentSucceeded(intent) {
   const { data: payment, error } = await adminSupabase
     .from('sponsorship_payments')
-    .select('id, contract_id, sponsor_id, fighter_id, amount_usd, milestone_id')
+    .select('id, contract_id, sponsor_id, fighter_id, amount_usd, milestone_id, status')
     .eq('stripe_payment_intent_id', intent.id)
     .maybeSingle()
 

@@ -14,35 +14,23 @@
 //   application.rejected → in-app notification to fighter
 // ─────────────────────────────────────────────────────────────────────────────
 
-import nodemailer from 'nodemailer'
 import { adminSupabase } from '../db/supabase.js'
 import { childLogger } from '../lib/logger.js'
+import { sendEmail as _sendEmail } from '../services/email.js'
 
 const log           = childLogger('outbox-dispatcher')
 const POLL_MS       = Number(process.env.OUTBOX_POLL_MS   || 5_000)
 const BATCH_SIZE    = Number(process.env.OUTBOX_BATCH_SIZE || 10)
 const MAX_ATTEMPTS  = 5
-const FROM          = process.env.FROM_EMAIL || 'contact@eleventh-rnd.us'
 const CLIENT        = process.env.CLIENT_URL || 'http://localhost:5173'
 
-let _transport = null
-function getTransport() {
-  if (!_transport && process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    _transport = nodemailer.createTransport({
-      host:   process.env.EMAIL_HOST,
-      port:   Number(process.env.EMAIL_PORT || 465),
-      secure: process.env.EMAIL_SECURE !== 'false',
-      auth:   { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    })
+// Wrap shared email helper so failures are logged but never propagate to the handler
+async function sendEmail(to, subject, text) {
+  try {
+    await _sendEmail(to, subject, `<pre style="font-family:inherit">${text}</pre>`)
+  } catch (e) {
+    log.warn({ err: e, to }, 'Outbox email send failed')
   }
-  return _transport
-}
-
-function sendEmail(to, subject, text) {
-  const t = getTransport()
-  if (!t) return Promise.resolve()
-  return t.sendMail({ from: `"The Eleventh Round" <${FROM}>`, to, subject, text })
-    .catch(e => log.warn({ err: e }, 'Email send failed'))
 }
 
 // ── Handler registry ─────────────────────────────────────────────────────────
@@ -78,7 +66,7 @@ async function handleMessageReceived(payload) {
     const { data: profile } = await adminSupabase
       .from('profiles').select('email').eq('id', recipientId).maybeSingle()
     if (profile?.email) {
-      sendEmail(
+      await sendEmail(
         profile.email,
         `New message from ${senderLabel}`,
         `${senderLabel} sent you a message:\n\n"${body_preview}"\n\nReply at ${CLIENT}/inbox`,
@@ -149,7 +137,7 @@ async function handlePaymentSucceeded(payload) {
   const { data: profile } = await adminSupabase
     .from('profiles').select('email').eq('id', fighter_id).maybeSingle()
   if (profile?.email) {
-    sendEmail(
+    await sendEmail(
       profile.email,
       `Payment of $${amount_usd?.toLocaleString()} received`,
       `Your sponsorship payment of $${amount_usd?.toLocaleString()} has been processed. View your contract at ${CLIENT}/contracts/${contract_id}`,
@@ -170,25 +158,36 @@ const HANDLERS = {
 async function tick() {
   if (!adminSupabase) return
 
-  // Claim a batch of pending events whose next_attempt_at is due
-  const { data: events, error } = await adminSupabase
-    .from('outbox_events')
-    .select('id, event_type, payload, attempts')
-    .in('status', ['pending', 'failed'])
-    .lte('next_attempt_at', new Date().toISOString())
-    .order('id', { ascending: true })
-    .limit(BATCH_SIZE)
+  // Atomically claim a batch: UPDATE ... RETURNING so two concurrent ticks
+  // cannot claim the same rows (Postgres UPDATE is row-level locked).
+  const { data: events, error } = await adminSupabase.rpc('claim_outbox_batch', {
+    batch_size:     BATCH_SIZE,
+    cutoff_time:    new Date().toISOString(),
+  })
 
-  if (error) { log.error({ err: error }, 'outbox tick select failed'); return }
+  if (error) {
+    // Fallback: rpc not available yet — use the non-atomic path with a warning
+    if (error.code === 'PGRST202') {
+      log.warn('claim_outbox_batch RPC not found — using non-atomic claim. Run the migration to fix.')
+      const { data: fallback, error: fbErr } = await adminSupabase
+        .from('outbox_events')
+        .select('id, event_type, payload, attempts')
+        .in('status', ['pending', 'failed'])
+        .lte('next_attempt_at', new Date().toISOString())
+        .order('id', { ascending: true })
+        .limit(BATCH_SIZE)
+      if (fbErr || !fallback?.length) return
+      await adminSupabase.from('outbox_events').update({ status: 'processing' }).in('id', fallback.map(e => e.id))
+      return processBatch(fallback)
+    }
+    log.error({ err: error }, 'outbox tick claim failed')
+    return
+  }
   if (!events?.length) return
+  return processBatch(events)
+}
 
-  // Mark as processing (prevents double-processing on concurrent workers)
-  const ids = events.map(e => e.id)
-  await adminSupabase
-    .from('outbox_events')
-    .update({ status: 'processing' })
-    .in('id', ids)
-
+async function processBatch(events) {
   await Promise.all(events.map(async event => {
     const handler = HANDLERS[event.event_type]
     if (!handler) {

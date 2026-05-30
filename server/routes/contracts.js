@@ -177,8 +177,9 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
 
     const uid  = req.user.id
     const role = req.user.role
-    const isSponsor = uid === contract.sponsor_id || role === 'admin'
-    const isFighter = uid === contract.fighter_id || role === 'admin'
+    // Admin acts as the party whose slot is still unfilled, not both at once.
+    const isSponsor = uid === contract.sponsor_id || (role === 'admin' && !contract.sponsor_accepted_at)
+    const isFighter = uid === contract.fighter_id || (role === 'admin' && !contract.fighter_accepted_at && contract.status === 'pending_fighter')
 
     if (!isSponsor && !isFighter) return res.status(403).json({ error: 'Forbidden.' })
 

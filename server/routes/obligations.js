@@ -157,9 +157,13 @@ router.post('/:id/proof/:pid/review', requireAuth, async (req, res) => {
     }).eq('id', req.params.pid)
     if (uErr) throw uErr
 
-    // If approved, complete the obligation
+    // If approved, transition obligation through the state machine
     if (review_status === 'approved') {
-      await adminSupabase.from('obligations').update({ status: 'completed' }).eq('id', req.params.id)
+      const { data: ob } = await adminSupabase
+        .from('obligations').select('status, owner_id').eq('id', req.params.id).maybeSingle()
+      if (ob && !['completed','canceled'].includes(ob.status)) {
+        await adminSupabase.from('obligations').update({ status: 'completed' }).eq('id', req.params.id)
+      }
     }
 
     const { data } = await adminSupabase.from('obligation_proofs').select('*').eq('id', req.params.pid).maybeSingle()
