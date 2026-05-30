@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import Navbar from '../../components/Navbar'
 import { useAuth } from '../../hooks/useAuth'
 import {
@@ -10,6 +12,14 @@ import {
   updateObligationStatus, submitProof, reviewProof,
   type Obligation, type ObligationProof,
 } from '../../lib/api/obligations'
+import {
+  createPaymentIntent, getContractPayments, getMilestones, addMilestone,
+  type SponsorshipPayment, type PaymentMilestone,
+} from '../../lib/api/payments'
+
+const stripePromise = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe((import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY as string)
+  : null
 
 // ── Shared UI bits ────────────────────────────────────────────────────────────
 
@@ -247,6 +257,212 @@ function ReviewModal({ obligationId, onDone, onClose }: { obligationId: string; 
         )}
         <Btn onClick={onClose} variant="ghost">Close</Btn>
       </div>
+    </div>
+  )
+}
+
+// ── Stripe checkout form ──────────────────────────────────────────────────────
+
+function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
+  const stripe   = useStripe()
+  const elements = useElements()
+  const [paying, setPaying] = useState(false)
+  const [err, setErr]       = useState('')
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return
+    setPaying(true); setErr('')
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: window.location.href },
+      redirect: 'if_required',
+    })
+    if (error) { setErr(error.message ?? 'Payment failed.'); setPaying(false) }
+    else onSuccess()
+  }
+
+  return (
+    <div>
+      <PaymentElement />
+      {err && <p className="text-xs mt-3" style={{ color: '#ef4444' }}>{err}</p>}
+      <div className="mt-4">
+        <Btn onClick={handlePay} disabled={paying || !stripe}>
+          {paying ? 'Processing…' : 'Pay Now'}
+        </Btn>
+      </div>
+    </div>
+  )
+}
+
+function PaymentSection({
+  contract, isSponsor, isFighter,
+}: { contract: Contract; isSponsor: boolean; isFighter: boolean }) {
+  const [payments, setPayments]   = useState<SponsorshipPayment[]>([])
+  const [milestones, setMilestones] = useState<PaymentMilestone[]>([])
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [paymentId, setPaymentId] = useState<string | null>(null)
+  const [loading, setLoading]     = useState(true)
+  const [initiating, setInitiating] = useState(false)
+  const [msg, setMsg]             = useState('')
+  const [showMilestoneForm, setShowMilestoneForm] = useState(false)
+  const [msName, setMsName]   = useState('')
+  const [msAmount, setMsAmount] = useState('')
+  const [msDue, setMsDue]     = useState('')
+
+  const load = () => {
+    Promise.all([
+      getContractPayments(contract.id).then(r => setPayments(r.payments)),
+      getMilestones(contract.id).then(r => setMilestones(r.milestones)),
+    ]).catch(() => {}).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load() }, [contract.id])
+
+  const initPay = async (milestoneId?: string) => {
+    setInitiating(true); setMsg(''); setClientSecret(null)
+    try {
+      const r = await createPaymentIntent(contract.id, milestoneId)
+      setClientSecret(r.client_secret)
+      setPaymentId(r.payment_id)
+    } catch (e: any) { setMsg(e.message) }
+    finally { setInitiating(false) }
+  }
+
+  const addMs = async () => {
+    if (!msName || !msAmount) return
+    try {
+      await addMilestone(contract.id, { name: msName, amount_usd: Number(msAmount), due_date: msDue || undefined })
+      setMsName(''); setMsAmount(''); setMsDue(''); setShowMilestoneForm(false)
+      load()
+    } catch (e: any) { setMsg(e.message) }
+  }
+
+  if (loading) return null
+
+  const succeeded = payments.filter(p => p.status === 'succeeded')
+  const totalPaid = succeeded.reduce((s, p) => s + p.amount_usd, 0)
+  const hasPending = milestones.some(m => m.status === 'pending')
+
+  return (
+    <div>
+      {/* Payment summary */}
+      <Card style={{ marginBottom: 16 }}>
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#4a4846' }}>Contract value</p>
+            <p className="text-sm font-bold" style={{ color: '#f0ece4' }}>${contract.value_usd.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#4a4846' }}>Total paid</p>
+            <p className="text-sm font-bold" style={{ color: totalPaid >= contract.value_usd ? '#4ade80' : '#f0ece4' }}>
+              ${totalPaid.toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#4a4846' }}>Remaining</p>
+            <p className="text-sm font-bold" style={{ color: '#f0ece4' }}>
+              ${Math.max(0, contract.value_usd - totalPaid).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Milestones */}
+        {milestones.length > 0 && (
+          <div className="mb-4">
+            {milestones.map(m => (
+              <div key={m.id} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <div>
+                  <span className="text-xs font-semibold" style={{ color: '#f0ece4' }}>{m.name}</span>
+                  <span className="text-xs ml-2" style={{ color: '#4a4846' }}>${m.amount_usd.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5"
+                    style={{
+                      background: m.status === 'paid' ? '#166534' : m.status === 'skipped' ? '#374151' : 'rgba(139,0,0,0.2)',
+                      color: m.status === 'paid' ? '#4ade80' : '#f0ece4',
+                    }}
+                  >
+                    {m.status}
+                  </span>
+                  {isSponsor && m.status === 'pending' && (
+                    <Btn onClick={() => initPay(m.id)} disabled={initiating} variant="ghost">Pay</Btn>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pay full / add milestone */}
+        {isSponsor && contract.status === 'active' && (
+          <div className="flex gap-2 flex-wrap">
+            {!hasPending && milestones.length === 0 && (
+              <Btn onClick={() => initPay()} disabled={initiating}>
+                {initiating ? 'Loading…' : `Pay $${contract.value_usd.toLocaleString()}`}
+              </Btn>
+            )}
+            <Btn onClick={() => setShowMilestoneForm(s => !s)} variant="ghost">
+              {showMilestoneForm ? 'Cancel' : '+ Add Milestone'}
+            </Btn>
+          </div>
+        )}
+
+        {showMilestoneForm && (
+          <div className="mt-4 flex gap-2 flex-wrap">
+            <input value={msName} onChange={e => setMsName(e.target.value)} placeholder="Milestone name"
+              className="px-3 py-2 text-sm outline-none flex-1"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0ece4', minWidth: 140 }} />
+            <input value={msAmount} onChange={e => setMsAmount(e.target.value)} placeholder="Amount (USD)" type="number"
+              className="px-3 py-2 text-sm outline-none w-32"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0ece4' }} />
+            <input value={msDue} onChange={e => setMsDue(e.target.value)} type="date"
+              className="px-3 py-2 text-sm outline-none"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0ece4' }} />
+            <Btn onClick={addMs}>Add</Btn>
+          </div>
+        )}
+
+        {msg && <p className="text-xs mt-3" style={{ color: '#ef4444' }}>{msg}</p>}
+      </Card>
+
+      {/* Stripe Elements checkout */}
+      {clientSecret && stripePromise && (
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest mb-4" style={{ color: '#4a4846' }}>Card Details</p>
+          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night' } }}>
+            <CheckoutForm onSuccess={() => { setClientSecret(null); load() }} />
+          </Elements>
+        </Card>
+      )}
+
+      {/* Payment history */}
+      {payments.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#4a4846' }}>Payment History</p>
+          {payments.map(p => (
+            <div key={p.id} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <div>
+                <span className="text-xs font-semibold" style={{ color: '#f0ece4' }}>${p.amount_usd.toLocaleString()}</span>
+                {p.paid_at && (
+                  <span className="text-xs ml-2" style={{ color: '#4a4846' }}>
+                    {new Date(p.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                )}
+              </div>
+              <span
+                className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5"
+                style={{
+                  background: p.status === 'succeeded' ? '#166534' : p.status === 'failed' ? '#7f1d1d' : '#374151',
+                  color: '#f0ece4',
+                }}
+              >
+                {p.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -489,6 +705,13 @@ export default function ContractDetailPage() {
                 ))}
               </div>
             </Card>
+          </Section>
+        )}
+
+        {/* Payments */}
+        {contract.status === 'active' && (
+          <Section title="Payments">
+            <PaymentSection contract={contract} isSponsor={isSponsor} isFighter={isFighter} />
           </Section>
         )}
 

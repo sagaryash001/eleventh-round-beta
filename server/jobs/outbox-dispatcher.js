@@ -123,11 +123,40 @@ async function handleApplicationRejected(payload) {
   })
 }
 
+async function handlePaymentSucceeded(payload) {
+  const { fighter_id, amount_usd, contract_id, payment_id } = payload
+  if (!fighter_id) return
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: fighter_id,
+    type:         'payment.succeeded',
+    title:        `Payment of $${amount_usd?.toLocaleString()} received`,
+    body:         'Funds are being processed. Payout will follow.',
+    action_url:   contract_id ? `${CLIENT}/contracts/${contract_id}` : `${CLIENT}/contracts`,
+    related_type: 'payment',
+    related_id:   payment_id ?? null,
+  })
+
+  if (process.env.SENDGRID_API_KEY) {
+    const { data: profile } = await adminSupabase
+      .from('profiles').select('email, name').eq('id', fighter_id).maybeSingle()
+    if (profile?.email) {
+      sgMail.send({
+        to:      profile.email,
+        from:    { email: FROM, name: 'The Eleventh Round' },
+        subject: `Payment of $${amount_usd?.toLocaleString()} received`,
+        text:    `Your sponsorship payment of $${amount_usd?.toLocaleString()} has been processed. View your contract at ${CLIENT}/contracts/${contract_id}`,
+      }).catch(e => log.warn({ err: e }, 'Email send failed'))
+    }
+  }
+}
+
 const HANDLERS = {
   'message.received':      handleMessageReceived,
   'application.received':  handleApplicationReceived,
   'application.accepted':  handleApplicationAccepted,
   'application.rejected':  handleApplicationRejected,
+  'payment.succeeded':     handlePaymentSucceeded,
 }
 
 // ── Single dispatch tick ─────────────────────────────────────────────────────

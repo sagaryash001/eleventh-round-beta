@@ -342,4 +342,65 @@ router.post('/:id/obligations', requireAuth, async (req, res) => {
   }
 })
 
+// ── GET /api/contracts/:id/milestones ─────────────────────────────────────────
+router.get('/:id/milestones', requireAuth, async (req, res) => {
+  try {
+    const { data: contract } = await adminSupabase
+      .from('contracts').select('sponsor_id, fighter_id').eq('id', req.params.id).maybeSingle()
+    if (!contract) return res.status(404).json({ error: 'Not found.' })
+    const uid = req.user.id
+    if (contract.sponsor_id !== uid && contract.fighter_id !== uid && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden.' })
+    }
+    const { data, error } = await adminSupabase
+      .from('payment_milestones')
+      .select('*')
+      .eq('contract_id', req.params.id)
+      .order('sequence', { ascending: true })
+    if (error) throw error
+    res.json({ ok: true, milestones: data ?? [] })
+  } catch (err) {
+    log.error({ err }, 'GET /contracts/:id/milestones threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/contracts/:id/milestones ────────────────────────────────────────
+router.post('/:id/milestones', requireAuth, async (req, res) => {
+  try {
+    const { data: contract } = await adminSupabase
+      .from('contracts').select('sponsor_id, payment_schedule').eq('id', req.params.id).maybeSingle()
+    if (!contract) return res.status(404).json({ error: 'Not found.' })
+    if (contract.sponsor_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only sponsors can add milestones.' })
+    }
+
+    const { name, amount_usd, due_date, sequence } = req.body
+    if (!name || !amount_usd) return res.status(400).json({ error: 'name and amount_usd required.' })
+
+    // Auto-assign next sequence if not provided
+    let seq = sequence
+    if (!seq) {
+      const { count } = await adminSupabase
+        .from('payment_milestones')
+        .select('id', { count: 'exact', head: true })
+        .eq('contract_id', req.params.id)
+      seq = (count ?? 0) + 1
+    }
+
+    const { data, error } = await adminSupabase
+      .from('payment_milestones')
+      .insert({ contract_id: req.params.id, name: name.trim(), amount_usd: Number(amount_usd), due_date: due_date ?? null, sequence: seq })
+      .select().maybeSingle()
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ error: 'A milestone with that sequence already exists.' })
+      throw error
+    }
+    res.status(201).json({ ok: true, milestone: data })
+  } catch (err) {
+    log.error({ err }, 'POST /contracts/:id/milestones threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router
