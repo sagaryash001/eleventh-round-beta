@@ -41,6 +41,16 @@ services:
       - key: CORS_EXTRA_ORIGINS
         sync: false               # TODO: set in dashboard if you add a custom domain
 
+      # --- PostgreSQL pool ---
+      - key: DATABASE_URL
+        sync: false               # Supabase pooler URL (Project Settings → Database)
+      - key: PG_POOL_MAX
+        value: 15
+      - key: PG_IDLE_MS
+        value: 10000
+      - key: PG_CONN_MS
+        value: 5000
+
       # --- Supabase (Phase 1+) ---
       - key: SUPABASE_URL
         sync: false               # TODO: paste in Render dashboard

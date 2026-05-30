@@ -12,6 +12,7 @@ import pinoHttp    from 'pino-http'
 dotenv.config({ path: new URL('../.env', import.meta.url).pathname })
 
 import { logger }    from './lib/logger.js'
+import { pool }      from './db/pool.js'
 import authRoutes    from './routes/auth.js'
 import fighterRoutes from './routes/fighter.js'
 import managerRoutes from './routes/manager.js'
@@ -100,6 +101,7 @@ app.get('/api/health', (_req, res) => res.json({
   env: process.env.NODE_ENV || 'development',
   supabase: !!process.env.SUPABASE_URL,
   email: !!process.env.EMAIL_HOST,
+  pool: pool ? { total: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount } : null,
 }))
 
 // ── 404 ─────────────────────────────────────────────────────────────────────
@@ -121,3 +123,12 @@ app.listen(PORT, () => {
   logger.info({ port: PORT, env: process.env.NODE_ENV }, 'Eleventh Round API listening')
   startOutboxDispatcher()
 })
+
+// ── Graceful shutdown — drain pool before process exits ──────────────────────
+async function shutdown(signal) {
+  logger.info({ signal }, 'Shutting down…')
+  if (pool) await pool.end().catch(() => {})
+  process.exit(0)
+}
+process.once('SIGTERM', () => shutdown('SIGTERM'))
+process.once('SIGINT',  () => shutdown('SIGINT'))
