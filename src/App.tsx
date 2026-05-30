@@ -19,6 +19,7 @@ import FighterProfileEditPage from './pages/fighter/FighterProfileEditPage'
 import MyApplicationsPage from './pages/fighter/MyApplicationsPage'
 import DiscoveryPage from './pages/opportunities/DiscoveryPage'
 import OpportunityDetailPage from './pages/opportunities/DetailPage'
+import InboxPage from './pages/InboxPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './context/CartContext'
 
@@ -104,6 +105,8 @@ function AppRoutes() {
       {/* Public discovery */}
       <Route path="/opportunities" element={<DiscoveryPage />} />
       <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
+      {/* Messaging */}
+      <Route path="/inbox" element={<InboxPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
