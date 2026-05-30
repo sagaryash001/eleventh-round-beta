@@ -4,9 +4,10 @@ import { useAuth } from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 
 const DEMO_CREDENTIALS = [
-  { role: 'Fighter',  email: 'fighter@demo.com', pass: 'fighter123', hint: 'Fighter dashboard' },
-  { role: 'Manager',  email: 'manager@demo.com', pass: 'manager123', hint: 'Manager operations' },
-  { role: 'Admin',    email: 'admin@demo.com',   pass: 'admin123',   hint: 'Full platform admin' },
+  { role: 'Fighter', email: 'fighter@demo.com', pass: 'fighter123' },
+  { role: 'Sponsor', email: 'sponsor@demo.com', pass: 'sponsor123' },
+  { role: 'Manager', email: 'manager@demo.com', pass: 'manager123' },
+  { role: 'Admin',   email: 'admin@demo.com',   pass: 'admin123'   },
 ]
 
 export default function LoginPage() {
@@ -23,6 +24,7 @@ export default function LoginPage() {
       navigate(
         user.role === 'fighter' ? '/dashboard/fighter' :
         user.role === 'manager' ? '/dashboard/manager' :
+        user.role === 'sponsor' ? '/dashboard/sponsor' :
         '/dashboard/admin'
       )
     }
@@ -40,10 +42,12 @@ export default function LoginPage() {
     // navigation handled by useEffect above
   }
 
-  const fillDemo = (email: string, pass: string) => {
-    setEmail(email)
-    setPassword(pass)
+  const loginAsDemo = async (email: string, pass: string) => {
     setError('')
+    setLoading(true)
+    const result = await login(email, pass)
+    setLoading(false)
+    if (!result.ok) setError(result.error ?? 'Demo login failed')
   }
 
   return (
@@ -166,21 +170,22 @@ export default function LoginPage() {
             <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-3 text-center">
               Demo Accounts
             </div>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               {DEMO_CREDENTIALS.map(d => (
                 <button
                   key={d.role}
-                  onClick={() => fillDemo(d.email, d.pass)}
-                  className="w-full bg-charcoal-2 border border-charcoal-3 px-4 py-3 flex items-center justify-between hover:border-blood/40 transition-colors cursor-pointer group"
+                  onClick={() => loginAsDemo(d.email, d.pass)}
+                  disabled={loading}
+                  className="bg-charcoal-2 border border-charcoal-3 px-4 py-3 flex items-center justify-between hover:border-blood/40 transition-colors cursor-pointer group disabled:opacity-50"
                 >
                   <div className="text-left">
                     <div className="font-condensed text-[12px] font-bold tracking-wide text-off-white group-hover:text-blood-glow transition-colors">
                       {d.role}
                     </div>
-                    <div className="font-condensed text-[10px] tracking-wide text-gray-3">{d.email}</div>
+                    <div className="font-condensed text-[10px] tracking-wide text-gray-3">demo</div>
                   </div>
                   <span className="font-condensed text-[10px] tracking-[0.25em] uppercase text-gray-3 group-hover:text-blood-glow transition-colors">
-                    Use →
+                    →
                   </span>
                 </button>
               ))}

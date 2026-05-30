@@ -55,6 +55,7 @@ const DEMO: Record<string, AuthUser & { password: string }> = {
   'fighter@demo.com': { id: 'f1', name: 'Marcus Torres', role: 'fighter', email: 'fighter@demo.com', password: 'fighter123' },
   'manager@demo.com': { id: 'm1', name: 'Ray Callahan',  role: 'manager', email: 'manager@demo.com', password: 'manager123' },
   'admin@demo.com':   { id: 'a1', name: 'Jordan Hayes',  role: 'admin',   email: 'admin@demo.com',   password: 'admin123'   },
+  'sponsor@demo.com': { id: 's1', name: 'Apex Sports',   role: 'sponsor', email: 'sponsor@demo.com', password: 'sponsor123' },
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
