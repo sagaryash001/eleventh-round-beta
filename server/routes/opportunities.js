@@ -129,28 +129,30 @@ router.post('/', requireAuth, requireSponsor, async (req, res) => {
 // ── GET /api/opportunities/:id ────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
-    const { data, error } = await adminSupabase
+    const { data: opp, error } = await adminSupabase
       .from('sponsorship_opportunities')
-      .select(`
-        *,
-        sponsor:profiles!sponsor_id (id, name),
-        sponsor_detail:sponsor_profiles (company_name, logo_path, is_verified, industry, website_url)
-      `)
+      .select('*')
       .eq('id', req.params.id)
       .is('deleted_at', null)
       .maybeSingle()
     if (error) throw error
-    if (!data) return res.status(404).json({ error: 'Not found.' })
+    if (!opp) return res.status(404).json({ error: 'Not found.' })
+
+    // Fetch sponsor detail separately (avoids PostgREST join schema issues)
+    const { data: sponsorDetail } = await adminSupabase
+      .from('sponsor_profiles')
+      .select('company_name, logo_path, is_verified, industry, website_url')
+      .eq('user_id', opp.sponsor_id)
+      .maybeSingle()
 
     // Increment view_count asynchronously
     adminSupabase
       .from('sponsorship_opportunities')
-      .update({ view_count: (data.view_count ?? 0) + 1 })
+      .update({ view_count: (opp.view_count ?? 0) + 1 })
       .eq('id', req.params.id)
-      .then(() => {})
-      .catch(() => {})
+      .then(() => {}).catch(() => {})
 
-    res.json({ ok: true, opportunity: data })
+    res.json({ ok: true, opportunity: { ...opp, sponsor_detail: sponsorDetail ?? null } })
   } catch (err) {
     log.error({ err }, 'GET /opportunities/:id threw')
     res.status(500).json({ error: err.message })
