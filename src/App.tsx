@@ -20,6 +20,8 @@ import MyApplicationsPage from './pages/fighter/MyApplicationsPage'
 import DiscoveryPage from './pages/opportunities/DiscoveryPage'
 import OpportunityDetailPage from './pages/opportunities/DetailPage'
 import InboxPage from './pages/InboxPage'
+import ContractsListPage from './pages/contracts/ListPage'
+import ContractDetailPage from './pages/contracts/DetailPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './context/CartContext'
 
@@ -107,6 +109,9 @@ function AppRoutes() {
       <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
       {/* Messaging */}
       <Route path="/inbox" element={<InboxPage />} />
+      {/* Contracts */}
+      <Route path="/contracts" element={<ContractsListPage />} />
+      <Route path="/contracts/:id" element={<ContractDetailPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

@@ -21,6 +21,8 @@ import opportunityRoutes    from './routes/opportunities.js'
 import applicationRoutes    from './routes/applications.js'
 import conversationRoutes   from './routes/conversations.js'
 import notificationRoutes   from './routes/notifications.js'
+import contractRoutes        from './routes/contracts.js'
+import obligationRoutes      from './routes/obligations.js'
 import stripeRoutes         from './routes/stripe.js'
 import { startOutboxDispatcher } from './jobs/outbox-dispatcher.js'
 
@@ -82,6 +84,8 @@ app.use('/api/opportunities', opportunityRoutes)
 app.use('/api/applications',  applicationRoutes)
 app.use('/api/conversations', conversationRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/contracts',    contractRoutes)
+app.use('/api/obligations',  obligationRoutes)
 app.use('/api/stripe',        stripeRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
