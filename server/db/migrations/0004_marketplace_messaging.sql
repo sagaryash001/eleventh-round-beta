@@ -28,7 +28,10 @@ CREATE TABLE IF NOT EXISTS public.conversations (
 CREATE INDEX IF NOT EXISTS idx_conversations_last_message ON public.conversations (last_message_at DESC NULLS LAST);
 CREATE INDEX IF NOT EXISTS idx_conversations_context ON public.conversations (context_type, context_id) WHERE context_id IS NOT NULL;
 
-SELECT set_updated_at('conversations');
+DROP TRIGGER IF EXISTS set_updated_at ON public.conversations;
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.conversations
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ── 2. CONVERSATION PARTICIPANTS ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.conversation_participants (
