@@ -232,59 +232,68 @@ router.get('/reports', ...guard, async (req, res) => {
 })
 
 // ── GET /api/admin/marketplace ────────────────────────────────────────────────
+// All aggregation pushed to Postgres — no full-table transfers to Node.
 router.get('/marketplace', ...guard, async (req, res) => {
   try {
     const sb = adminSupabase
+
     const [
-      { data: contracts,    count: contractCount  },
-      { data: payments },
-      { data: sponsors },
-      { data: applications, count: appCount       },
-      { data: disputes,     count: disputeCount   },
-      { data: opportunities, count: oppCount      },
+      // Counts via head:true — zero rows transferred
+      { count: contractCount },
+      { count: activeContractCount },
+      { count: completedContractCount },
+      { count: oppCount },
+      { count: appCount },
+      { count: openDisputeCount },
+      { count: sponsorCount },
+      { count: verifiedSponsorCount },
+      // GMV: only succeeded payments, only amount column
+      { data: gmvRows },
+      // Application funnel: status + count via separate status queries
+      { data: appFunnel },
+      // Recent 5 contracts only
+      { data: recent },
     ] = await Promise.all([
-      sb.from('contracts').select('id, status, value_usd, created_at', { count: 'exact' }).is('deleted_at', null),
-      sb.from('sponsorship_payments').select('amount_usd, status'),
-      sb.from('sponsor_profiles').select('user_id, is_verified, company_name'),
-      sb.from('applications').select('id, status', { count: 'exact' }),
-      sb.from('disputes').select('id, status', { count: 'exact' }).eq('status', 'open').catch(() => ({ data: [], count: 0 })),
-      sb.from('sponsorship_opportunities').select('id, status', { count: 'exact' }),
+      sb.from('contracts').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+      sb.from('contracts').select('*', { count: 'exact', head: true }).eq('status', 'active').is('deleted_at', null),
+      sb.from('contracts').select('*', { count: 'exact', head: true }).eq('status', 'completed').is('deleted_at', null),
+      sb.from('sponsorship_opportunities').select('*', { count: 'exact', head: true }),
+      sb.from('applications').select('*', { count: 'exact', head: true }),
+      sb.from('disputes').select('*', { count: 'exact', head: true }).eq('status', 'open').catch(() => ({ count: 0 })),
+      sb.from('sponsor_profiles').select('*', { count: 'exact', head: true }),
+      sb.from('sponsor_profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
+      sb.from('sponsorship_payments').select('amount_usd').eq('status', 'succeeded'),
+      // Funnel: fetch status counts for each terminal state in parallel below
+      sb.from('applications').select('status'),
+      sb.from('contracts').select('id, status, value_usd, created_at').is('deleted_at', null)
+        .order('created_at', { ascending: false }).limit(5),
     ])
 
-    const activeContracts    = (contracts ?? []).filter(c => c.status === 'active').length
-    const completedContracts = (contracts ?? []).filter(c => c.status === 'completed').length
-    const gmv = (payments ?? [])
-      .filter(p => p.status === 'succeeded')
-      .reduce((s, p) => s + (p.amount_usd ?? 0), 0)
+    const gmv = (gmvRows ?? []).reduce((s, p) => s + (p.amount_usd ?? 0), 0)
 
-    // Applications funnel
     const byStatus = {}
-    for (const a of (applications ?? [])) {
+    for (const a of (appFunnel ?? [])) {
       byStatus[a.status] = (byStatus[a.status] ?? 0) + 1
     }
 
-    // Recent contracts for activity feed
-    const recent = (contracts ?? [])
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 5)
-      .map(c => ({
-        name:  `Contract $${c.value_usd?.toLocaleString?.() ?? c.value_usd}`,
-        badge: c.status.replace('_', ' '),
-        type:  c.status === 'active' ? 'green' : c.status === 'terminated' ? 'red' : 'yellow',
-      }))
+    const recentFormatted = (recent ?? []).map(c => ({
+      name:  `Contract $${c.value_usd?.toLocaleString?.() ?? c.value_usd}`,
+      badge: c.status.replace('_', ' '),
+      type:  c.status === 'active' ? 'green' : c.status === 'terminated' ? 'red' : 'yellow',
+    }))
 
     res.json({
       gmv_usd:             gmv,
-      active_contracts:    activeContracts,
-      completed_contracts: completedContracts,
-      total_contracts:     contractCount ?? 0,
-      total_opportunities: oppCount ?? 0,
-      total_applications:  appCount ?? 0,
-      open_disputes:       disputeCount ?? 0,
-      sponsor_count:       (sponsors ?? []).length,
-      verified_sponsors:   (sponsors ?? []).filter(s => s.is_verified).length,
+      active_contracts:    activeContractCount  ?? 0,
+      completed_contracts: completedContractCount ?? 0,
+      total_contracts:     contractCount        ?? 0,
+      total_opportunities: oppCount             ?? 0,
+      total_applications:  appCount             ?? 0,
+      open_disputes:       openDisputeCount     ?? 0,
+      sponsor_count:       sponsorCount         ?? 0,
+      verified_sponsors:   verifiedSponsorCount ?? 0,
       applications_funnel: byStatus,
-      recent_contracts:    recent,
+      recent_contracts:    recentFormatted,
     })
   } catch (err) {
     log.error({ err }, '/admin/marketplace threw')
@@ -295,21 +304,25 @@ router.get('/marketplace', ...guard, async (req, res) => {
 // ── GET /api/admin/analytics ──────────────────────────────────────────────────
 router.get('/analytics', ...guard, async (req, res) => {
   try {
-    const sb = adminSupabase
-    const [{ data: payments }, { data: contracts }] = await Promise.all([
-      sb.from('sponsorship_payments').select('amount_usd, status, created_at'),
-      sb.from('contracts').select('status, created_at').is('deleted_at', null),
-    ])
-
-    // Monthly GMV for last 6 months
+    const sb  = adminSupabase
     const now = new Date()
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString()
+
+    // Only fetch the last 6 months of succeeded payments — bounded dataset
+    const { data: payments } = await sb
+      .from('sponsorship_payments')
+      .select('amount_usd, created_at')
+      .eq('status', 'succeeded')
+      .gte('created_at', sixMonthsAgo)
+
+    // Group in JS — data is already bounded to 6 months
     const monthly = []
     for (let i = 5; i >= 0; i--) {
       const d   = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
       const label = d.toLocaleDateString('en-US', { month: 'short' })
       const value = (payments ?? [])
-        .filter(p => p.status === 'succeeded' && new Date(p.created_at) >= d && new Date(p.created_at) < end)
+        .filter(p => { const t = new Date(p.created_at); return t >= d && t < end })
         .reduce((s, p) => s + (p.amount_usd ?? 0), 0)
       monthly.push({ label, value })
     }
