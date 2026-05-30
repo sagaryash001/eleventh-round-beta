@@ -71,30 +71,42 @@ router.post('/', requireAuth, async (req, res) => {
 })
 
 // ── GET /api/applications/mine — fighter's own applications ───────────────────
+// ?limit=20&before=<ISO> (cursor pagination on created_at)
 router.get('/mine', requireAuth, async (req, res) => {
   try {
-    const { data: apps, error } = await adminSupabase
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const before = req.query.before
+
+    let q = adminSupabase
       .from('applications')
       .select('*')
       .eq('fighter_id', req.user.id)
       .order('created_at', { ascending: false })
+      .limit(limit + 1)
+
+    if (before) q = q.lt('created_at', before)
+
+    const { data: apps, error } = await q
     if (error) throw error
 
+    const has_more = (apps ?? []).length > limit
+    const page     = (apps ?? []).slice(0, limit)
+
     // Enrich with opportunity + sponsor detail
-    const oppIds     = [...new Set((apps ?? []).map(a => a.opportunity_id))]
-    const sponsorIds = [...new Set((apps ?? []).map(a => a.sponsor_id))]
+    const oppIds     = [...new Set(page.map(a => a.opportunity_id))]
+    const sponsorIds = [...new Set(page.map(a => a.sponsor_id))]
     let oppMap = {}, sponsorMap = {}
     const fetches = []
     if (oppIds.length)     fetches.push(adminSupabase.from('sponsorship_opportunities').select('id, title, campaign_type, budget_min_usd, budget_max_usd, status').in('id', oppIds).then(r => { for (const o of r.data ?? []) oppMap[o.id] = o }))
     if (sponsorIds.length) fetches.push(adminSupabase.from('sponsor_profiles').select('user_id, company_name, logo_path, is_verified').in('user_id', sponsorIds).then(r => { for (const s of r.data ?? []) sponsorMap[s.user_id] = s }))
     await Promise.all(fetches)
 
-    const data = (apps ?? []).map(a => ({
+    const data = page.map(a => ({
       ...a,
-      opportunity:   oppMap[a.opportunity_id]  ?? null,
-      sponsor_detail: sponsorMap[a.sponsor_id] ?? null,
+      opportunity:    oppMap[a.opportunity_id]  ?? null,
+      sponsor_detail: sponsorMap[a.sponsor_id]  ?? null,
     }))
-    res.json({ ok: true, applications: data })
+    res.json({ ok: true, applications: data, has_more })
   } catch (err) {
     log.error({ err }, 'GET /applications/mine threw')
     res.status(500).json({ error: err.message })

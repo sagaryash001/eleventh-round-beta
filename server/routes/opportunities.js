@@ -84,16 +84,27 @@ router.get('/', async (req, res) => {
 })
 
 // ── GET /api/opportunities/mine — sponsor's own opportunities ─────────────────
+// ?limit=20&before=<ISO> (cursor pagination)
 router.get('/mine', requireAuth, requireSponsor, async (req, res) => {
   try {
-    const { data, error } = await adminSupabase
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const before = req.query.before
+
+    let q = adminSupabase
       .from('sponsorship_opportunities')
       .select('*, application_count, view_count')
       .eq('sponsor_id', req.user.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
+      .limit(limit + 1)
+
+    if (before) q = q.lt('created_at', before)
+
+    const { data, error } = await q
     if (error) throw error
-    res.json({ ok: true, data: data ?? [] })
+
+    const has_more = (data ?? []).length > limit
+    res.json({ ok: true, data: (data ?? []).slice(0, limit), has_more })
   } catch (err) {
     log.error({ err }, 'GET /opportunities/mine threw')
     res.status(500).json({ error: err.message })
@@ -280,11 +291,15 @@ router.get('/:id/applications', requireAuth, requireSponsor, async (req, res) =>
       return res.status(403).json({ error: 'Not your opportunity.' })
     }
 
+    const limit  = Math.min(Number(req.query.limit) || 50, 200)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+
     const { data: apps, error } = await adminSupabase
       .from('applications')
       .select('*')
       .eq('opportunity_id', req.params.id)
       .order('match_score', { ascending: false })
+      .range(offset, offset + limit)
     if (error) throw error
 
     // Enrich with fighter profile details
@@ -305,7 +320,7 @@ router.get('/:id/applications', requireAuth, requireSponsor, async (req, res) =>
       fighter_detail: fighterMap[a.fighter_id]  ?? null,
     }))
 
-    res.json({ ok: true, applications: data })
+    res.json({ ok: true, applications: data, limit, offset })
   } catch (err) {
     log.error({ err }, 'GET /opportunities/:id/applications threw')
     res.status(500).json({ error: err.message })

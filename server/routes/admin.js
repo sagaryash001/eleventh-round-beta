@@ -43,13 +43,17 @@ router.get('/overview', ...guard, async (req, res) => {
 })
 
 // ── GET /api/admin/users ──────────────────────────────────────────────────────
+// ?limit=50&offset=0
 router.get('/users', ...guard, async (req, res) => {
   try {
-    const { data, error } = await adminSupabase
+    const limit  = Math.min(Number(req.query.limit)  || 50, 200)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+
+    const { data, error, count } = await adminSupabase
       .from('profiles')
-      .select('id, name, email, role, account_type, created_at')
+      .select('id, name, email, role, account_type, created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .limit(50)
+      .range(offset, offset + limit - 1)
     if (error) throw error
 
     const users = (data ?? []).map(u => ({
@@ -61,7 +65,7 @@ router.get('/users', ...guard, async (req, res) => {
       plan:   u.role === 'fighter' ? 'Pipeline Pro' : u.role === 'manager' ? 'MGMT-SUITE' : 'Free',
     }))
 
-    res.json({ users })
+    res.json({ users, total: count ?? 0, limit, offset })
   } catch (err) {
     log.error({ err }, '/admin/users threw')
     res.status(500).json({ error: err.message })
@@ -335,15 +339,24 @@ router.get('/analytics', ...guard, async (req, res) => {
 })
 
 // ── GET /api/admin/disputes ───────────────────────────────────────────────────
+// ?limit=50&offset=0&status=open
 router.get('/disputes', ...guard, async (req, res) => {
   try {
-    const { data, error } = await adminSupabase
+    const limit  = Math.min(Number(req.query.limit)  || 50, 200)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+    const status = req.query.status
+
+    let q = adminSupabase
       .from('disputes')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .limit(50)
+      .range(offset, offset + limit - 1)
+
+    if (status) q = q.eq('status', status)
+
+    const { data, error, count } = await q
     if (error) throw error
-    res.json({ ok: true, disputes: data ?? [] })
+    res.json({ ok: true, disputes: data ?? [], total: count ?? 0, limit, offset })
   } catch (err) {
     log.error({ err }, '/admin/disputes threw')
     res.status(500).json({ error: err.message })

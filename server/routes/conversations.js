@@ -7,9 +7,12 @@ const router = Router()
 const log    = childLogger('conversations')
 
 // ── GET /api/conversations — list user's conversations ───────────────────────
+// ?limit=30&before=<ISO last_message_at> (cursor pagination)
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const uid = req.user.id
+    const uid    = req.user.id
+    const limit  = Math.min(Number(req.query.limit) || 30, 100)
+    const before = req.query.before
 
     // Fetch conversations the user participates in
     const { data: participations, error: pErr } = await adminSupabase
@@ -19,18 +22,23 @@ router.get('/', requireAuth, async (req, res) => {
       .is('left_at', null)
 
     if (pErr) throw pErr
-    if (!participations?.length) return res.json({ ok: true, conversations: [] })
+    if (!participations?.length) return res.json({ ok: true, conversations: [], has_more: false })
 
     const convIds = participations.map(p => p.conversation_id)
     const pMap    = Object.fromEntries(participations.map(p => [p.conversation_id, p]))
 
-    // Fetch conversation rows
-    const { data: convs, error: cErr } = await adminSupabase
+    // Fetch conversation rows with cursor + limit
+    let convQ = adminSupabase
       .from('conversations')
       .select('*')
       .in('id', convIds)
       .is('deleted_at', null)
       .order('last_message_at', { ascending: false, nullsFirst: false })
+      .limit(limit + 1)
+
+    if (before) convQ = convQ.lt('last_message_at', before)
+
+    const { data: convs, error: cErr } = await convQ
 
     if (cErr) throw cErr
 
@@ -74,7 +82,10 @@ router.get('/', requireAuth, async (req, res) => {
     }
 
     // Assemble response
-    const result = (convs ?? []).map(c => {
+    const page     = (convs ?? []).slice(0, limit)
+    const has_more = (convs ?? []).length > limit
+
+    const result = page.map(c => {
       const myPart = pMap[c.id] ?? {}
       return {
         ...c,
@@ -85,7 +96,7 @@ router.get('/', requireAuth, async (req, res) => {
       }
     })
 
-    res.json({ ok: true, conversations: result, profiles: profileMap })
+    res.json({ ok: true, conversations: result, profiles: profileMap, has_more })
   } catch (err) {
     log.error({ err }, 'GET /conversations threw')
     res.status(500).json({ error: err.message })

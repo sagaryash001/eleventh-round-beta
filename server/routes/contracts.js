@@ -84,19 +84,26 @@ router.post('/', requireAuth, async (req, res) => {
 })
 
 // ── GET /api/contracts — list user's contracts ────────────────────────────────
+// ?limit=20&before=<ISO> (cursor pagination on created_at)
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const uid = req.user.id
-    const col = req.user.role === 'sponsor' ? 'sponsor_id' : 'fighter_id'
+    const uid    = req.user.id
+    const col    = req.user.role === 'sponsor' ? 'sponsor_id' : 'fighter_id'
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const before = req.query.before
 
-    const query = req.user.role === 'admin'
-      ? adminSupabase.from('contracts').select('*').is('deleted_at', null).order('created_at', { ascending: false })
-      : adminSupabase.from('contracts').select('*').eq(col, uid).is('deleted_at', null).order('created_at', { ascending: false })
+    let q = req.user.role === 'admin'
+      ? adminSupabase.from('contracts').select('*').is('deleted_at', null)
+      : adminSupabase.from('contracts').select('*').eq(col, uid).is('deleted_at', null)
 
-    const { data, error } = await query
+    q = q.order('created_at', { ascending: false }).limit(limit + 1)
+    if (before) q = q.lt('created_at', before)
+
+    const { data, error } = await q
     if (error) throw error
 
-    res.json({ ok: true, contracts: data ?? [] })
+    const has_more = (data ?? []).length > limit
+    res.json({ ok: true, contracts: (data ?? []).slice(0, limit), has_more })
   } catch (err) {
     log.error({ err }, 'GET /contracts threw')
     res.status(500).json({ error: err.message })
@@ -287,11 +294,14 @@ router.get('/:id/obligations', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden.' })
     }
 
+    const limit = Math.min(Number(req.query.limit) || 100, 500)
+
     const { data, error } = await adminSupabase
       .from('obligations')
       .select('*')
       .eq('contract_id', req.params.id)
       .order('due_date', { ascending: true })
+      .limit(limit)
     if (error) throw error
 
     res.json({ ok: true, obligations: data ?? [] })
@@ -358,6 +368,7 @@ router.get('/:id/milestones', requireAuth, async (req, res) => {
       .select('*')
       .eq('contract_id', req.params.id)
       .order('sequence', { ascending: true })
+      .limit(200)
     if (error) throw error
     res.json({ ok: true, milestones: data ?? [] })
   } catch (err) {
