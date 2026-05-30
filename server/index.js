@@ -99,7 +99,7 @@ app.get('/api/health', (_req, res) => res.json({
   ts: Date.now(),
   env: process.env.NODE_ENV || 'development',
   supabase: !!process.env.SUPABASE_URL,
-  sendgrid: !!process.env.SENDGRID_API_KEY,
+  email: !!process.env.EMAIL_HOST,
 }))
 
 // ── 404 ─────────────────────────────────────────────────────────────────────

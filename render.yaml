@@ -51,9 +51,17 @@ services:
       - key: SUPABASE_JWT_SECRET
         sync: false
 
-      # --- SendGrid (Phase 2+) ---
-      - key: SENDGRID_API_KEY
-        sync: false
+      # --- Email / SMTP ---
+      - key: EMAIL_HOST
+        sync: false               # e.g. smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 465
+      - key: EMAIL_SECURE
+        value: true
+      - key: EMAIL_USER
+        sync: false               # sending address
+      - key: EMAIL_PASS
+        sync: false               # app password (not login password)
       - key: FROM_EMAIL
         value: contact@eleventh-rnd.us
       - key: TEAM_NOTIFY_EMAIL

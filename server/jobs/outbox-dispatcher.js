@@ -14,9 +14,9 @@
 //   application.rejected → in-app notification to fighter
 // ─────────────────────────────────────────────────────────────────────────────
 
+import nodemailer from 'nodemailer'
 import { adminSupabase } from '../db/supabase.js'
 import { childLogger } from '../lib/logger.js'
-import sgMail from '@sendgrid/mail'
 
 const log           = childLogger('outbox-dispatcher')
 const POLL_MS       = Number(process.env.OUTBOX_POLL_MS   || 5_000)
@@ -25,8 +25,24 @@ const MAX_ATTEMPTS  = 5
 const FROM          = process.env.FROM_EMAIL || 'contact@eleventh-rnd.us'
 const CLIENT        = process.env.CLIENT_URL || 'http://localhost:5173'
 
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+let _transport = null
+function getTransport() {
+  if (!_transport && process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    _transport = nodemailer.createTransport({
+      host:   process.env.EMAIL_HOST,
+      port:   Number(process.env.EMAIL_PORT || 465),
+      secure: process.env.EMAIL_SECURE !== 'false',
+      auth:   { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    })
+  }
+  return _transport
+}
+
+function sendEmail(to, subject, text) {
+  const t = getTransport()
+  if (!t) return Promise.resolve()
+  return t.sendMail({ from: `"The Eleventh Round" <${FROM}>`, to, subject, text })
+    .catch(e => log.warn({ err: e }, 'Email send failed'))
 }
 
 // ── Handler registry ─────────────────────────────────────────────────────────
@@ -58,22 +74,15 @@ async function handleMessageReceived(payload) {
       related_id:   conversation_id,
     })
 
-    // Send email if SendGrid is configured (fire-and-forget — don't fail the event)
-    if (process.env.SENDGRID_API_KEY) {
-      const { data: profile } = await adminSupabase
-        .from('profiles')
-        .select('email, name')
-        .eq('id', recipientId)
-        .maybeSingle()
-
-      if (profile?.email) {
-        sgMail.send({
-          to:      profile.email,
-          from:    { email: FROM, name: 'The Eleventh Round' },
-          subject: `New message from ${senderLabel}`,
-          text:    `${senderLabel} sent you a message:\n\n"${body_preview}"\n\nReply at ${CLIENT}/inbox`,
-        }).catch(e => log.warn({ err: e }, 'Email send failed'))
-      }
+    // Send email (fire-and-forget — don't fail the event)
+    const { data: profile } = await adminSupabase
+      .from('profiles').select('email').eq('id', recipientId).maybeSingle()
+    if (profile?.email) {
+      sendEmail(
+        profile.email,
+        `New message from ${senderLabel}`,
+        `${senderLabel} sent you a message:\n\n"${body_preview}"\n\nReply at ${CLIENT}/inbox`,
+      )
     }
   }
 }
@@ -137,17 +146,14 @@ async function handlePaymentSucceeded(payload) {
     related_id:   payment_id ?? null,
   })
 
-  if (process.env.SENDGRID_API_KEY) {
-    const { data: profile } = await adminSupabase
-      .from('profiles').select('email, name').eq('id', fighter_id).maybeSingle()
-    if (profile?.email) {
-      sgMail.send({
-        to:      profile.email,
-        from:    { email: FROM, name: 'The Eleventh Round' },
-        subject: `Payment of $${amount_usd?.toLocaleString()} received`,
-        text:    `Your sponsorship payment of $${amount_usd?.toLocaleString()} has been processed. View your contract at ${CLIENT}/contracts/${contract_id}`,
-      }).catch(e => log.warn({ err: e }, 'Email send failed'))
-    }
+  const { data: profile } = await adminSupabase
+    .from('profiles').select('email').eq('id', fighter_id).maybeSingle()
+  if (profile?.email) {
+    sendEmail(
+      profile.email,
+      `Payment of $${amount_usd?.toLocaleString()} received`,
+      `Your sponsorship payment of $${amount_usd?.toLocaleString()} has been processed. View your contract at ${CLIENT}/contracts/${contract_id}`,
+    )
   }
 }
 
