@@ -12,8 +12,8 @@
     "hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
   },
   "/Users/yashsagar/Downloads/er-app/server/index.js": {
-    "mtime": 1780169010.8258739,
-    "hash": "f77c0c085cce0d560a1357c4012858ad"
+    "mtime": 1780172510.2267637,
+    "hash": "18c84e3fd2f8e7b61875b14a34767224"
   },
   "/Users/yashsagar/Downloads/er-app/server/middleware/auth.js": {
     "mtime": 1779076653.7835994,
@@ -39,9 +39,17 @@
     "mtime": 1779076633.5616271,
     "hash": "2161c8887fb8bf1b47f624bd7d43454d"
   },
+  "/Users/yashsagar/Downloads/er-app/server/db/pool.js": {
+    "mtime": 1780172493.152899,
+    "hash": "996927236b1922514b145a32cbc129eb"
+  },
   "/Users/yashsagar/Downloads/er-app/server/db/migrations/0001_init.sql": {
     "mtime": 1779076628.3001916,
     "hash": "a52b6a270998f3d35d2a2a8112511652"
+  },
+  "/Users/yashsagar/Downloads/er-app/server/db/migrations/0009_indexes.sql": {
+    "mtime": 1780172360.9530935,
+    "hash": "4302d35db5db5446b3c955c82b566961"
   },
   "/Users/yashsagar/Downloads/er-app/server/db/migrations/0007_marketplace_admin.sql": {
     "mtime": 1780168421.130917,
@@ -59,73 +67,77 @@
     "mtime": 1780119523.6343818,
     "hash": "e15a131c82dc2c84d8002391505e8207"
   },
+  "/Users/yashsagar/Downloads/er-app/server/db/migrations/0008_outbox_atomic_claim.sql": {
+    "mtime": 1780171741.906822,
+    "hash": "bb44044b81cfa376b6b4a2ed5bb16ea7"
+  },
   "/Users/yashsagar/Downloads/er-app/server/db/migrations/0004_marketplace_messaging.sql": {
     "mtime": 1780166913.3098383,
     "hash": "4ae440f13f4362c4b578a565ce81250d"
   },
   "/Users/yashsagar/Downloads/er-app/server/jobs/outbox-dispatcher.js": {
-    "mtime": 1780169005.3861003,
-    "hash": "cd33079b1e0dbbaeebf4098380b4db53"
+    "mtime": 1780171961.9022202,
+    "hash": "719493cf9fa82943f9c9d51d47fb4806"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/applications.js": {
-    "mtime": 1780139793.0078208,
-    "hash": "b63e9af3109279ec4cbbf7b19e8c86a3"
+    "mtime": 1780172871.3032067,
+    "hash": "11047ca91b89f709f9880066c406317c"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/sponsorship-payments.js": {
     "mtime": 1780168130.1238484,
     "hash": "2fb2ba6a6f0d4b025ab265112efb1bf7"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/obligations.js": {
-    "mtime": 1780167770.0710323,
-    "hash": "e49bacd949d6ef2a19635d2c35930c2e"
+    "mtime": 1780172822.2673683,
+    "hash": "426035852e1bc0179ee7510e14f01580"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/auth.js": {
     "mtime": 1780119975.9531918,
     "hash": "94367528a6bb2c3df25b60dde33d99a4"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/stripe-webhook.js": {
-    "mtime": 1780168148.8360732,
-    "hash": "d47d57485488d9df0e623a8fdf86c34b"
+    "mtime": 1780171648.8881109,
+    "hash": "90b4316c7cf667620e65a00a2bb84a8e"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/stripe.js": {
     "mtime": 1780060731.3898094,
     "hash": "add1a563c823b461010eaf5ff339ee17"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/sponsor.js": {
-    "mtime": 1780168464.079684,
-    "hash": "8013255f263f940a063012e2d6c3ac67"
+    "mtime": 1780172921.2370994,
+    "hash": "157284b73e187585fad296a39b7e8798"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/manager.js": {
     "mtime": 1780060731.3897297,
     "hash": "74ebb745fbdd75a4167b32a849001151"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/conversations.js": {
-    "mtime": 1780165387.9550571,
-    "hash": "e9258a4b0b90a783f8baf2b66f99eb74"
+    "mtime": 1780172911.0239346,
+    "hash": "ce56131d2641bfba93ff9df67648ebfa"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/fighter.js": {
     "mtime": 1780168455.1882832,
     "hash": "aecc193b888ae5d5b6b20e035cec070e"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/admin.js": {
-    "mtime": 1780168441.057155,
-    "hash": "fe37496b08999efc3909b8f43a4169b5"
+    "mtime": 1780172254.2040777,
+    "hash": "a54a7f82207667529eb6fee4cc8808db"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/opportunities.js": {
-    "mtime": 1780139384.255801,
-    "hash": "050b83c75c501356d4b32bf36ad4e3e4"
+    "mtime": 1780172167.7699163,
+    "hash": "0bb5dde1235238831941e4bd98fa747e"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/notifications.js": {
     "mtime": 1780165399.9334075,
     "hash": "b534ffeea71cba443b157ec97f97afbb"
   },
   "/Users/yashsagar/Downloads/er-app/server/routes/contracts.js": {
-    "mtime": 1780168174.48249,
-    "hash": "4dffd7667d9a85df8b1bf29e3c911f52"
+    "mtime": 1780172756.497204,
+    "hash": "bf2381840d2d7f5ea7d91be6714bd312"
   },
   "/Users/yashsagar/Downloads/er-app/server/services/email.js": {
-    "mtime": 1780168974.2523608,
-    "hash": "0b763fbca7231760b504637afbbd09a6"
+    "mtime": 1780171698.0111382,
+    "hash": "0ffc66734ba9d63be31ce9ec514cb138"
   },
   "/Users/yashsagar/Downloads/er-app/src/App.tsx": {
     "mtime": 1780167918.582813,
@@ -192,8 +204,8 @@
     "hash": "bdb0426d892e0af45f775f25f722a64a"
   },
   "/Users/yashsagar/Downloads/er-app/src/hooks/useAuth.tsx": {
-    "mtime": 1780120045.62596,
-    "hash": "bca21baccd158ce8bbf02c57835fe7b5"
+    "mtime": 1780169851.6804,
+    "hash": "0064a5be990809e7b69bc1999f6ae3f9"
   },
   "/Users/yashsagar/Downloads/er-app/src/hooks/useScrollReveal.ts": {
     "mtime": 1775234318.0,
@@ -272,12 +284,12 @@
     "hash": "e6efef7ccd09e9c0d1b06e90a4e79acc"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/RegisterPage.tsx": {
-    "mtime": 1780120294.8661568,
-    "hash": "d534299f7fe3021e29d119f79cd45104"
+    "mtime": 1780170129.0707152,
+    "hash": "401cf1d0d425db73acc86ab4dd95c597"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/LoginPage.tsx": {
-    "mtime": 1780060731.3954585,
-    "hash": "baca532439dcdaaf0302956369a4636f"
+    "mtime": 1780170144.4758132,
+    "hash": "ee5de3ce5d4b4eb264ff414d7e5f67b0"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/VerifyEmailPage.tsx": {
     "mtime": 1780060731.3959346,
@@ -316,8 +328,8 @@
     "hash": "6b1e167c782ee29737de3a828c1b4d2e"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/opportunities/DiscoveryPage.tsx": {
-    "mtime": 1780138448.2539241,
-    "hash": "812dd1170b6e4f22bb83bc65d5c4516b"
+    "mtime": 1780170018.7849011,
+    "hash": "c80d52400b33b9c1defa542936f45d6f"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/contracts/DetailPage.tsx": {
     "mtime": 1780168270.8196456,
@@ -336,8 +348,8 @@
     "hash": "14b89b11406200b895071061fc883f4a"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/dashboards/SponsorDashboard.tsx": {
-    "mtime": 1780168570.9624193,
-    "hash": "f42618753b0f4f46eb187519c125d22e"
+    "mtime": 1780170279.8079224,
+    "hash": "4476b1c6c2b4928cd552bc23b645bdf9"
   },
   "/Users/yashsagar/Downloads/er-app/src/pages/dashboards/DashShell.tsx": {
     "mtime": 1780060731.3966312,
@@ -368,8 +380,8 @@
     "hash": "55140fb1745fed2982e599c80826f8b5"
   },
   "/Users/yashsagar/Downloads/er-app/render.yaml": {
-    "mtime": 1780169031.666447,
-    "hash": "6e2bb91407b0ae4ecafe875b47766bfd"
+    "mtime": 1780172525.616895,
+    "hash": "af390d6b3c43fc86416a1f0716478fad"
   },
   "/Users/yashsagar/Downloads/er-app/index.html": {
     "mtime": 1779039310.284267,
