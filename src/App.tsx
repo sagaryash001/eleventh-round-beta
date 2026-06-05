@@ -1,29 +1,30 @@
-import React, { useEffect, Component } from 'react'
+import React, { useEffect, Component, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import HomePage from './pages/HomePage'
-import LoginPage from './pages/LoginPage'
-import PodcastPage from './pages/PodcastPage'
-import ApparelPage from './pages/ApparelPage'
-import TeamPage from './pages/TeamPage'
-import RegisterPage from './pages/RegisterPage'
-import VerifyEmailPage from './pages/VerifyEmailPage'
-import FighterDashboard from './pages/dashboards/FighterDashboard'
-import ManagerDashboard from './pages/dashboards/ManagerDashboard'
-import AdminDashboard from './pages/dashboards/AdminDashboard'
-import SponsorDashboard from './pages/dashboards/SponsorDashboard'
-import SponsorOnboardPage from './pages/sponsor/SponsorOnboardPage'
-import OpportunityFormPage from './pages/sponsor/OpportunityFormPage'
-import SponsorOpportunitiesPage from './pages/sponsor/OpportunitiesPage'
-import ApplicantsPage from './pages/sponsor/ApplicantsPage'
-import FighterProfileEditPage from './pages/fighter/FighterProfileEditPage'
-import MyApplicationsPage from './pages/fighter/MyApplicationsPage'
-import DiscoveryPage from './pages/opportunities/DiscoveryPage'
-import OpportunityDetailPage from './pages/opportunities/DetailPage'
-import InboxPage from './pages/InboxPage'
-import ContractsListPage from './pages/contracts/ListPage'
-import ContractDetailPage from './pages/contracts/DetailPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './context/CartContext'
+
+const HomePage              = lazy(() => import('./pages/HomePage'))
+const LoginPage             = lazy(() => import('./pages/LoginPage'))
+const RegisterPage          = lazy(() => import('./pages/RegisterPage'))
+const VerifyEmailPage       = lazy(() => import('./pages/VerifyEmailPage'))
+const PodcastPage           = lazy(() => import('./pages/PodcastPage'))
+const ApparelPage           = lazy(() => import('./pages/ApparelPage'))
+const TeamPage              = lazy(() => import('./pages/TeamPage'))
+const FighterDashboard      = lazy(() => import('./pages/dashboards/FighterDashboard'))
+const ManagerDashboard      = lazy(() => import('./pages/dashboards/ManagerDashboard'))
+const AdminDashboard        = lazy(() => import('./pages/dashboards/AdminDashboard'))
+const SponsorDashboard      = lazy(() => import('./pages/dashboards/SponsorDashboard'))
+const SponsorOnboardPage    = lazy(() => import('./pages/sponsor/SponsorOnboardPage'))
+const OpportunityFormPage   = lazy(() => import('./pages/sponsor/OpportunityFormPage'))
+const SponsorOpportunitiesPage = lazy(() => import('./pages/sponsor/OpportunitiesPage'))
+const ApplicantsPage        = lazy(() => import('./pages/sponsor/ApplicantsPage'))
+const FighterProfileEditPage = lazy(() => import('./pages/fighter/FighterProfileEditPage'))
+const MyApplicationsPage    = lazy(() => import('./pages/fighter/MyApplicationsPage'))
+const DiscoveryPage         = lazy(() => import('./pages/opportunities/DiscoveryPage'))
+const OpportunityDetailPage = lazy(() => import('./pages/opportunities/DetailPage'))
+const InboxPage             = lazy(() => import('./pages/InboxPage'))
+const ContractsListPage     = lazy(() => import('./pages/contracts/ListPage'))
+const ContractDetailPage    = lazy(() => import('./pages/contracts/DetailPage'))
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -117,6 +118,10 @@ function AppRoutes() {
   )
 }
 
+const PageFallback = () => (
+  <div style={{ minHeight: '100vh', background: '#080808' }} />
+)
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -125,7 +130,9 @@ export default function App() {
           <CartProvider>
             <ScrollToTop />
             <div className="noise-overlay" />
-            <AppRoutes />
+            <Suspense fallback={<PageFallback />}>
+              <AppRoutes />
+            </Suspense>
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>

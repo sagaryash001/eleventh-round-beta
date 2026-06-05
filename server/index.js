@@ -2,121 +2,17 @@
 // Eleventh Round — API server bootstrap
 // ─────────────────────────────────────────────────────────────────────────────
 
-import express     from 'express'
-import cors        from 'cors'
-import dotenv      from 'dotenv'
-import rateLimit   from 'express-rate-limit'
-import pinoHttp    from 'pino-http'
+import dotenv from 'dotenv'
 
 // Load .env from project root (one level up from /server)
 dotenv.config({ path: new URL('../.env', import.meta.url).pathname })
 
-import { logger }    from './lib/logger.js'
-import { pool }      from './db/pool.js'
-import authRoutes    from './routes/auth.js'
-import fighterRoutes from './routes/fighter.js'
-import managerRoutes from './routes/manager.js'
-import adminRoutes   from './routes/admin.js'
-import sponsorRoutes        from './routes/sponsor.js'
-import opportunityRoutes    from './routes/opportunities.js'
-import applicationRoutes    from './routes/applications.js'
-import conversationRoutes   from './routes/conversations.js'
-import notificationRoutes   from './routes/notifications.js'
-import contractRoutes          from './routes/contracts.js'
-import obligationRoutes        from './routes/obligations.js'
-import paymentRoutes           from './routes/sponsorship-payments.js'
-import stripeWebhookRoutes     from './routes/stripe-webhook.js'
-import stripeRoutes            from './routes/stripe.js'
+import app from './app.js'
+import { logger } from './lib/logger.js'
+import { pool }   from './db/pool.js'
 import { startOutboxDispatcher } from './jobs/outbox-dispatcher.js'
 
-const app  = express()
 const PORT = process.env.PORT || 3001
-
-// Extra CORS origins (comma-separated) for custom domains, set in env.
-const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
-  .split(',').map(s => s.trim()).filter(Boolean)
-
-// ── Structured request logging ──────────────────────────────────────────────
-app.use(pinoHttp({
-  logger,
-  customLogLevel: (req, res, err) => {
-    if (err || res.statusCode >= 500) return 'error'
-    if (res.statusCode >= 400)        return 'warn'
-    return 'info'
-  },
-}))
-
-// ── CORS ────────────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true)
-    if (origin === (process.env.CLIENT_URL || 'http://localhost:5173')) return cb(null, true)
-    if (/^https:\/\/[a-z0-9-]+\.eleventh-rnd\.com$/.test(origin))       return cb(null, true)
-    if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin))             return cb(null, true)
-    if (extraOrigins.includes(origin))                                  return cb(null, true)
-    logger.warn({ origin }, 'CORS blocked')
-    cb(new Error(`CORS blocked: ${origin}`))
-  },
-  credentials: true,
-}))
-
-// ── Stripe webhook MUST come before express.json() — it needs raw body ──────
-app.use('/api/stripe/webhook',
-  express.raw({ type: 'application/json' }),
-  stripeWebhookRoutes,
-)
-
-// ── JSON parsing for everything else ────────────────────────────────────────
-app.use(express.json({ limit: '256kb' }))
-
-// ── Rate limiting (public endpoints) ────────────────────────────────────────
-const publicLimiter = rateLimit({
-  windowMs: 60_000,
-  max: Number(process.env.RATE_LIMIT_PUBLIC_PER_MIN || 20),
-  standardHeaders: true,
-  legacyHeaders:   false,
-  message: { error: 'Too many requests. Slow down and try again in a minute.' },
-})
-app.use('/api/auth', publicLimiter)
-
-// ── Routes ──────────────────────────────────────────────────────────────────
-app.use('/api/auth',    authRoutes)
-app.use('/api/fighter', fighterRoutes)
-app.use('/api/manager', managerRoutes)
-app.use('/api/admin',   adminRoutes)
-app.use('/api/sponsor',       sponsorRoutes)
-app.use('/api/opportunities', opportunityRoutes)
-app.use('/api/applications',  applicationRoutes)
-app.use('/api/conversations', conversationRoutes)
-app.use('/api/notifications', notificationRoutes)
-app.use('/api/contracts',    contractRoutes)
-app.use('/api/obligations',  obligationRoutes)
-app.use('/api/payments',     paymentRoutes)
-app.use('/api/stripe',       stripeRoutes)
-
-// ── Health check ────────────────────────────────────────────────────────────
-app.get('/api/health', (_req, res) => res.json({
-  ok: true,
-  ts: Date.now(),
-  env: process.env.NODE_ENV || 'development',
-  supabase: !!process.env.SUPABASE_URL,
-  email: !!process.env.EMAIL_HOST,
-  pool: pool ? { total: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount } : null,
-}))
-
-// ── 404 ─────────────────────────────────────────────────────────────────────
-app.use((req, res) => res.status(404).json({ error: 'Not found', path: req.path }))
-
-// ── Centralized error handler ───────────────────────────────────────────────
-app.use((err, req, res, _next) => {
-  req.log?.error({ err }, 'Unhandled error')
-  if (res.headersSent) return
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error.'
-      : err.message,
-  })
-})
 
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

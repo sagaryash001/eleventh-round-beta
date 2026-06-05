@@ -1,0 +1,2880 @@
+{
+  "version": "9.3.2",
+  "generatedAt": "2026-05-31T08:28:45.446Z",
+  "rootPath": "C:\\Users\\athar\\eleventh-round-beta",
+  "recon": {
+    "frameworks": [
+      "vite"
+    ],
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "apiRoutes": [],
+    "authPatterns": [
+      "server/middleware/auth.js",
+      "server/routes/auth.js",
+      "supabase-auth"
+    ],
+    "databases": [
+      "supabase"
+    ],
+    "cloudProviders": [
+      "render",
+      "vercel"
+    ],
+    "frontendExposure": [],
+    "packageManagers": [
+      "npm"
+    ],
+    "cicd": [],
+    "hasDockerfile": false,
+    "hasTerraform": false,
+    "hasKubernetes": false,
+    "envFiles": [
+      ".env",
+      ".env.example"
+    ],
+    "configFiles": [
+      "vercel.json"
+    ]
+  },
+  "fileIndex": {
+    ".env": {
+      "hash": "a3857b0484fec04035d16f28ef3aae2edd5b97e0f3802ccc95ebbac65022073e",
+      "size": 1909,
+      "lastScanned": "2026-05-31T08:28:45.422Z"
+    },
+    ".env.example": {
+      "hash": "87f434968b2cbd25aeb2819eb24036fb1bb986048091826a96f3815a635699e3",
+      "size": 7492,
+      "lastScanned": "2026-05-31T08:28:45.423Z"
+    },
+    ".gitignore": {
+      "hash": "8ff1ca4cea0374f3d32b229576586c0080a1bb1d9461cc849c1d6a7520e81706",
+      "size": 101,
+      "lastScanned": "2026-05-31T08:28:45.423Z"
+    },
+    ".impeccable.md": {
+      "hash": "ed5bdcc92aa95b6e237e6ae6bfa36d9d546aaddccc99b93b5666b32efd86238e",
+      "size": 2136,
+      "lastScanned": "2026-05-31T08:28:45.423Z"
+    },
+    "CLAUDE.md": {
+      "hash": "22cf0e76bbc9f0b3e605636bf1f0848e4909a6fe6aa07510f350f6fb5b8884bf",
+      "size": 763,
+      "lastScanned": "2026-05-31T08:28:45.423Z"
+    },
+    "index.html": {
+      "hash": "64bc3a5cab7d7ee592e8b7412586457f25ca2d33627506af898ac38cb843e70e",
+      "size": 820,
+      "lastScanned": "2026-05-31T08:28:45.424Z"
+    },
+    "package.json": {
+      "hash": "f51598c7311aecc8d8761ae40ff4645343e2231856e6cc15b96e1d445d2f556e",
+      "size": 1258,
+      "lastScanned": "2026-05-31T08:28:45.424Z"
+    },
+    "postcss.config.js": {
+      "hash": "374f669f08b18e67d0a7264fa45b71228017e604fe7f6db8a5c1bd5ba27e5c98",
+      "size": 86,
+      "lastScanned": "2026-05-31T08:28:45.424Z"
+    },
+    "README.md": {
+      "hash": "12c347b682455faf054d4c3f08526071f082fb816aa403ef83a4361d184024ec",
+      "size": 11196,
+      "lastScanned": "2026-05-31T08:28:45.425Z"
+    },
+    "render.yaml": {
+      "hash": "6e03d9f3b577ae45e0d50781dac41cbcad720eabb0a62c9b5b42ba39800d3b83",
+      "size": 3917,
+      "lastScanned": "2026-05-31T08:28:45.425Z"
+    },
+    "tailwind.config.js": {
+      "hash": "5018513eea8d6922911abb04f4cebafbde161dcadf0408a88b24274fd8de622e",
+      "size": 905,
+      "lastScanned": "2026-05-31T08:28:45.426Z"
+    },
+    "tsconfig.json": {
+      "hash": "70030395f435733c163b7eaafba9766dc1a8c1dea640c5eaa495207a3344cb23",
+      "size": 585,
+      "lastScanned": "2026-05-31T08:28:45.426Z"
+    },
+    "tsconfig.node.json": {
+      "hash": "e2926034a7ed41a1431e4b8e60e58371af014a8856a3fcc583d3efa85440b996",
+      "size": 244,
+      "lastScanned": "2026-05-31T08:28:45.426Z"
+    },
+    "vercel.json": {
+      "hash": "03c7f21fe3db75f45c7f87ee12f2dc323c98119588e04582fc7580bc9e1dd080",
+      "size": 805,
+      "lastScanned": "2026-05-31T08:28:45.426Z"
+    },
+    "vite.config.ts": {
+      "hash": "838d1a8a305c25ce4655534481e5666a3cba243afba0d5c115eb3afb2ba90afd",
+      "size": 624,
+      "lastScanned": "2026-05-31T08:28:45.426Z"
+    },
+    "vitest.config.ts": {
+      "hash": "cf016c3f9dd351d7fd6644bb23cc03c290f64553deaca19d5c8430d2a7a9689a",
+      "size": 243,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    ".claude/settings.json": {
+      "hash": "dcde95770f9cbca6ccd37d5201cd9a6fb2dea34ece508a9dcae95d3fe8d7742d",
+      "size": 704,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    ".claude/settings.local.json": {
+      "hash": "46130515f6687d769937262e936f105c0d31ebc5cac082ed960df07a14b99b93",
+      "size": 2272,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    ".remember/.gitignore": {
+      "hash": "cdbcae15105d6b781e620813c79c7e868740d4e9cc53ce6f5fcbbc12387adf4b",
+      "size": 2,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    ".remember/now.md": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    ".remember/today-2026-05-31.md": {
+      "hash": "dbd8d7fc5aff8001254e92c7bcdd59f0aa6a90ad5e889ffe533e029a12f937c2",
+      "size": 193,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    "design-reference/Downloads - Shortcut.lnk": {
+      "hash": "1f3019be46586ee986a9c8f61d83551675e7c070bf756307b576cd9eef1549d4",
+      "size": 742,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    "docs/sponsorship-marketplace-tdd.md": {
+      "hash": "78de1e777c7dc80ac569ae474c7bb6613db9a70dd528af43edb06da05c5f4ce6",
+      "size": 51737,
+      "lastScanned": "2026-05-31T08:28:45.427Z"
+    },
+    ".playwright-mcp/console-2026-05-12T16-38-58-639Z.log": {
+      "hash": "ad9f8e0c5584f6a3b232b3b40bc62a1c1d6a440a2639762b2bfdc54d73e2aa40",
+      "size": 1655,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/console-2026-05-12T16-39-59-893Z.log": {
+      "hash": "241183e377f76e5fcdf91e269d0c7b16c2c96f2d29e8d584bede39101da3830d",
+      "size": 2160,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/console-2026-05-12T16-42-41-979Z.log": {
+      "hash": "4508dc19cedca2603107faca25fe63e19901335b559b7f1725249136b4aa121b",
+      "size": 988,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/console-2026-05-12T16-43-34-944Z.log": {
+      "hash": "63419202f7f8ee361b64a3191825a98c26ed6ee7748caf96008c870995d6a4e8",
+      "size": 1976,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-39-00-066Z.yml": {
+      "hash": "798857d3b504ecb324bc106624c894637b360d3469413ad97117227c8efe7a8f",
+      "size": 1886,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-39-09-912Z.yml": {
+      "hash": "798857d3b504ecb324bc106624c894637b360d3469413ad97117227c8efe7a8f",
+      "size": 1886,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-40-00-081Z.yml": {
+      "hash": "09194c2a769e13af44448d32abd19ecededdc91864b0c326a9e57c416a31810a",
+      "size": 13041,
+      "lastScanned": "2026-05-31T08:28:45.428Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-40-07-389Z.yml": {
+      "hash": "8bbc4402ee5da29f964ea4aa8a5df265aab395437fe393843990273b2ab218e5",
+      "size": 13077,
+      "lastScanned": "2026-05-31T08:28:45.429Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-42-13-020Z.yml": {
+      "hash": "789cd03a6c39fa43f7c9574d9a1e192128692c22625e5dbe81286262c1fc8cea",
+      "size": 13078,
+      "lastScanned": "2026-05-31T08:28:45.429Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-42-42-086Z.yml": {
+      "hash": "463debb9ef9f20b29df18c75afe1ba0c6cddf9202c6468c7fd80366f7e5c2c8f",
+      "size": 228,
+      "lastScanned": "2026-05-31T08:28:45.429Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-43-07-920Z.yml": {
+      "hash": "1bc7660e3731bcc722bbe1b2178b052df0f7ac0f582380020c2e30fe16343af1",
+      "size": 13091,
+      "lastScanned": "2026-05-31T08:28:45.429Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-43-35-370Z.yml": {
+      "hash": "09194c2a769e13af44448d32abd19ecededdc91864b0c326a9e57c416a31810a",
+      "size": 13041,
+      "lastScanned": "2026-05-31T08:28:45.429Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-43-53-543Z.yml": {
+      "hash": "1700a36dfa508db3f265a4c5e03a5e1da39fad4a8c233a8cae7192d2b9788941",
+      "size": 12972,
+      "lastScanned": "2026-05-31T08:28:45.429Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-44-47-031Z.yml": {
+      "hash": "1521053ab0426629b05a8d621c7c33538ab7c6590df125c69248bf1946acbbdd",
+      "size": 12981,
+      "lastScanned": "2026-05-31T08:28:45.430Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-45-45-078Z.yml": {
+      "hash": "1521053ab0426629b05a8d621c7c33538ab7c6590df125c69248bf1946acbbdd",
+      "size": 12981,
+      "lastScanned": "2026-05-31T08:28:45.430Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-46-25-304Z.yml": {
+      "hash": "1521053ab0426629b05a8d621c7c33538ab7c6590df125c69248bf1946acbbdd",
+      "size": 12981,
+      "lastScanned": "2026-05-31T08:28:45.430Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-52-15-258Z.yml": {
+      "hash": "b7326736182c9effdcba5c08b5b9f64c1b18106eccddc73d298b7916be2c9ef7",
+      "size": 12763,
+      "lastScanned": "2026-05-31T08:28:45.430Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-52-35-312Z.yml": {
+      "hash": "b7326736182c9effdcba5c08b5b9f64c1b18106eccddc73d298b7916be2c9ef7",
+      "size": 12763,
+      "lastScanned": "2026-05-31T08:28:45.430Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-53-12-610Z.yml": {
+      "hash": "7b254a0852551efc1fd9d233c18553dceeb8683976ac4c192acff10efd5189de",
+      "size": 12647,
+      "lastScanned": "2026-05-31T08:28:45.430Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-53-26-716Z.yml": {
+      "hash": "7b254a0852551efc1fd9d233c18553dceeb8683976ac4c192acff10efd5189de",
+      "size": 12647,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    ".playwright-mcp/page-2026-05-12T16-53-48-235Z.yml": {
+      "hash": "7b254a0852551efc1fd9d233c18553dceeb8683976ac4c192acff10efd5189de",
+      "size": 12647,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    "server/app.js": {
+      "hash": "7b6b7d6d5c32b67acfeecee6d2e91e5eac257edf3d9592bf9d4055e19b1c9076",
+      "size": 5950,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    "server/index.js": {
+      "hash": "1f9bccccf903a326d1da9064f65df89930eacb784e62441af90cfed0e1472ec4",
+      "size": 1656,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    "server/package.json": {
+      "hash": "2e3acc7258cf61260fb79577b9df04eb050e657fff4c656e3a85fb8953abe4f0",
+      "size": 889,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    "server/vitest.config.js": {
+      "hash": "d42e9fba4d568a053d3ce531fde15d93035208e049bcd7d5950fe8ea3957c1e8",
+      "size": 138,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    ".remember/tmp/last-ndc.ts": {
+      "hash": "8595b9405aedd9b321f30c45999cc917e276d46e4d038b11c0239c4a785f32a9",
+      "size": 11,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    ".remember/tmp/last-save-ts": {
+      "hash": "0f8dda79cd7e2967868c8958a1a9c257fc3c28c0ab79ee3f90ba21323e9c751c",
+      "size": 11,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    ".remember/tmp/last-save.json": {
+      "hash": "d13a7929aad6a6582d5f591acc0395dbe17739c68e1576312ef10bfbb23b78ee",
+      "size": 64,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    ".remember/tmp/save-session.pid": {
+      "hash": "059df89c549121dcce31659a1cab11da37c1558d5e8591e660ebeb04e39bf8a7",
+      "size": 5,
+      "lastScanned": "2026-05-31T08:28:45.431Z"
+    },
+    ".remember/logs/hook-errors.log": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    ".remember/logs/memory-2026-05-31.log": {
+      "hash": "4467fb7862d893a9150a699ea83536f9d1452f89c38e31e18c7ec4af72f963ad",
+      "size": 35473,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "design-reference/stitch_eleventh_round_cinematic_redesign/code.html": {
+      "hash": "bb4a1c72bb6e82000793269c84489d01b4d43cd15d62279a454582dd98824807",
+      "size": 27690,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md": {
+      "hash": "5d6ef70075baf8e1d28538ae7e8a1ab6666e7b39132acdbf042b44d336a542af",
+      "size": 8324,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "src/App.tsx": {
+      "hash": "bc36e983f2617b4e5a2fcfafa21004f9d1c309612fdf853e5157e8f0014f2d40",
+      "size": 5773,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "src/index.css": {
+      "hash": "2222468ca67a5b58549a15dac46fba06194efd80f08524e685aee9656c79b115",
+      "size": 10793,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "src/main.tsx": {
+      "hash": "9be09253c7b31ea38fcfa4a082cb5bbc84b7a75a711acc51e0a6a84359136f08",
+      "size": 714,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "server/db/pool.js": {
+      "hash": "72f64ed3a3410224a732c95c681716ba5e9f35a55478f5e0c98ae20ac117be60",
+      "size": 4187,
+      "lastScanned": "2026-05-31T08:28:45.432Z"
+    },
+    "server/db/supabase.js": {
+      "hash": "fd645f3fb4e303dfdb883a5208379b5e58c0ba021cbde4f392554c4f2e6c558a",
+      "size": 2499,
+      "lastScanned": "2026-05-31T08:28:45.433Z"
+    },
+    "server/jobs/outbox-dispatcher.js": {
+      "hash": "933d687dd5da246c8ae8a3bc28b67258c5e6300593fb281849035b11b9c24f66",
+      "size": 9883,
+      "lastScanned": "2026-05-31T08:28:45.433Z"
+    },
+    "server/middleware/auth.js": {
+      "hash": "18e5a50f60187db7699876f3befed72836234105eab28776d8e4a5a715686bad",
+      "size": 3752,
+      "lastScanned": "2026-05-31T08:28:45.433Z"
+    },
+    "server/lib/logger.js": {
+      "hash": "ba4e6aeb5e8df170773f6119c64fd6692db7c6a5865a3c8ec3bab97f57115ca1",
+      "size": 1338,
+      "lastScanned": "2026-05-31T08:28:45.433Z"
+    },
+    "server/lib/matching.js": {
+      "hash": "c1daffc018abadd728e2600d04fb0ab2d1129c947bf7c93b22cb9f8cb2419c09",
+      "size": 7229,
+      "lastScanned": "2026-05-31T08:28:45.433Z"
+    },
+    "server/lib/state-machines.js": {
+      "hash": "d2e97645712cd363a1ce45a7c92d1190edfc2344c3b1e56ab2ab7db8ef6b316a",
+      "size": 2715,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/lib/validate.js": {
+      "hash": "91de6234ba637b8b3b1bc30451a1fd65b46228d9089c77d48dcd087d12707a9a",
+      "size": 3314,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/services/email.js": {
+      "hash": "84cc66d5dc2bf7e8dd7a5ee0de0712f74a0b0e0b9cfb78c057cb9b184ce78544",
+      "size": 5857,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/tests/auth-guard.test.js": {
+      "hash": "7af0d8fe7f05da2c4f61578d23ad41a57e71eb0dff75698a1c0b76642550aab5",
+      "size": 1404,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/tests/auth-validation.test.js": {
+      "hash": "719ba0a4e88eacbb769802615a89bd5d96c3ab50ff59c01961216c0982a45230",
+      "size": 2851,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/tests/health.test.js": {
+      "hash": "7d05f98fbfc94abc76f64fe9121d77551be1f5d24350d608df9619aecdea69e2",
+      "size": 766,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/routes/admin.js": {
+      "hash": "c0c5bbc213cdf46795cb70f0187d3b43ee5dc8d2ff3a734a15cad0f50b84aac3",
+      "size": 15896,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/routes/applications.js": {
+      "hash": "adc294e120e241a8a8a8d0b2231dcf18e39dfb12e73eec76ab4daec5f965e6f7",
+      "size": 11021,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/routes/auth.js": {
+      "hash": "436d3a2b3081e82490b8d3535870fdd67c972c3c51b6c817a0da247109a82277",
+      "size": 13765,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/routes/contracts.js": {
+      "hash": "b2a2c38e67f575a6ef8ece7f699a2b5d34f204d454b026a32d9ee3aae531e7b7",
+      "size": 19689,
+      "lastScanned": "2026-05-31T08:28:45.434Z"
+    },
+    "server/routes/conversations.js": {
+      "hash": "31b442da0e5fc22270963dda42002af6417b56a44afa194f098745d6eb7a2cc6",
+      "size": 12187,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/fighter.js": {
+      "hash": "d0b30781d995f9cd83ca3a8d0fcc643db7d23e71e5d1cc388f2e49603467ce3d",
+      "size": 17809,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/manager.js": {
+      "hash": "b59d094ea0b23d6b1df32e42d0a50d460c10285fdea60fc16197236c1e9b552c",
+      "size": 12124,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/notifications.js": {
+      "hash": "79d569486a0ca661dd1cec5a111478f8b9210472e196ab70d1d22b3a892256e9",
+      "size": 2892,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/obligations.js": {
+      "hash": "2045b1cb87a13a2e17bd380e514e4cb5a160235d648a4e7f2c9dc55fc49dfdc6",
+      "size": 7942,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/opportunities.js": {
+      "hash": "32330530445e3dcaf14aa870e6602de56904639520073ea0fa9f86bce046f612",
+      "size": 13093,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/sponsor.js": {
+      "hash": "e64d195b653fb849dd5e7b4d6c84a83563a017744e5d0b536e30acea93ce5d29",
+      "size": 7742,
+      "lastScanned": "2026-05-31T08:28:45.435Z"
+    },
+    "server/routes/sponsorship-payments.js": {
+      "hash": "b20467941e0cac4818f089d7a01c3adfcc3ec016611370053c7015c3dfb13140",
+      "size": 8063,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "server/routes/stripe-webhook.js": {
+      "hash": "7748a7720ed2a7d7ebb00ba208f5f7cccb3eb472444f34039749ab6d668bb9e9",
+      "size": 4600,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "server/routes/stripe.js": {
+      "hash": "f07c27290b7f781cd726bd3314f2803b33c848f2636698101ec8dbaca28dc923",
+      "size": 2007,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/context/CartContext.tsx": {
+      "hash": "6b73a622db368428f214b1d0710b9dac850e7ad742a2997d40bae1bf9ca29f60",
+      "size": 3093,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/components/DashboardPreview.tsx": {
+      "hash": "5d19ebd8349b8c92c7e2a5b297ebb4e25435ca9154b48ed86083c3896997c42e",
+      "size": 16030,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/components/FinalCTA.tsx": {
+      "hash": "c4f4e9d5533ba6575958a1721f3e5505eda592030e88d7dca6d25dc963d573d3",
+      "size": 6448,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/components/Footer.tsx": {
+      "hash": "fb679938b274c9ed3852a553df336f4b9eb8520f19d2afb4530befcafb14c43d",
+      "size": 6003,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/components/HeroSection.tsx": {
+      "hash": "d1e2e1c34947ee59fc0828369e7bcf86f5f67fd2b01d03851b0315478cf16bf8",
+      "size": 20644,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/components/IntroSequence.tsx": {
+      "hash": "9e277f70b92a6d7a037cd68fc599b3bf83aee818a8cdc0bb012721d21f883aa7",
+      "size": 9281,
+      "lastScanned": "2026-05-31T08:28:45.436Z"
+    },
+    "src/components/Navbar.tsx": {
+      "hash": "86f3703ceeab2d7e6444ebead31234648b7a6a410d192b56f613f7cb00a110fa",
+      "size": 19238,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/components/ProblemsSection.tsx": {
+      "hash": "b381f5cf1738d712bbb0ca9f715b60f64cf5fa43af97605e322b617888c723e5",
+      "size": 10396,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/components/ProductsCarousel.tsx": {
+      "hash": "f47dff6e398883cbf81b9d14bace266387c54490147733f76790d5f1eaa3d54b",
+      "size": 26233,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/components/TeamSection.tsx": {
+      "hash": "97f074cfbcaed65baeccf9530e49978ea461e2e64c548ecdacb8f116e89c528b",
+      "size": 16011,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/components/TestimonialsSection.tsx": {
+      "hash": "b29f1fb9c5f0d908635b4b9176274b989fac8ee17e46d4a3d0164a340a73ab3a",
+      "size": 8783,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/data/problems.ts": {
+      "hash": "221e4e33ea415466cb7c43f22395939a8a7ddf480937b9e600ce43e0161e863f",
+      "size": 4365,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/data/products.ts": {
+      "hash": "8668fd1782fbe03af97e980270d741fc08602a23190d303ead7c3d0c392fdb8a",
+      "size": 4268,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/data/team.ts": {
+      "hash": "03c7a2c1066af9f111a140c3c3a0f956fa50cc521976a7e29602123819376b75",
+      "size": 4419,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/lib/api.ts": {
+      "hash": "b5903cbabe640f12bc8433745093cdf2503edeca91f3b2720af398310cc83719",
+      "size": 1415,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/lib/supabase.ts": {
+      "hash": "04cc56eb43a78165986945f98a31a4a05ee171b1ef0b977facc6a0802a53685a",
+      "size": 1992,
+      "lastScanned": "2026-05-31T08:28:45.437Z"
+    },
+    "src/test/LoginPage.test.tsx": {
+      "hash": "7dd0a2fca92effb0ceeeba1ad293c06c548787b184807a214a40f9fb3cb4dfe0",
+      "size": 1504,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/test/Navbar.test.tsx": {
+      "hash": "4f81cdedfdfe16e907f938eea8681d96e8a1b7c4ab8a065cf3f9d2f45e522f54",
+      "size": 1019,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/test/setup.ts": {
+      "hash": "27b9e0f69d156c680ff63560e58a12c01a4abec1bdb4756534c93e13c1f278ea",
+      "size": 35,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/test/useAuth.test.tsx": {
+      "hash": "951770142acfb7b7dfca5d674a71d7a38098742d22c3fc2b067122499c5fa0cb",
+      "size": 2104,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/ApparelPage.tsx": {
+      "hash": "ce566e7bedcbf5deb2fb0f11bfb80796aff29e6963995353cc1093751c955e92",
+      "size": 20110,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/HomePage.tsx": {
+      "hash": "1aee6cbc501e3664abda418556e08cf4617518bc9223612f6671493bc3d75619",
+      "size": 1930,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/InboxPage.tsx": {
+      "hash": "fde364525f53b3d8bff58ef42d7aa0812bf433e70ca16646a0dea9b5fc6ef991",
+      "size": 17969,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/LoginPage.tsx": {
+      "hash": "002473335f11edceedb6e57c25e9c790d219e96543cd220f67a43469cd6396b2",
+      "size": 9295,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/PodcastPage.tsx": {
+      "hash": "8da0139490e79ab93210a77359d7e3da1de7c81690007784c2f3b4ff1e4e609b",
+      "size": 8487,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/RegisterPage.tsx": {
+      "hash": "e1ba30fa7b50909991f9be2e6b25a939f424849d0ef6bde2553cb586586e3bbe",
+      "size": 30011,
+      "lastScanned": "2026-05-31T08:28:45.438Z"
+    },
+    "src/pages/TeamPage.tsx": {
+      "hash": "1c72bf66c25c214f64fac9d71860944e02a8172b9dba5352a680936eff01aa89",
+      "size": 14428,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "src/pages/VerifyEmailPage.tsx": {
+      "hash": "b774d7c84c9dd2bed0b9937a3de1e1d30d693d4f07fca565ba13fb2529ed8cbc",
+      "size": 6924,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "src/hooks/useApi.ts": {
+      "hash": "18e3d96fb4072c5b9858f736ed0ccc4240dab0bef0a21a404bb32d96170c8aa7",
+      "size": 1333,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "src/hooks/useAuth.tsx": {
+      "hash": "2223c63dd455b9a3e0143d48b95f8368b0720e2bceb7dddefde82abc262b3f88",
+      "size": 8470,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "src/hooks/useScrollReveal.ts": {
+      "hash": "3b7eb1f97bea4f4b379de5f88d0ca60d67d446c64a7cd9188b2a952e80fa33a9",
+      "size": 681,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "src/hooks/useSubdomain.ts": {
+      "hash": "1e2e2fe49482d3e18e45b06360016acd7bdbc8fe7a90c1216df60afd93bc15cf",
+      "size": 1075,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "server/db/migrations/0001_init.sql": {
+      "hash": "249d81ca673d8f18217162b685234eecc4250ae0b09c5172ffb330c022a59cf4",
+      "size": 22125,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "server/db/migrations/0002_marketplace_profiles.sql": {
+      "hash": "7946fad30273336a300bf57369de907a6e4be0241e8b77304af95feec3d4f770",
+      "size": 17536,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "server/db/migrations/0004_marketplace_messaging.sql": {
+      "hash": "75907ee3c1ffd231f3651e9f1071715bc5f336fb42b4fa79dd74dccffc751cf1",
+      "size": 10174,
+      "lastScanned": "2026-05-31T08:28:45.439Z"
+    },
+    "server/db/migrations/0005_marketplace_contracts.sql": {
+      "hash": "2eb461e1284d9640abcf19bd0d3d8674dd954970225e37091404dc658779ed99",
+      "size": 6903,
+      "lastScanned": "2026-05-31T08:28:45.440Z"
+    },
+    "server/db/migrations/0006_marketplace_payments.sql": {
+      "hash": "51ec2080fb5cd1ac1284b74667ecd7fbd5ffa8dfdd085e0b1d6197a2ae8d9c38",
+      "size": 5398,
+      "lastScanned": "2026-05-31T08:28:45.440Z"
+    },
+    "server/db/migrations/0007_marketplace_admin.sql": {
+      "hash": "e5fd2b3c6d89fac21304d35330f0853952ff63e37f99e861400d1f1a171db1f8",
+      "size": 4718,
+      "lastScanned": "2026-05-31T08:28:45.441Z"
+    },
+    "server/db/migrations/0008_outbox_atomic_claim.sql": {
+      "hash": "23f308e2d3fba4bd1a1968678451155fa28b3d25845450e61b0a19666c83b4d2",
+      "size": 1184,
+      "lastScanned": "2026-05-31T08:28:45.441Z"
+    },
+    "server/db/migrations/0009_indexes.sql": {
+      "hash": "e0015219a40da8c46a97c585508914da02e29818a949d93bfc3d3afd3bb03ef0",
+      "size": 7447,
+      "lastScanned": "2026-05-31T08:28:45.441Z"
+    },
+    "src/components/apparel/CartDrawer.tsx": {
+      "hash": "4144376aaa73eadb9930aff78c3ec8e819924fe5cb6f7dbf66c568df50908499",
+      "size": 6407,
+      "lastScanned": "2026-05-31T08:28:45.441Z"
+    },
+    "src/components/apparel/ProductImageViewer.tsx": {
+      "hash": "2021dd307b650561c507290f1b508618df9deb731969a6c3ff91558940a73fe2",
+      "size": 4152,
+      "lastScanned": "2026-05-31T08:28:45.441Z"
+    },
+    "src/components/apparel/ProductViewer3D.tsx": {
+      "hash": "8c006390bcd9bfadc13d5be0953f9a5efb8f959f037fe1e9f569fc8c3ee10722",
+      "size": 2673,
+      "lastScanned": "2026-05-31T08:28:45.441Z"
+    },
+    "src/lib/api/applications.ts": {
+      "hash": "ca2a290ac94e13b81eea2a92ae00642b079f72aafd7ce4222e65aefb7aa75fdc",
+      "size": 1382,
+      "lastScanned": "2026-05-31T08:28:45.442Z"
+    },
+    "src/lib/api/client.ts": {
+      "hash": "a936717f3e12be1ae35bee463bd0d216ff4b599f1c0b1b83d6b71d0e282e3612",
+      "size": 2107,
+      "lastScanned": "2026-05-31T08:28:45.442Z"
+    },
+    "src/lib/api/contracts.ts": {
+      "hash": "ede733309b3b50533570df65483e6b63a07477d9725c7cd80ffc8380216e98ea",
+      "size": 2521,
+      "lastScanned": "2026-05-31T08:28:45.442Z"
+    },
+    "src/lib/api/conversations.ts": {
+      "hash": "8aa3090ed8320e66a1acc78f3b2e7d28676655eceb0f591a276967e52a9c680d",
+      "size": 2362,
+      "lastScanned": "2026-05-31T08:28:45.442Z"
+    },
+    "src/lib/api/fighters.ts": {
+      "hash": "034a8baa9868cf4c7f084b804dfa978e40114ba1a8e15e30e3a8763becb5538c",
+      "size": 1530,
+      "lastScanned": "2026-05-31T08:28:45.442Z"
+    },
+    "src/lib/api/notifications.ts": {
+      "hash": "fb02f4cc1a2a350bbdff6fa8dfafb1273e58f01afa0f69ff853e1fc4fe5994e2",
+      "size": 977,
+      "lastScanned": "2026-05-31T08:28:45.442Z"
+    },
+    "src/lib/api/obligations.ts": {
+      "hash": "ca91569d52c417452921e4caeb9ad82ea153101793793e30b0eafe10030618d3",
+      "size": 1759,
+      "lastScanned": "2026-05-31T08:28:45.443Z"
+    },
+    "src/lib/api/opportunities.ts": {
+      "hash": "14f2a39392289ddf834a97bd3ec49b9ebe691ccfbd30661120a414d40e343b00",
+      "size": 2153,
+      "lastScanned": "2026-05-31T08:28:45.443Z"
+    },
+    "src/lib/api/payments.ts": {
+      "hash": "83e7baa9f122640df2188094916aa30e4b3c5c3caa1ef2c4f7843f85e1251292",
+      "size": 1732,
+      "lastScanned": "2026-05-31T08:28:45.443Z"
+    },
+    "src/lib/api/sponsors.ts": {
+      "hash": "8ad8ac270ea57a7a1cb73ba3286d442272d6f30fbc53948b9d5f79be902e26a3",
+      "size": 1485,
+      "lastScanned": "2026-05-31T08:28:45.443Z"
+    },
+    "src/pages/contracts/DetailPage.tsx": {
+      "hash": "68bb08535dfe94c6cf28276722f7f8b7a9a03d13c702f02a8f24541533d8121b",
+      "size": 33417,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/contracts/ListPage.tsx": {
+      "hash": "089bb53e5330b7cb884146a50d5c56246711fabd79354ccc6b1293b235d8e1ae",
+      "size": 5614,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/fighter/FighterProfileEditPage.tsx": {
+      "hash": "4698711094928dfd93bbabb359b7632a65571d28f0e2b355290564679c8793a2",
+      "size": 10282,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/fighter/MyApplicationsPage.tsx": {
+      "hash": "742b41f13b6901f8f9d45019115cedc4dd636ecf9243ca6e4f2a3144ee5b670c",
+      "size": 5193,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/dashboards/AdminDashboard.tsx": {
+      "hash": "60d16a15ebef2a4c5f64c4903e220bc0e37e6ca54cfe93c70479062ea547762e",
+      "size": 18676,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/dashboards/DashShell.tsx": {
+      "hash": "5a0d248d18528efc9ba32db447191602db9d771c473853bf6eb05cd75a9327bc",
+      "size": 5264,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/dashboards/DashWidgets.tsx": {
+      "hash": "71fae3403a94413b39b907472e9f478a32d7e45a37425f51347fc2a9df12a367",
+      "size": 10933,
+      "lastScanned": "2026-05-31T08:28:45.444Z"
+    },
+    "src/pages/dashboards/FighterDashboard.tsx": {
+      "hash": "32b9242b2e3f58564eae73de81b8f26ef5c319fbe212d4f510fa0c00294152bc",
+      "size": 20533,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/dashboards/ManagerDashboard.tsx": {
+      "hash": "52bc323ae373c756029955f63fc3b789d0f136737c9c4dc197884f2b94d88f28",
+      "size": 13000,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/dashboards/SponsorDashboard.tsx": {
+      "hash": "ced05e5a5e83aebafb925d63b388222885cf4adc385ed02ad889e2d241b2a0e0",
+      "size": 15617,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/opportunities/DetailPage.tsx": {
+      "hash": "1ad268eb750e55dc2f5f87935e84f538e092c3920bd51a22425a83a8b657c462",
+      "size": 10997,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/opportunities/DiscoveryPage.tsx": {
+      "hash": "fb2231cebcb343c88b782e4cf1d0ea14d4cd2c12918b2d74adab6893c9ace6cf",
+      "size": 9535,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/sponsor/ApplicantsPage.tsx": {
+      "hash": "f73508f82220f844f497c77eae4ec1226437613721976c6468325227d93ca143",
+      "size": 7984,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/sponsor/OpportunitiesPage.tsx": {
+      "hash": "7a4f402a818514ebb0cd5ad4b877962e95ca91332d573502fc1e1c45b22b0723",
+      "size": 5467,
+      "lastScanned": "2026-05-31T08:28:45.445Z"
+    },
+    "src/pages/sponsor/OpportunityFormPage.tsx": {
+      "hash": "da6568005cb50f83d22e64fbdca6b892357f458aea876320d4be05e45ee11728",
+      "size": 16520,
+      "lastScanned": "2026-05-31T08:28:45.446Z"
+    },
+    "src/pages/sponsor/SponsorOnboardPage.tsx": {
+      "hash": "1906dc9257036cda805003dfc2138ec9bb0481ef6691ef7c400e0195be5afe60",
+      "size": 12922,
+      "lastScanned": "2026-05-31T08:28:45.446Z"
+    }
+  },
+  "lastFindings": {
+    ".env": [
+      {
+        "line": 9,
+        "column": 19,
+        "severity": "low",
+        "category": "secret",
+        "rule": "Supabase Service Role Key",
+        "title": "Supabase Service Role Key",
+        "description": "Supabase service role keys bypass Row Level Security. Keep server-side only.",
+        "matched": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92aHJrYnhtaWJ5emJ0cnVwdWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTQ4MjYsImV4cCI6MjA5NDczMDgyNn0.ufHmh1uTUQPxD6k8CL9Rzmbk-fiOGYfQL-KTQbHoPW8",
+        "confidence": "low",
+        "fix": "Already gitignored — ensure secrets manager is used for production deploys"
+      },
+      {
+        "line": 9,
+        "column": 1,
+        "severity": "low",
+        "category": "secret",
+        "rule": "Supabase Anon Key in Code",
+        "title": "Supabase Anon Key in Code",
+        "description": "Supabase anon keys. Safe for frontend but verify RLS is enabled.",
+        "matched": "SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92aHJrYnhtaWJ5emJ0cnVwdWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTQ4MjYsImV4cCI6MjA5NDczMDgyNn0.ufHmh1uTUQPxD6k8CL9Rzmbk-fiOGYfQL-KTQbHoPW8",
+        "confidence": "low",
+        "fix": "Already gitignored — ensure secrets manager is used for production deploys"
+      },
+      {
+        "line": 17,
+        "column": 24,
+        "severity": "low",
+        "category": "secret",
+        "rule": "Supabase Service Role Key",
+        "title": "Supabase Service Role Key",
+        "description": "Supabase service role keys bypass Row Level Security. Keep server-side only.",
+        "matched": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92aHJrYnhtaWJ5emJ0cnVwdWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTQ4MjYsImV4cCI6MjA5NDczMDgyNn0.ufHmh1uTUQPxD6k8CL9Rzmbk-fiOGYfQL-KTQbHoPW8",
+        "confidence": "low",
+        "fix": "Already gitignored — ensure secrets manager is used for production deploys"
+      },
+      {
+        "line": 17,
+        "column": 6,
+        "severity": "low",
+        "category": "secret",
+        "rule": "Supabase Anon Key in Code",
+        "title": "Supabase Anon Key in Code",
+        "description": "Supabase anon keys. Safe for frontend but verify RLS is enabled.",
+        "matched": "SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92aHJrYnhtaWJ5emJ0cnVwdWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTQ4MjYsImV4cCI6MjA5NDczMDgyNn0.ufHmh1uTUQPxD6k8CL9Rzmbk-fiOGYfQL-KTQbHoPW8",
+        "confidence": "low",
+        "fix": "Already gitignored — ensure secrets manager is used for production deploys"
+      }
+    ],
+    ".env.example": [
+      {
+        "line": 22,
+        "column": 5,
+        "severity": "low",
+        "category": "secret",
+        "rule": "Database URL with Credentials",
+        "title": "Database URL with Credentials",
+        "description": "Database URLs with embedded passwords expose your database.",
+        "matched": "postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres",
+        "confidence": "low",
+        "fix": "Already gitignored — ensure secrets manager is used for production deploys"
+      },
+      {
+        "line": 24,
+        "column": 5,
+        "severity": "low",
+        "category": "secret",
+        "rule": "Database URL with Credentials",
+        "title": "Database URL with Credentials",
+        "description": "Database URLs with embedded passwords expose your database.",
+        "matched": "postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres",
+        "confidence": "low",
+        "fix": "Already gitignored — ensure secrets manager is used for production deploys"
+      },
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "medium",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Database URL with Credentials",
+        "description": "Secret found in current code AND in git history (commit d62408c7e0).",
+        "matched": "postgres***gres",
+        "confidence": "high",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Remove from code, rotate the credential, then clean git history with BFG or git filter-repo"
+      }
+    ],
+    "design-reference/stitch_eleventh_round_cinematic_redesign/code.html": [
+      {
+        "line": 242,
+        "column": 546,
+        "severity": "high",
+        "category": "secret",
+        "rule": "Upstash Redis REST Token",
+        "title": "Upstash Redis REST Token",
+        "description": "Upstash Redis tokens grant access to your serverless Redis database.",
+        "matched": "AXuA3dIEIQAG0LWStFTrpRXFD1CoqAEuTj7AN2TfssfQkqyidBfPlMlYINV6",
+        "confidence": "high",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 309,
+        "column": 434,
+        "severity": "high",
+        "category": "secret",
+        "rule": "Upstash Redis REST Token",
+        "title": "Upstash Redis REST Token",
+        "description": "Upstash Redis tokens grant access to your serverless Redis database.",
+        "matched": "AXuCuwNb6mPUWuSkTqsRQ3xHE5hmswGlWyIbmOSm2gQZPKLdaDAjNJsV6UTdZsjTwAe4uJ1d8HG17egM",
+        "confidence": "high",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 320,
+        "column": 393,
+        "severity": "high",
+        "category": "secret",
+        "rule": "Upstash Redis REST Token",
+        "title": "Upstash Redis REST Token",
+        "description": "Upstash Redis tokens grant access to your serverless Redis database.",
+        "matched": "AXuBynYsp7zffRoYYm8GnNWz2yDp8ZQsyeNGmXRwO5g7ehBX5yXmNTeE5WlX57mcAaFsqrXZ4JY8zO72McsnRnYLwkHnmcyvnBbuLnBSju",
+        "confidence": "high",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "critical",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Upstash Redis REST Token",
+        "description": "Secret was removed from code but still exists in git history (commit 138cdc1b56, Mon May 18 01:22:42 2026 +0530). Anyone with repo access can retrieve it.",
+        "matched": "AXuA3dIE***INV6",
+        "confidence": "medium",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Rotate this credential immediately, then clean history: npx bfg --replace-text passwords.txt"
+      }
+    ],
+    "server/db/pool.js": [
+      {
+        "line": 16,
+        "column": 16,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Database URL with Credentials",
+        "title": "Database URL with Credentials",
+        "description": "Database URLs with embedded passwords expose your database.",
+        "matched": "postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres",
+        "confidence": "medium",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 17,
+        "column": 16,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Database URL with Credentials",
+        "title": "Database URL with Credentials",
+        "description": "Database URLs with embedded passwords expose your database.",
+        "matched": "postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres",
+        "confidence": "medium",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 47,
+        "column": 14,
+        "severity": "high",
+        "category": "auth",
+        "rule": "TLS_REJECT_UNAUTH_FALSE",
+        "title": "TLS rejectUnauthorized: false",
+        "description": "rejectUnauthorized: false disables TLS certificate checking.",
+        "matched": "rejectUnauthorized: false",
+        "confidence": "medium",
+        "cwe": "CWE-295",
+        "owasp": "A02:2021",
+        "fix": "Remove rejectUnauthorized: false, or use a proper CA bundle"
+      }
+    ],
+    "server/tests/auth-validation.test.js": [
+      {
+        "line": 21,
+        "column": 7,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'validpassword1'",
+        "confidence": "low",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 43,
+        "column": 7,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'validpassword1'",
+        "confidence": "low",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 54,
+        "column": 7,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'validpassword1'",
+        "confidence": "low",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 66,
+        "column": 7,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'validpassword1'",
+        "confidence": "low",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 77,
+        "column": 58,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'somepassword'",
+        "confidence": "low",
+        "fix": "Move to environment variable or secrets manager"
+      }
+    ],
+    "src/hooks/useAuth.tsx": [
+      {
+        "line": 55,
+        "column": 102,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'fighter123'",
+        "confidence": "medium",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 56,
+        "column": 102,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'manager123'",
+        "confidence": "medium",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 57,
+        "column": 102,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'admin123'",
+        "confidence": "medium",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 58,
+        "column": 102,
+        "severity": "medium",
+        "category": "secret",
+        "rule": "Password Assignment",
+        "title": "Password Assignment",
+        "description": "Hardcoded passwords are a critical vulnerability.",
+        "matched": "password: 'sponsor123'",
+        "confidence": "medium",
+        "fix": "Move to environment variable or secrets manager"
+      },
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Password Assignment",
+        "description": "Secret was removed from code but still exists in git history (commit c476ef0d79, Sun May 31 01:08:17 2026 +0530). Anyone with repo access can retrieve it.",
+        "matched": "password***123'",
+        "confidence": "medium",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Rotate this credential immediately, then clean history: npx bfg --replace-text passwords.txt"
+      },
+      {
+        "line": 48,
+        "column": 3,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "SESSION_NO_REGENERATE",
+        "title": "Session Not Regenerated After Login",
+        "description": "Sessions should be regenerated after login to prevent session fixation.",
+        "matched": "login:    (email: string, password: string) =>",
+        "confidence": "low",
+        "cwe": "CWE-384",
+        "owasp": "A07:2021",
+        "fix": "Call req.session.regenerate() after successful authentication"
+      },
+      {
+        "line": 133,
+        "column": 19,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "TIMING_ATTACK_COMPARISON",
+        "title": "Timing Attack: String Comparison",
+        "description": "Direct string comparison of secrets is vulnerable to timing attacks.",
+        "matched": "token !== ",
+        "confidence": "medium",
+        "cwe": "CWE-208",
+        "owasp": "A02:2021",
+        "fix": "Use crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))"
+      },
+      {
+        "line": 55,
+        "column": 3,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 56,
+        "column": 3,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'manager@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 57,
+        "column": 3,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'admin@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 58,
+        "column": 3,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'sponsor@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      }
+    ],
+    "server/db/supabase.js": [
+      {
+        "line": 17,
+        "column": 38,
+        "severity": "critical",
+        "category": "auth",
+        "rule": "SUPABASE_SERVICE_KEY_CLIENT",
+        "title": "Supabase: Service Role Key in Client Code",
+        "description": "Service role key bypasses RLS entirely. Never expose it in client-side code.",
+        "matched": "SUPABASE_SERVICE_ROLE_KEY",
+        "confidence": "high",
+        "cwe": "CWE-798",
+        "owasp": "A07:2021",
+        "fix": "Use the anon key on the client. Move service_role operations to a backend/edge function."
+      },
+      {
+        "line": 25,
+        "column": 33,
+        "severity": "critical",
+        "category": "auth",
+        "rule": "SUPABASE_SERVICE_KEY_CLIENT",
+        "title": "Supabase: Service Role Key in Client Code",
+        "description": "Service role key bypasses RLS entirely. Never expose it in client-side code.",
+        "matched": "SUPABASE_SERVICE_ROLE_KEY",
+        "confidence": "high",
+        "cwe": "CWE-798",
+        "owasp": "A07:2021",
+        "fix": "Use the anon key on the client. Move service_role operations to a backend/edge function."
+      },
+      {
+        "line": 55,
+        "column": 8,
+        "severity": "critical",
+        "category": "auth",
+        "rule": "SUPABASE_SERVICE_KEY_CLIENT",
+        "title": "Supabase: Service Role Key in Client Code",
+        "description": "Service role key bypasses RLS entirely. Never expose it in client-side code.",
+        "matched": "SUPABASE_SERVICE_ROLE_KEY",
+        "confidence": "medium",
+        "cwe": "CWE-798",
+        "owasp": "A07:2021",
+        "fix": "Use the anon key on the client. Move service_role operations to a backend/edge function."
+      }
+    ],
+    "package.json": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "supply-chain",
+        "rule": "TYPOSQUAT_SUSPECT",
+        "title": "Possible Typosquat: \"vite\" (similar to \"vue\")",
+        "description": "Package \"vite\" is 2 character(s) away from popular package \"vue\". This could be a typosquatting attempt.",
+        "matched": "vite",
+        "confidence": "medium",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Verify this is the intended package. Did you mean \"vue\"?"
+      },
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "supply-chain",
+        "rule": "DEPCONF_NO_SCOPE_REGISTRY",
+        "title": "Scoped Packages Without Registry Pin: @react-three, @vitest, @vitejs",
+        "description": "Scoped packages (@react-three, @vitest, @vitejs) found without a .npmrc pinning the scope to a private registry. An attacker could claim the scope on the public npm registry.",
+        "matched": "@react-three, @vitest, @vitejs",
+        "confidence": "low",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Add to .npmrc: @yourscope:registry=https://your-private-registry.com/"
+      }
+    ],
+    "package-lock.json": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Upstash Redis REST Token",
+        "description": "Secret found in current code AND in git history (commit 958f558da9).",
+        "matched": "AX2ba2b8***IrEA",
+        "confidence": "medium",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Remove from code, rotate the credential, then clean git history with BFG or git filter-repo"
+      }
+    ],
+    "src/data/frames.ts": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Upstash Redis REST Token",
+        "description": "Secret found in current code AND in git history (commit 958f558da9).",
+        "matched": "AXNGaKSg***NLQA",
+        "confidence": "medium",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Remove from code, rotate the credential, then clean git history with BFG or git filter-repo"
+      }
+    ],
+    "server/routes/stripe.js": [
+      {
+        "line": 17,
+        "column": 1,
+        "severity": "high",
+        "category": "api",
+        "rule": "API_NO_AUTH_CHECK",
+        "title": "API: Route Without Auth Check",
+        "description": "State-changing API route without visible auth middleware. Verify authentication is enforced.",
+        "matched": "router.post('/checkout', async (req",
+        "confidence": "medium",
+        "cwe": "CWE-306",
+        "owasp": "A07:2021",
+        "fix": "Add auth middleware: router.post(\"/api/data\", authMiddleware, handler)"
+      },
+      {
+        "line": 53,
+        "column": 5,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_STACK_TRACE_RESPONSE",
+        "title": "API: Stack Trace in Response",
+        "description": "Error details sent in API response leak internal information.",
+        "matched": "res.status(err",
+        "confidence": "high",
+        "cwe": "CWE-209",
+        "owasp": "A05:2021",
+        "fix": "Log errors server-side. Return generic message: res.status(500).json({ error: \"Internal error\" })"
+      }
+    ],
+    "server/jobs/outbox-dispatcher.js": [
+      {
+        "line": 164,
+        "column": 54,
+        "severity": "high",
+        "category": "auth",
+        "rule": "SUPABASE_RLS_DISABLED",
+        "title": "Supabase: RLS Bypass via .rpc() or Admin Client",
+        "description": "Supabase .rpc() calls execute database functions that may bypass RLS policies.",
+        "matched": ".rpc('claim_outbox_batch'",
+        "confidence": "low",
+        "cwe": "CWE-284",
+        "owasp": "A01:2021",
+        "fix": "Ensure the underlying SQL function uses SECURITY DEFINER carefully, or set search_path."
+      }
+    ],
+    "server/routes/auth.js": [
+      {
+        "line": 6,
+        "column": 47,
+        "severity": "high",
+        "category": "llm",
+        "rule": "AGENT_TOOL_NO_CONFIRMATION",
+        "title": "Agent: Destructive Tools Without Human Confirmation",
+        "description": "Agent configured to auto-execute tools without human confirmation. Prompt injection can trigger destructive actions.",
+        "matched": "confirm=false",
+        "confidence": "medium",
+        "cwe": "CWE-862",
+        "owasp": "A01:2021",
+        "fix": "Require human-in-the-loop confirmation for destructive operations (write, delete, send, pay)."
+      },
+      {
+        "line": 32,
+        "column": 33,
+        "severity": "high",
+        "category": "llm",
+        "rule": "AGENT_TOOL_NO_CONFIRMATION",
+        "title": "Agent: Destructive Tools Without Human Confirmation",
+        "description": "Agent configured to auto-execute tools without human confirmation. Prompt injection can trigger destructive actions.",
+        "matched": "CONFIRM=false",
+        "confidence": "medium",
+        "cwe": "CWE-862",
+        "owasp": "A01:2021",
+        "fix": "Require human-in-the-loop confirmation for destructive operations (write, delete, send, pay)."
+      },
+      {
+        "line": 60,
+        "column": 38,
+        "severity": "high",
+        "category": "llm",
+        "rule": "AGENT_TOOL_NO_CONFIRMATION",
+        "title": "Agent: Destructive Tools Without Human Confirmation",
+        "description": "Agent configured to auto-execute tools without human confirmation. Prompt injection can trigger destructive actions.",
+        "matched": "confirm:false",
+        "confidence": "medium",
+        "cwe": "CWE-862",
+        "owasp": "A01:2021",
+        "fix": "Require human-in-the-loop confirmation for destructive operations (write, delete, send, pay)."
+      },
+      {
+        "line": 41,
+        "column": 14,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/register'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 192,
+        "column": 14,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "server/services/email.js": [
+      {
+        "line": 29,
+        "column": 5,
+        "severity": "high",
+        "category": "config",
+        "rule": "PII_IN_CONSOLE_LOG",
+        "title": "Privacy: PII Logged to Console",
+        "description": "PII fields logged to console. Log output may be stored in log aggregation services, exposing sensitive user data.",
+        "matched": "console.warn('[email] EMAIL_HOST/USER/PASS not set — skipping email",
+        "confidence": "medium",
+        "cwe": "CWE-532",
+        "owasp": "A09:2021",
+        "fix": "Remove PII from log statements. Use structured logging with PII redaction: logger.info({ userId: user.id }) instead of logging full user objects."
+      },
+      {
+        "line": 3,
+        "column": 44,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'contact@eleventh-rnd.us'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      }
+    ],
+    "src/App.tsx": [
+      {
+        "line": 58,
+        "column": 35,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 59,
+        "column": 73,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 67,
+        "column": 20,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 68,
+        "column": 20,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/register\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/components/DashboardPreview.tsx": [
+      {
+        "line": 336,
+        "column": 21,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/components/FinalCTA.tsx": [
+      {
+        "line": 155,
+        "column": 21,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 156,
+        "column": 21,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 157,
+        "column": 21,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/components/Footer.tsx": [
+      {
+        "line": 45,
+        "column": 19,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/components/HeroSection.tsx": [
+      {
+        "line": 33,
+        "column": 259,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 34,
+        "column": 216,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/components/Navbar.tsx": [
+      {
+        "line": 25,
+        "column": 8,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 289,
+        "column": 27,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 402,
+        "column": 25,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/components/ProductsCarousel.tsx": [
+      {
+        "line": 13,
+        "column": 383,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 15,
+        "column": 354,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 16,
+        "column": 353,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 17,
+        "column": 353,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 18,
+        "column": 353,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 19,
+        "column": 352,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 24,
+        "column": 326,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 26,
+        "column": 342,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 27,
+        "column": 345,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 28,
+        "column": 342,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 29,
+        "column": 340,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 34,
+        "column": 350,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 36,
+        "column": 339,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 37,
+        "column": 340,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 38,
+        "column": 340,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/InboxPage.tsx": [
+      {
+        "line": 136,
+        "column": 26,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/LoginPage.tsx": [
+      {
+        "line": 170,
+        "column": 27,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/register\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 7,
+        "column": 29,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 8,
+        "column": 29,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'sponsor@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 9,
+        "column": 29,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'manager@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 10,
+        "column": 29,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'admin@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      }
+    ],
+    "src/pages/RegisterPage.tsx": [
+      {
+        "line": 268,
+        "column": 24,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 533,
+        "column": 29,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 594,
+        "column": 27,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 543,
+        "column": 49,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 544,
+        "column": 49,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'sponsor@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      }
+    ],
+    "src/pages/VerifyEmailPage.tsx": [
+      {
+        "line": 157,
+        "column": 29,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/test/LoginPage.test.tsx": [
+      {
+        "line": 9,
+        "column": 37,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/test/Navbar.test.tsx": [
+      {
+        "line": 9,
+        "column": 37,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 23,
+        "column": 42,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/hooks/useApi.ts": [
+      {
+        "line": 13,
+        "column": 38,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "TIMING_ATTACK_COMPARISON",
+        "title": "Timing Attack: String Comparison",
+        "description": "Direct string comparison of secrets is vulnerable to timing attacks.",
+        "matched": "token === ",
+        "confidence": "medium",
+        "cwe": "CWE-208",
+        "owasp": "A02:2021",
+        "fix": "Use crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))"
+      },
+      {
+        "line": 23,
+        "column": 19,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "TIMING_ATTACK_COMPARISON",
+        "title": "Timing Attack: String Comparison",
+        "description": "Direct string comparison of secrets is vulnerable to timing attacks.",
+        "matched": "token === ",
+        "confidence": "medium",
+        "cwe": "CWE-208",
+        "owasp": "A02:2021",
+        "fix": "Use crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))"
+      }
+    ],
+    "src/pages/contracts/DetailPage.tsx": [
+      {
+        "line": 488,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/contracts/ListPage.tsx": [
+      {
+        "line": 47,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/dashboards/DashShell.tsx": [
+      {
+        "line": 71,
+        "column": 58,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 75,
+        "column": 58,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/dashboards/SponsorDashboard.tsx": [
+      {
+        "line": 86,
+        "column": 19,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "TIMING_ATTACK_COMPARISON",
+        "title": "Timing Attack: String Comparison",
+        "description": "Direct string comparison of secrets is vulnerable to timing attacks.",
+        "matched": "token === ",
+        "confidence": "medium",
+        "cwe": "CWE-208",
+        "owasp": "A02:2021",
+        "fix": "Use crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))"
+      }
+    ],
+    "src/pages/fighter/FighterProfileEditPage.tsx": [
+      {
+        "line": 49,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/fighter/MyApplicationsPage.tsx": [
+      {
+        "line": 23,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/sponsor/OpportunitiesPage.tsx": [
+      {
+        "line": 59,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/sponsor/OpportunityFormPage.tsx": [
+      {
+        "line": 122,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/sponsor/SponsorOnboardPage.tsx": [
+      {
+        "line": 102,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 103,
+        "column": 71,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/pages/opportunities/DetailPage.tsx": [
+      {
+        "line": 37,
+        "column": 28,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/login'",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      },
+      {
+        "line": 126,
+        "column": 25,
+        "severity": "medium",
+        "category": "auth",
+        "rule": "NO_RATE_LIMIT_LOGIN",
+        "title": "No Rate Limiting on Authentication",
+        "description": "Auth endpoints without rate limiting are vulnerable to brute-force attacks.",
+        "matched": "/register\"",
+        "confidence": "low",
+        "cwe": "CWE-307",
+        "owasp": "A07:2021",
+        "fix": "Add rate limiting: express-rate-limit, @upstash/ratelimit, or Cloudflare rules"
+      }
+    ],
+    "src/hooks/useSubdomain.ts": [
+      {
+        "line": 5,
+        "column": 32,
+        "severity": "medium",
+        "category": "ssrf",
+        "rule": "SSRF_INTERNAL_IP",
+        "title": "SSRF: Internal IP Pattern",
+        "description": "Internal IP address in code. Verify it is not reachable via user-controlled URLs.",
+        "matched": "127.0.0.1",
+        "confidence": "low",
+        "cwe": "CWE-918",
+        "owasp": "A10:2021",
+        "fix": "Block private IP ranges in URL validation for user-supplied URLs"
+      },
+      {
+        "line": 19,
+        "column": 49,
+        "severity": "medium",
+        "category": "ssrf",
+        "rule": "SSRF_INTERNAL_IP",
+        "title": "SSRF: Internal IP Pattern",
+        "description": "Internal IP address in code. Verify it is not reachable via user-controlled URLs.",
+        "matched": "127.0.0.1",
+        "confidence": "low",
+        "cwe": "CWE-918",
+        "owasp": "A10:2021",
+        "fix": "Block private IP ranges in URL validation for user-supplied URLs"
+      }
+    ],
+    "server/app.js": [
+      {
+        "line": 58,
+        "column": 39,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_LARGE_BODY_NO_LIMIT",
+        "title": "API: No Request Body Size Limit",
+        "description": "No body size limit configured. Large payloads can cause memory exhaustion.",
+        "matched": "express.json()",
+        "confidence": "low",
+        "cwe": "CWE-400",
+        "owasp": null,
+        "fix": "Set limit: express.json({ limit: \"1mb\" })"
+      },
+      {
+        "line": 109,
+        "column": 3,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_STACK_TRACE_RESPONSE",
+        "title": "API: Stack Trace in Response",
+        "description": "Error details sent in API response leak internal information.",
+        "matched": "res.status(err",
+        "confidence": "high",
+        "cwe": "CWE-209",
+        "owasp": "A05:2021",
+        "fix": "Log errors server-side. Return generic message: res.status(500).json({ error: \"Internal error\" })"
+      },
+      {
+        "line": 35,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 45,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 59,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 65,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 75,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 78,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 79,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 80,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 81,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 82,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 83,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 84,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 85,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 86,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 87,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 88,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 89,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 90,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 103,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      },
+      {
+        "line": 106,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.use(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      }
+    ],
+    "server/routes/contracts.js": [
+      {
+        "line": 278,
+        "column": 5,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_STACK_TRACE_RESPONSE",
+        "title": "API: Stack Trace in Response",
+        "description": "Error details sent in API response leak internal information.",
+        "matched": "res.status(err",
+        "confidence": "high",
+        "cwe": "CWE-209",
+        "owasp": "A05:2021",
+        "fix": "Log errors server-side. Return generic message: res.status(500).json({ error: \"Internal error\" })"
+      }
+    ],
+    "server/routes/sponsorship-payments.js": [
+      {
+        "line": 135,
+        "column": 5,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_STACK_TRACE_RESPONSE",
+        "title": "API: Stack Trace in Response",
+        "description": "Error details sent in API response leak internal information.",
+        "matched": "res.status(err",
+        "confidence": "high",
+        "cwe": "CWE-209",
+        "owasp": "A05:2021",
+        "fix": "Log errors server-side. Return generic message: res.status(500).json({ error: \"Internal error\" })"
+      }
+    ],
+    "server/routes/stripe-webhook.js": [
+      {
+        "line": 4,
+        "column": 19,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_LARGE_BODY_NO_LIMIT",
+        "title": "API: No Request Body Size Limit",
+        "description": "No body size limit configured. Large payloads can cause memory exhaustion.",
+        "matched": "express.json()",
+        "confidence": "low",
+        "cwe": "CWE-400",
+        "owasp": null,
+        "fix": "Set limit: express.json({ limit: \"1mb\" })"
+      },
+      {
+        "line": 121,
+        "column": 23,
+        "severity": "medium",
+        "category": "api",
+        "rule": "API_NO_VALIDATION",
+        "title": "API: No Input Validation",
+        "description": "Request body used without validation. Validate with Zod, Joi, or Yup.",
+        "matched": "req.body)",
+        "confidence": "low",
+        "cwe": "CWE-20",
+        "owasp": "A03:2021",
+        "fix": "Validate: const data = schema.parse(req.body) using Zod or similar"
+      }
+    ],
+    "../AppData/Roaming/Claude/claude_desktop_config.json": [
+      {
+        "line": 1,
+        "column": 0,
+        "severity": "medium",
+        "category": "llm",
+        "rule": "MCP_SHADOW_CONFIG",
+        "title": "MCP: 1 Shadow Server(s) in User Config",
+        "description": "Found 1 MCP server(s) configured outside the project in C:\\Users\\athar\\AppData\\Roaming\\Claude\\claude_desktop_config.json. These operate outside your project's security controls.",
+        "matched": "blender",
+        "confidence": "medium",
+        "cwe": "CWE-269",
+        "owasp": "A05:2021",
+        "fix": "Review shadow MCP servers. Move project-specific servers to the project mcp.json and track in version control."
+      }
+    ],
+    "src/test/useAuth.test.tsx": [
+      {
+        "line": 30,
+        "column": 43,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 37,
+        "column": 45,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 45,
+        "column": 43,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 58,
+        "column": 28,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'sponsor@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      }
+    ],
+    "src/pages/opportunities/DiscoveryPage.tsx": [
+      {
+        "line": 106,
+        "column": 38,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'fighter@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      },
+      {
+        "line": 110,
+        "column": 38,
+        "severity": "medium",
+        "category": "config",
+        "rule": "PII_EMAIL_HARDCODED",
+        "title": "Privacy: Real Email Address Hardcoded",
+        "description": "Real email address hardcoded in source code (not @example.com). May be PII or a credential.",
+        "matched": "'sponsor@demo.com'",
+        "confidence": "low",
+        "cwe": "CWE-312",
+        "owasp": "A02:2021",
+        "fix": "Use @example.com for test emails. Store real emails in environment variables or config."
+      }
+    ],
+    "src/main.tsx": [
+      {
+        "line": 21,
+        "column": 10,
+        "severity": "medium",
+        "category": "injection",
+        "rule": "EXCEPTION_NO_ERROR_BOUNDARY",
+        "title": "Exception: React App Without Error Boundary",
+        "description": "React app rendered without an Error Boundary. Unhandled component errors will crash the entire UI.",
+        "matched": "createRoot(document.getElementById('root')!)",
+        "confidence": "low",
+        "cwe": "CWE-755",
+        "owasp": "A10:2025",
+        "fix": "Wrap your app: <ErrorBoundary fallback={<ErrorPage />}><App /></ErrorBoundary>"
+      }
+    ],
+    "server/index.js": [
+      {
+        "line": 18,
+        "column": 1,
+        "severity": "low",
+        "category": "api",
+        "rule": "API_NO_SECURITY_HEADERS",
+        "title": "API: Missing Security Headers (Helmet)",
+        "description": "Express app without helmet middleware. Missing security headers (CSP, HSTS, etc.).",
+        "matched": "app.listen(",
+        "confidence": "low",
+        "cwe": "CWE-693",
+        "owasp": "A05:2021",
+        "fix": "Add helmet: app.use(helmet()) for automatic security headers"
+      }
+    ]
+  },
+  "stats": {
+    "totalFiles": 154,
+    "totalFindings": 143,
+    "lastScore": 17.1,
+    "lastGrade": "F"
+  }
+}

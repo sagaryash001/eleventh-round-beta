@@ -533,27 +533,6 @@ export default function RegisterPage() {
                   <Link to="/login" className="text-blood-glow hover:text-off-white transition-colors no-underline">Sign In</Link>
                 </p>
 
-                {/* Demo shortcut */}
-                <div className="mt-5 pt-5" style={{ borderTop: '1px solid #222226' }}>
-                  <p className="font-condensed text-[10px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-3 text-center">
-                    Or try a demo account
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { role: 'Fighter', email: 'fighter@demo.com', pass: 'fighter123' },
-                      { role: 'Sponsor', email: 'sponsor@demo.com', pass: 'sponsor123' },
-                    ].map(d => (
-                      <Link
-                        key={d.role}
-                        to={`/login?demo=${d.email}`}
-                        state={{ demoEmail: d.email, demoPass: d.pass }}
-                        className="font-condensed font-bold uppercase text-[11px] tracking-widest px-4 py-2.5 border border-charcoal-3 text-gray-2 no-underline text-center transition-colors hover:border-blood hover:text-off-white"
-                      >
-                        {d.role} Demo →
-                      </Link>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           )}

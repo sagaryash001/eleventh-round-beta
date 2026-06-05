@@ -1,34 +1,29 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Team data — The Eleventh Round
-//
-// Founder name sourced from site testimonial (Patrick Sullivan, eleventh-rnd.com).
-// All other fields marked TODO — fill in before launch.
-// Headshots go in: public/team/
+// Headshots live in public/team/ — see photo paths below for filenames needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface Founder {
   name: string
-  title: string   // TODO: confirm official title
-  tagline: string // TODO: short punchy tagline (1 sentence)
-  bio: string     // TODO: 2-3 sentence bio paragraph
-  photo: string   // TODO: drop headshot at public/team/kevin-leka.jpg
+  title: string
+  tagline: string
+  bio: string
+  photo: string
 }
 
 export interface Manager {
   id: number
-  name: string   // TODO: fill in
-  role: string   // TODO: fill in (e.g. "Director of Fighter Relations")
-  bio: string    // TODO: 1-2 sentence description
-  photo: string  // TODO: drop headshot at the path below
+  name: string
+  role: string
+  bio: string
+  photo: string
 }
 
 // ── Founder ──────────────────────────────────────────────────────────────────
-// Kevin Leka is referenced by name in fighter testimonials on eleventh-rnd.com.
-// All other details are TODO placeholders.
 export const FOUNDER: Founder = {
   name:    'Kevin Leka',
-  title:   'TODO — Founder & CEO',   // TODO: confirm official title
-  tagline: 'TODO — Add a one-sentence founder tagline here.',
+  title:   'Founder & CEO',
+  tagline: 'Building the infrastructure combat athletes have always deserved.',
   bio:
     'Kevin Leka is the founder of The Eleventh Round, a platform dedicated to helping ' +
     'combat athletes build resilience, structure, and opportunity beyond the fight. A former ' +
@@ -42,23 +37,32 @@ export const FOUNDER: Founder = {
   photo: '/team/kevin-leka.png',
 }
 
-// ── Managers ─────────────────────────────────────────────────────────────────
-// No manager names or roles were publicly listed on eleventh-rnd.com at time of
-// build. Add real entries below when ready; remove the placeholder slots.
+// ── Advisors & Consultants ───────────────────────────────────────────────────
+// Photo filenames map to public/team/<filename>
 export const MANAGERS: Manager[] = [
   {
     id:    0,
-    name:  'TODO — Manager Name',
-    role:  'TODO — Role / Title',
-    bio:   'TODO — Short description of this person\'s background and role at The Eleventh Round.',
-    photo: '/team/manager-01.jpg',   // TODO: add headshot image
+    name:  'Don Rudolph',
+    role:  'Financial Awareness Consultant',
+    bio:
+      'Fiduciary wealth management advisor and sports finance consultant with over 26 years of ' +
+      'experience in financial planning and athlete advisory services. Founder of Flat Fee CIO and ' +
+      'Wealth Management Advisor at LCA Sports Management, with prior leadership at Bank of America ' +
+      'and SunTrust. Holds an MBA from Tulane University and specializes in helping athletes build ' +
+      'long-term financial stability, investment strategy, and financial literacy systems.',
+    photo: '/team/don-rudolph.jpg',
   },
   {
     id:    1,
-    name:  'TODO — Manager Name',
-    role:  'TODO — Role / Title',
-    bio:   'TODO — Short description of this person\'s background and role at The Eleventh Round.',
-    photo: '/team/manager-02.jpg',   // TODO: add headshot image
+    name:  'Brian Maeali',
+    role:  'Sports Medicine & Injury Consultant',
+    bio:
+      'Certified Orthopedic Surgery Physician Assistant and sports medicine specialist with over ' +
+      '20 years of experience helping athletes navigate injury prevention, recovery, and ' +
+      'performance longevity. Founder of ILP Sports Consultants and host of The Injured List ' +
+      'Podcast. Holds a Master\'s in Kinesiology from Temple University and PA certification from ' +
+      'Weill Cornell Medical College.',
+    photo: '/team/brian-maeali.jpg',
   },
   {
     id:    2,
@@ -72,5 +76,30 @@ export const MANAGERS: Manager[] = [
       'The Eleventh Round, she educates fighters on personal branding, financial literacy in contracts, ' +
       'career strategy, and sponsorship acquisition.',
     photo: '/team/manager-03.jpg',
+  },
+  {
+    id:    3,
+    name:  'Antonio Palmieri',
+    role:  'Legal & Operations Advisor',
+    bio:
+      'Sports and entertainment attorney and boxing operations executive with experience spanning ' +
+      'legal advisory, fighter operations, matchmaking, and event management. Former Vice President ' +
+      'of Operations & Matchmaker at Star Boxing, currently in fighter operations at Overtime. ' +
+      'Provides guidance on legal structure, combat sports operations, sponsorship agreements, ' +
+      'and fighter professionalism systems.',
+    photo: '/team/antonio-palmieri.jpg',
+  },
+  {
+    id:    4,
+    name:  'Next Play Communications',
+    role:  'Communication & Leadership Development',
+    bio:
+      'Communication and leadership development company founded by Quest Sandel and Charlie Gu, ' +
+      'built around the belief that communication is a performance variable in sports and business. ' +
+      'With experience coaching national champion debate students, financial professionals, ' +
+      'politicians, and athletes, Next Play helps competitors develop confidence, composure, ' +
+      'media presence, and storytelling ability. At The Eleventh Round, they lead athlete branding, ' +
+      'media training, and long-term professional development initiatives.',
+    photo: '/team/nextplay-communications.png',
   },
 ]

@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { getOpportunities, type Opportunity } from '../../lib/api/opportunities'
-import { useAuth } from '../../hooks/useAuth'
 
 const CAMPAIGN_TYPES = [
   { value: '', label: 'All Types' },
@@ -81,41 +80,6 @@ function OppCard({ opp }: { opp: Opportunity }) {
   )
 }
 
-function DemoBanner() {
-  const { user, login } = useAuth()
-  const navigate = useNavigate()
-  const [busy, setBusy] = useState(false)
-
-  if (user) return null
-
-  const enter = async (email: string, pass: string) => {
-    setBusy(true)
-    const r = await login(email, pass)
-    if (r.ok) navigate(email.includes('sponsor') ? '/dashboard/sponsor' : '/dashboard/fighter')
-    else setBusy(false)
-  }
-
-  return (
-    <div className="mb-8 border border-charcoal-3 bg-charcoal px-6 py-4 flex flex-wrap items-center justify-between gap-4"
-      style={{ borderLeft: '2px solid #8b0000' }}>
-      <div>
-        <p className="font-condensed font-bold text-off-white text-[13px] tracking-wide">Try the platform — no account needed</p>
-        <p className="font-condensed text-gray-3 text-[11px] mt-0.5">Jump straight into a demo session as a fighter or sponsor.</p>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={() => enter('fighter@demo.com', 'fighter123')} disabled={busy}
-          className="btn-primary py-2 px-5 text-[11px] disabled:opacity-50">
-          {busy ? '…' : 'Enter as Fighter'}
-        </button>
-        <button onClick={() => enter('sponsor@demo.com', 'sponsor123')} disabled={busy}
-          className="font-condensed font-bold uppercase text-[11px] tracking-widest px-5 py-2 border border-charcoal-3 text-gray-2 hover:border-blood hover:text-off-white transition-colors disabled:opacity-50"
-          style={{ background: 'transparent', cursor: busy ? 'not-allowed' : 'pointer' }}>
-          {busy ? '…' : 'Enter as Sponsor'}
-        </button>
-      </div>
-    </div>
-  )
-}
 
 export default function DiscoveryPage() {
   const [opps, setOpps]     = useState<Opportunity[]>([])
@@ -158,8 +122,6 @@ export default function DiscoveryPage() {
             Apply directly — no middlemen.
           </p>
         </div>
-
-        <DemoBanner />
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-8">

@@ -10,8 +10,6 @@ interface ApiState<T> {
 
 /**
  * Fetches an API endpoint using the current user's auth token.
- * Returns null data for demo users (token === 'demo-token') so dashboards
- * fall back to their built-in hardcoded values transparently.
  */
 export function useApi<T>(path: string): ApiState<T> {
   const { token } = useAuth()
@@ -20,7 +18,7 @@ export function useApi<T>(path: string): ApiState<T> {
   pathRef.current = path
 
   useEffect(() => {
-    if (!token || token === 'demo-token') return
+    if (!token) return
 
     let cancelled = false
     setState({ data: null, loading: true, error: null })

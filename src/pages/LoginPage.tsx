@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
-
-const DEMO_CREDENTIALS = [
-  { role: 'Fighter', email: 'fighter@demo.com', pass: 'fighter123' },
-  { role: 'Sponsor', email: 'sponsor@demo.com', pass: 'sponsor123' },
-  { role: 'Manager', email: 'manager@demo.com', pass: 'manager123' },
-  { role: 'Admin',   email: 'admin@demo.com',   pass: 'admin123'   },
-]
 
 export default function LoginPage() {
   const [email,    setEmail]    = useState('')
@@ -18,15 +11,6 @@ export default function LoginPage() {
   const [focused,  setFocused]  = useState<string | null>(null)
   const { login, user }         = useAuth()
   const navigate                = useNavigate()
-  const location                = useLocation()
-  const demoState               = location.state as { demoEmail?: string; demoPass?: string } | null
-
-  // Auto-login when arriving from the register page demo links
-  useEffect(() => {
-    if (demoState?.demoEmail && demoState?.demoPass && !user) {
-      loginAsDemo(demoState.demoEmail, demoState.demoPass)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (user) {
@@ -48,15 +32,6 @@ export default function LoginPage() {
     if (!result.ok) {
       setError(result.error ?? 'Login failed')
     }
-    // navigation handled by useEffect above
-  }
-
-  const loginAsDemo = async (email: string, pass: string) => {
-    setError('')
-    setLoading(true)
-    const result = await login(email, pass)
-    setLoading(false)
-    if (!result.ok) setError(result.error ?? 'Demo login failed')
   }
 
   return (
@@ -101,7 +76,6 @@ export default function LoginPage() {
               </h1>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Email */}
                 <div>
                   <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-2">
                     Email Address
@@ -115,13 +89,10 @@ export default function LoginPage() {
                     placeholder="you@example.com"
                     required
                     className="w-full bg-charcoal-2 border text-off-white font-body text-[14px] px-4 py-3 outline-none transition-all duration-200 placeholder:text-gray-3"
-                    style={{
-                      borderColor: focused === 'email' ? '#8b0000' : '#222226',
-                    }}
+                    style={{ borderColor: focused === 'email' ? '#8b0000' : '#222226' }}
                   />
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-2">
                     Password
@@ -135,20 +106,16 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     required
                     className="w-full bg-charcoal-2 border text-off-white font-body text-[14px] px-4 py-3 outline-none transition-all duration-200 placeholder:text-gray-3"
-                    style={{
-                      borderColor: focused === 'password' ? '#8b0000' : '#222226',
-                    }}
+                    style={{ borderColor: focused === 'password' ? '#8b0000' : '#222226' }}
                   />
                 </div>
 
-                {/* Error */}
                 {error && (
                   <div className="font-condensed text-[11px] tracking-wide text-blood-glow bg-blood/10 border border-blood/25 px-4 py-2.5">
                     {error}
                   </div>
                 )}
 
-                {/* Submit */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -164,40 +131,12 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              {/* Sign up CTA */}
               <p className="font-condensed text-[10px] tracking-wide text-gray-3 mt-5 text-center">
                 Don't have an account?{' '}
                 <Link to="/register" className="text-blood-glow hover:text-off-white transition-colors no-underline font-bold">
                   Create one →
                 </Link>
               </p>
-            </div>
-          </div>
-
-          {/* Demo credentials */}
-          <div className="mt-6">
-            <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-3 text-center">
-              Demo Accounts
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {DEMO_CREDENTIALS.map(d => (
-                <button
-                  key={d.role}
-                  onClick={() => loginAsDemo(d.email, d.pass)}
-                  disabled={loading}
-                  className="bg-charcoal-2 border border-charcoal-3 px-4 py-3 flex items-center justify-between hover:border-blood/40 transition-colors cursor-pointer group disabled:opacity-50"
-                >
-                  <div className="text-left">
-                    <div className="font-condensed text-[12px] font-bold tracking-wide text-off-white group-hover:text-blood-glow transition-colors">
-                      {d.role}
-                    </div>
-                    <div className="font-condensed text-[10px] tracking-wide text-gray-3">demo</div>
-                  </div>
-                  <span className="font-condensed text-[10px] tracking-[0.25em] uppercase text-gray-3 group-hover:text-blood-glow transition-colors">
-                    →
-                  </span>
-                </button>
-              ))}
             </div>
           </div>
 
