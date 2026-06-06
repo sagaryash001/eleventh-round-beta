@@ -70,7 +70,8 @@
       "Bash(git --no-pager log --oneline main..feat/auto-confirm-email)",
       "Bash(git merge *)",
       "Bash(curl -sS -m 60 -w '\\\\nHTTP:%{http_code}' -X POST https://eleventh-round-beta.onrender.com/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"__TRACKED_VAR__\",\"password\":\"AcVerify123!\"}')",
-      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\server\" -Name | Where-Object { $_ -ne \"node_modules\" })"
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\server\" -Name | Where-Object { $_ -ne \"node_modules\" })",
+      "Bash(npm test *)"
     ]
   }
 }

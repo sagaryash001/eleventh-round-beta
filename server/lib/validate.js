@@ -124,6 +124,29 @@ export const ManagerOnboardSchema = z.object({
                       .optional().nullable(),
 })
 
+// ── Admin schemas ────────────────────────────────────────────────────────────
+
+export const ModuleCreateSchema = z.object({
+  name:           z.string().trim().min(1, 'Name is required.').max(200),
+  description:    z.string().trim().max(2000).optional().nullable(),
+  category:       z.string().trim().max(60).optional().nullable(),
+  order_num:      z.number().int().min(1).default(100),
+  is_published:   z.boolean().default(false),
+  estimated_mins: z.number().int().min(0).optional().nullable(),
+  content_url:    z.string().trim().max(500).optional().nullable(),
+})
+
+export const PackageCreateSchema = z.object({
+  name:             z.string().trim().min(1, 'Package name is required.').max(120),
+  audience:         z.enum(['fighter', 'manager', 'sponsor', 'all']),
+  description:      z.string().trim().max(2000).optional().nullable(),
+  price_cents:      z.number().int().min(0, 'Price must be ≥ 0.'),
+  billing_interval: z.enum(['monthly', 'annual', 'one_time']),
+  features:         z.array(z.string().trim().max(200)).default([]),
+  active:           z.boolean().default(true),
+  sort_order:       z.number().int().min(0).default(100),
+})
+
 export const SponsorOnboardSchema = z.object({
   company_name:            z.string().trim().min(1, 'Company name is required.').max(120),
   industry:                z.string().trim().max(80).optional().nullable(),
