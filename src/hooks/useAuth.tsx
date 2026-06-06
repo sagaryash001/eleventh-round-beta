@@ -82,17 +82,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
-        setUser(null); setToken(null)
+        setUser(null)
+        setToken(null)
         return
       }
-      const profile = await fetchProfile(session.user.id)
-      if (profile) {
-        setUser(profile)
-        setToken(session.access_token)
-      }
+
+      setTimeout(async () => {
+        const profile = await fetchProfile(session.user.id)
+        if (profile) {
+          setUser(profile)
+          setToken(session.access_token)
+        }
+    }, 0)
     })
+
 
     return () => {
       cancelled = true
