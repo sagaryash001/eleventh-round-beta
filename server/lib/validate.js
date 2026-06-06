@@ -84,4 +84,58 @@ export const ObligationSchema = z.object({
   category:    z.string().trim().max(40).optional().nullable(),
 })
 
+// ── Onboarding schemas ───────────────────────────────────────────────────────
+
+export const FighterOnboardSchema = z.object({
+  full_name:            z.string().trim().min(1, 'Name is required.').max(120),
+  nickname:             z.string().trim().max(60).optional().nullable(),
+  sport:                z.enum(['mma', 'boxing', 'bjj', 'muay_thai', 'wrestling', 'other']),
+  level:                z.enum(['amateur', 'pro']),
+  weight_class:         z.string().trim().min(1, 'Weight class is required.').max(60),
+  record_wins:          z.number().int().min(0).default(0),
+  record_losses:        z.number().int().min(0).default(0),
+  record_draws:         z.number().int().min(0).default(0),
+  base_city:            z.string().trim().max(120).optional().nullable(),
+  gym_name:             z.string().trim().max(120).optional().nullable(),
+  bio:                  z.string().trim().max(2000).optional().nullable(),
+  manager_status:       z.enum(['has_manager', 'needs_manager', 'self_manages']),
+  manager_name:         z.string().trim().max(120).optional().nullable(),
+  manager_email:        z.string().email().optional().nullable().or(z.literal('')),
+  instagram_handle:     z.string().trim().max(60).optional().nullable(),
+  instagram_followers:  z.number().int().min(0).default(0),
+  tiktok_handle:        z.string().trim().max(60).optional().nullable(),
+  youtube_handle:       z.string().trim().max(60).optional().nullable(),
+  has_upcoming_event:   z.boolean().default(false),
+  event_date:           z.string().optional().nullable(),
+  event_name:           z.string().trim().max(200).optional().nullable(),
+  goal:                 z.string().trim().max(1000).optional().nullable(),
+})
+
+export const ManagerOnboardSchema = z.object({
+  manager_name:      z.string().trim().min(1, 'Your name is required.').max(120),
+  team_name:         z.string().trim().min(1, 'Team or organization name is required.').max(120),
+  manager_type:      z.enum(['agent', 'coach', 'gym', 'mentor', 'team', 'promotion']),
+  location:          z.string().trim().max(120).optional().nullable(),
+  primary_sport:     z.string().trim().max(60).optional().nullable(),
+  fighter_count:     z.number().int().min(0).default(0),
+  website_or_social: z.string().trim().max(200).optional().nullable(),
+  team_slug:         z.string().trim()
+                      .regex(/^[a-z0-9-]{3,40}$/, 'Use 3–40 lowercase letters, numbers, or hyphens.')
+                      .optional().nullable(),
+})
+
+export const SponsorOnboardSchema = z.object({
+  company_name:            z.string().trim().min(1, 'Company name is required.').max(120),
+  industry:                z.string().trim().max(80).optional().nullable(),
+  website_url:             z.string().trim().max(200).optional().nullable(),
+  description:             z.string().trim().max(2000).optional().nullable(),
+  hq_country:              z.string().trim().max(60).optional().nullable(),
+  hq_region:               z.string().trim().max(60).optional().nullable(),
+  budget_min_usd:          z.union([z.number(), z.string()]).optional().nullable(),
+  budget_max_usd:          z.union([z.number(), z.string()]).optional().nullable(),
+  preferred_weight_classes: z.array(z.string()).default([]),
+  preferred_promotions:    z.array(z.string()).default([]),
+  campaign_goals:          z.array(z.string()).default([]),
+})
+
 export { z }

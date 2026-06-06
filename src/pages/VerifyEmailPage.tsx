@@ -45,9 +45,20 @@ export default function VerifyEmailPage() {
         // Redirect after 2.5s — useAuth will have populated `user` by then
         setTimeout(() => {
           const role = user?.role
+          const complete = user?.onboarding_complete
+          if (!complete && role !== 'admin') {
+            navigate(
+              role === 'fighter' ? '/onboarding/fighter' :
+              role === 'manager' ? '/onboarding/manager' :
+              '/onboarding/sponsor',
+              { replace: true }
+            )
+            return
+          }
           navigate(
             role === 'manager' ? '/dashboard/manager' :
             role === 'admin'   ? '/dashboard/admin'   :
+            role === 'sponsor' ? '/dashboard/sponsor' :
             '/dashboard/fighter',
             { replace: true }
           )

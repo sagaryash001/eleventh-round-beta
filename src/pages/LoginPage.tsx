@@ -13,14 +13,23 @@ export default function LoginPage() {
   const navigate                = useNavigate()
 
   useEffect(() => {
-    if (user) {
+    if (!user) return
+    if (!user.onboarding_complete && user.role !== 'admin') {
       navigate(
-        user.role === 'fighter' ? '/dashboard/fighter' :
-        user.role === 'manager' ? '/dashboard/manager' :
-        user.role === 'sponsor' ? '/dashboard/sponsor' :
-        '/dashboard/admin'
+        user.role === 'fighter' ? '/onboarding/fighter' :
+        user.role === 'manager' ? '/onboarding/manager' :
+        '/onboarding/sponsor',
+        { replace: true }
       )
+      return
     }
+    navigate(
+      user.role === 'fighter' ? '/dashboard/fighter' :
+      user.role === 'manager' ? '/dashboard/manager' :
+      user.role === 'sponsor' ? '/dashboard/sponsor' :
+      '/dashboard/admin',
+      { replace: true }
+    )
   }, [user, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {

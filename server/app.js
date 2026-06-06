@@ -24,6 +24,7 @@ import obligationRoutes        from './routes/obligations.js'
 import paymentRoutes           from './routes/sponsorship-payments.js'
 import stripeWebhookRoutes     from './routes/stripe-webhook.js'
 import stripeRoutes            from './routes/stripe.js'
+import onboardingRoutes        from './routes/onboarding.js'
 
 const app = express()
 
@@ -88,6 +89,7 @@ app.use('/api/contracts',    contractRoutes)
 app.use('/api/obligations',  obligationRoutes)
 app.use('/api/payments',     paymentRoutes)
 app.use('/api/stripe',       stripeRoutes)
+app.use('/api/onboarding',  onboardingRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({

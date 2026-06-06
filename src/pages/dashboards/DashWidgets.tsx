@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 // ── Readiness ring ─────────────────────────────────────────────
 export function ReadinessRing({ pct, size = 110, color = '#c00000', label = 'Score' }: {
@@ -226,6 +227,134 @@ export function FullWidthCard({ label, children }: { label: string; children: Re
     <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
       <div className="dash-label">{label}</div>
       {children}
+    </div>
+  )
+}
+
+// ── Skeleton shimmer ───────────────────────────────────────────
+export function SkeletonBlock({ h = 16, className = '' }: { h?: number; className?: string }) {
+  return (
+    <div
+      className={`rounded animate-pulse bg-charcoal-2 ${className}`}
+      style={{ height: h, opacity: 0.6 }}
+    />
+  )
+}
+
+/** Full tab skeleton — use while useApi loading=true. */
+export function DashSkeleton() {
+  return (
+    <div className="space-y-4">
+      <SkeletonBlock h={32} className="w-48 mb-6" />
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} className="dash-card space-y-3">
+            <SkeletonBlock h={10} className="w-28" />
+            <SkeletonBlock h={28} className="w-16" />
+            <SkeletonBlock h={6} />
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        {[0, 1].map(i => (
+          <div key={i} className="dash-card space-y-3">
+            <SkeletonBlock h={10} className="w-32" />
+            <SkeletonBlock h={80} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Empty state ────────────────────────────────────────────────
+export function EmptyState({
+  icon = '○', title, body, action,
+}: {
+  icon?: string
+  title: string
+  body: string
+  action?: React.ReactNode
+}) {
+  return (
+    <div
+      className="dash-card text-center py-10 flex flex-col items-center gap-3"
+      style={{ borderColor: '#222226', borderStyle: 'dashed' }}
+    >
+      <span style={{ fontSize: 30, opacity: 0.3, color: '#7a7672' }}>{icon}</span>
+      <div
+        className="font-condensed font-bold uppercase tracking-widest"
+        style={{ fontSize: 10, color: '#4a4846' }}
+      >
+        {title}
+      </div>
+      <p className="font-body" style={{ fontSize: 13, maxWidth: 360, lineHeight: 1.6, color: '#4a4846' }}>
+        {body}
+      </p>
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  )
+}
+
+// ── API error state ────────────────────────────────────────────
+export function ApiError({ message, retry }: { message: string; retry?: () => void }) {
+  return (
+    <div className="dash-card text-center py-5" style={{ borderColor: '#4a0000' }}>
+      <p className="font-condensed text-blood-glow" style={{ fontSize: 12 }}>
+        Could not load data — {message}
+      </p>
+      {retry && (
+        <button onClick={retry} className="btn-ghost mt-3 text-[10px] py-1.5 px-4">
+          Retry
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── Setup checklist item ───────────────────────────────────────
+export function ChecklistItem({
+  done, label, detail, href,
+}: {
+  done: boolean; label: string; detail?: string; href?: string
+}) {
+  return (
+    <div
+      className="flex items-center gap-4 py-3 border-b border-charcoal-3 last:border-0"
+    >
+      <div
+        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0"
+        style={{
+          borderColor: done ? '#00c060' : '#4a4846',
+          background:  done ? 'rgba(0,192,96,0.12)' : 'transparent',
+        }}
+      >
+        {done && (
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+            <polyline points="2 6 5 9 10 3" stroke="#00c060" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </div>
+      <div className="flex-1">
+        <div
+          className="font-condensed font-bold"
+          style={{ fontSize: 12, color: done ? '#f0ece4' : '#7a7672', letterSpacing: '0.05em' }}
+        >
+          {label}
+        </div>
+        {detail && (
+          <div className="font-condensed" style={{ fontSize: 10, color: '#4a4846' }}>{detail}</div>
+        )}
+      </div>
+      {href && !done && (
+        <Link
+          to={href}
+          className="font-condensed font-bold uppercase text-blood-glow no-underline"
+          style={{ fontSize: 10, letterSpacing: '0.2em' }}
+        >
+          Setup →
+        </Link>
+      )}
     </div>
   )
 }

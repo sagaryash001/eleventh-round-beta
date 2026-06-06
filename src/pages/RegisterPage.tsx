@@ -152,14 +152,24 @@ export default function RegisterPage() {
   const set = (key: keyof FormState) => (val: string) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
-  // Redirect if already logged in. Sponsors go to onboarding (the onboard page
-  // itself bounces already-onboarded sponsors to their dashboard).
+  // Redirect if already logged in.
   useEffect(() => {
-    if (user) navigate(
+    if (!user) return
+    if (!user.onboarding_complete && user.role !== 'admin') {
+      navigate(
+        user.role === 'fighter' ? '/onboarding/fighter' :
+        user.role === 'manager' ? '/onboarding/manager' :
+        '/onboarding/sponsor',
+        { replace: true }
+      )
+      return
+    }
+    navigate(
       user.role === 'fighter' ? '/dashboard/fighter' :
       user.role === 'manager' ? '/dashboard/manager' :
-      user.role === 'sponsor' ? '/sponsor/onboard'   :
-      '/dashboard/admin', { replace: true }
+      user.role === 'sponsor' ? '/dashboard/sponsor' :
+      '/dashboard/admin',
+      { replace: true }
     )
   }, [user, navigate])
 
