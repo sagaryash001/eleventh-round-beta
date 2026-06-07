@@ -207,4 +207,27 @@ export const ManagerFighterProfileUpdateSchema = z.object({
   sponsorship_interests: z.array(z.string().trim().max(80)).optional(),
 })
 
+// ── Messaging schemas ─────────────────────────────────────────────────────────
+
+export const ConversationCreateSchema = z.object({
+  participant_ids:  z.array(z.string().uuid()).min(1, 'At least one participant required.').max(10),
+  context_type:     z.enum(['application','contract','obligation']).optional(),
+  context_id:       z.string().uuid().optional().nullable(),
+  subject:          z.string().trim().max(200).optional().nullable(),
+  initial_message:  z.string().trim().max(4000).optional().nullable(),
+}).refine(
+  d => !(d.context_type && !d.context_id),
+  { message: 'context_id required when context_type is provided.', path: ['context_id'] },
+)
+
+export const MessageCreateSchema = z.object({
+  body:        z.string().trim().min(1, 'Message body required.').max(4000),
+  attachments: z.array(z.object({
+    path: z.string().max(500),
+    name: z.string().max(200),
+    size: z.number().int().min(0),
+    mime: z.string().max(100),
+  })).max(5).optional().default([]),
+})
+
 export { z }

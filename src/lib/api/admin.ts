@@ -142,3 +142,18 @@ export const getAdminContracts = (params?: { status?: string; limit?: number; of
   const qs = q.toString()
   return apiGet<{ ok: boolean; contracts: any[]; total: number }>(`/api/admin/contracts${qs ? `?${qs}` : ''}`)
 }
+
+// ── Conversations ─────────────────────────────────────────────────────────────
+
+export const getAdminConversationList = (params?: { status?: string; limit?: number }) => {
+  const q = new URLSearchParams()
+  if (params?.status) q.set('status', params.status)
+  if (params?.limit)  q.set('limit',  String(params.limit))
+  const qs = q.toString()
+  return apiGet<{ ok: boolean; conversations: any[]; total: number }>(
+    `/api/admin/conversations${qs ? `?${qs}` : ''}`
+  )
+}
+
+export const adminLockConversation = (id: string, status: 'open' | 'archived' | 'locked') =>
+  apiPatch<{ ok: boolean }>(`/api/admin/conversations/${id}/status`, { status })

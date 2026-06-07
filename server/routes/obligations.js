@@ -122,6 +122,28 @@ router.post('/:id/proof', requireAuth, async (req, res) => {
       await adminSupabase.from('obligations').update({ status: 'in_progress' }).eq('id', req.params.id)
     }
 
+    // Notify sponsor that proof was submitted (fire-and-forget)
+    if (ob.contract_id) {
+      ;(async () => {
+        const { data: c } = await adminSupabase
+          .from('contracts').select('sponsor_id').eq('id', ob.contract_id).maybeSingle()
+        if (c?.sponsor_id) {
+          await adminSupabase.from('outbox_events').insert({
+            event_type:     'obligation.proof_submitted',
+            aggregate_type: 'obligation',
+            aggregate_id:   req.params.id,
+            payload: {
+              obligation_id:    req.params.id,
+              obligation_title: ob.title,
+              fighter_id:       req.user.id,
+              sponsor_id:       c.sponsor_id,
+              contract_id:      ob.contract_id,
+            },
+          })
+        }
+      })().catch(() => {})
+    }
+
     res.status(201).json({ ok: true, proof: data })
   } catch (err) {
     log.error({ err }, 'POST /obligations/:id/proof threw')
@@ -182,6 +204,26 @@ router.post('/:id/proof/:pid/review', requireAuth, async (req, res) => {
         await adminSupabase.from('obligations').update({ status: 'pending' }).eq('id', req.params.id)
       }
     }
+
+    // Notify fighter of review outcome (fire-and-forget)
+    const reviewEventType = review_status === 'approved'
+      ? 'obligation.proof_approved'
+      : 'obligation.proof_rejected'
+    ;(async () => {
+      await adminSupabase.from('outbox_events').insert({
+        event_type:     reviewEventType,
+        aggregate_type: 'obligation',
+        aggregate_id:   req.params.id,
+        payload: {
+          obligation_id:    req.params.id,
+          obligation_title: ob.title,
+          fighter_id:       ob.owner_id,
+          sponsor_id:       req.user.id,
+          contract_id:      ob.contract_id,
+          review_notes:     review_notes?.trim() || null,
+        },
+      })
+    })().catch(() => {})
 
     const { data } = await adminSupabase.from('obligation_proofs').select(PROOF_COLS).eq('id', req.params.pid).maybeSingle()
     res.json({ ok: true, proof: data })

@@ -146,12 +146,122 @@ async function handlePaymentSucceeded(payload) {
   }
 }
 
+async function handleApplicationShortlisted(payload) {
+  const { fighter_id, opportunity_title, application_id } = payload
+  if (!fighter_id) return
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: fighter_id,
+    type:         'application.shortlisted',
+    title:        'You have been shortlisted!',
+    body:         opportunity_title ? `For: ${opportunity_title}` : null,
+    action_url:   `${CLIENT}/fighter/applications`,
+    related_type: 'application',
+    related_id:   application_id ?? null,
+  })
+}
+
+async function handleContractCreated(payload) {
+  const { contract_id, sponsor_id, fighter_id, value_usd } = payload
+  if (!contract_id) return
+
+  const valueLabel = value_usd ? ` ($${Number(value_usd).toLocaleString()})` : ''
+  const notifs = []
+
+  if (fighter_id) {
+    notifs.push({
+      recipient_id: fighter_id,
+      type:         'contract.created',
+      title:        `A contract draft has been created${valueLabel}`,
+      body:         'Review and sign your contract to activate the sponsorship.',
+      action_url:   `${CLIENT}/contracts/${contract_id}`,
+      related_type: 'contract',
+      related_id:   contract_id,
+    })
+  }
+  if (sponsor_id) {
+    notifs.push({
+      recipient_id: sponsor_id,
+      type:         'contract.created',
+      title:        `Contract draft created${valueLabel}`,
+      body:         'Sign the contract to send it to the fighter for their signature.',
+      action_url:   `${CLIENT}/contracts/${contract_id}`,
+      related_type: 'contract',
+      related_id:   contract_id,
+    })
+  }
+  if (notifs.length) await adminSupabase.from('notifications').insert(notifs)
+}
+
+async function handleObligationProofSubmitted(payload) {
+  const { obligation_id, obligation_title, fighter_id, sponsor_id, contract_id } = payload
+  if (!sponsor_id) return
+
+  let fighterName = 'Fighter'
+  if (fighter_id) {
+    const { data: p } = await adminSupabase
+      .from('profiles').select('name').eq('id', fighter_id).maybeSingle()
+    fighterName = p?.name ?? fighterName
+  }
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: sponsor_id,
+    type:         'obligation.proof_submitted',
+    title:        `${fighterName} submitted proof`,
+    body:         obligation_title ? `For: ${obligation_title}` : null,
+    action_url:   contract_id ? `${CLIENT}/contracts/${contract_id}` : `${CLIENT}/contracts`,
+    related_type: 'obligation',
+    related_id:   obligation_id ?? null,
+  })
+}
+
+async function handleObligationProofApproved(payload) {
+  const { obligation_id, obligation_title, fighter_id, contract_id } = payload
+  if (!fighter_id) return
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: fighter_id,
+    type:         'obligation.proof_approved',
+    title:        'Proof approved!',
+    body:         obligation_title
+      ? `Your submission for "${obligation_title}" was approved.`
+      : null,
+    action_url:   contract_id ? `${CLIENT}/contracts/${contract_id}` : `${CLIENT}/contracts`,
+    related_type: 'obligation',
+    related_id:   obligation_id ?? null,
+  })
+}
+
+async function handleObligationProofRejected(payload) {
+  const { obligation_id, obligation_title, fighter_id, contract_id, review_notes } = payload
+  if (!fighter_id) return
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: fighter_id,
+    type:         'obligation.proof_rejected',
+    title:        'Proof needs resubmission',
+    body:         review_notes
+      ? `"${obligation_title}" — ${review_notes}`
+      : obligation_title
+        ? `Your submission for "${obligation_title}" was rejected. Please resubmit.`
+        : 'A proof submission was rejected. Please resubmit.',
+    action_url:   contract_id ? `${CLIENT}/contracts/${contract_id}` : `${CLIENT}/contracts`,
+    related_type: 'obligation',
+    related_id:   obligation_id ?? null,
+  })
+}
+
 const HANDLERS = {
-  'message.received':      handleMessageReceived,
-  'application.received':  handleApplicationReceived,
-  'application.accepted':  handleApplicationAccepted,
-  'application.rejected':  handleApplicationRejected,
-  'payment.succeeded':     handlePaymentSucceeded,
+  'message.received':             handleMessageReceived,
+  'application.received':         handleApplicationReceived,
+  'application.shortlisted':      handleApplicationShortlisted,
+  'application.accepted':         handleApplicationAccepted,
+  'application.rejected':         handleApplicationRejected,
+  'contract.created':             handleContractCreated,
+  'obligation.proof_submitted':   handleObligationProofSubmitted,
+  'obligation.proof_approved':    handleObligationProofApproved,
+  'obligation.proof_rejected':    handleObligationProofRejected,
+  'payment.succeeded':            handlePaymentSucceeded,
 }
 
 // ── Single dispatch tick ─────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ import {
   getAdminModules, createModule, updateModule,
   getAdminPackages, createPackage, updatePackage,
   getAdminDashboard, getAdminContracts,
+  getAdminConversationList, adminLockConversation,
   type AdminUser, type PendingSponsor, type AdminModule, type AdminPackage,
 } from '../../lib/api/admin'
 import { adminRecompute } from '../../lib/api/opportunities'
@@ -25,6 +26,7 @@ const NAV = [
   { id: 'content',     label: 'Modules',         icon: '📚' },
   { id: 'marketplace', label: 'Marketplace',     icon: '🤝' },
   { id: 'contracts',   label: 'Contracts',       icon: '📄' },
+  { id: 'messaging',   label: 'Messaging',       icon: '💬' },
   { id: 'reports',     label: 'Reports',         icon: '📊' },
   { id: 'mentors',     label: 'Mentors',         icon: '🎯' },
   { id: 'sponsorforge',label: 'SponsorForge',    icon: '⚡' },
@@ -1219,6 +1221,113 @@ function AdminContracts() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// MESSAGING TAB
+// ═════════════════════════════════════════════════════════════════════════════
+const CONV_STATUS_COLOR: Record<string, string> = {
+  open: '#00c060', archived: '#4a4846', locked: '#7f1d1d',
+}
+
+function AdminMessaging() {
+  const [convs, setConvs]         = useState<any[]>([])
+  const [total, setTotal]         = useState(0)
+  const [loading, setLoading]     = useState(true)
+  const [statusFilter, setFilter] = useState('')
+  const [actingId, setActingId]   = useState<string | null>(null)
+  const [msg, setMsg]             = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  const load = useCallback((s?: string) => {
+    setLoading(true); setMsg(null)
+    getAdminConversationList({ status: s || undefined, limit: 30 })
+      .then(r => { setConvs(r.conversations ?? []); setTotal(r.total ?? 0); setLoading(false) })
+      .catch(e => { setMsg({ type: 'err', text: e.message ?? 'Failed to load.' }); setLoading(false) })
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const changeStatus = async (id: string, status: 'open' | 'archived' | 'locked') => {
+    setActingId(id)
+    try {
+      await adminLockConversation(id, status)
+      setConvs(prev => prev.map(c => c.id === id ? { ...c, status } : c))
+      setMsg({ type: 'ok', text: `Conversation ${status}.` })
+    } catch (e: any) {
+      setMsg({ type: 'err', text: e.message ?? 'Failed.' })
+    } finally { setActingId(null) }
+  }
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Conversations ({total})</SectionHeading>
+
+      <div className="flex gap-2 flex-wrap">
+        {(['', 'open', 'archived', 'locked'] as const).map(s => (
+          <button key={s} onClick={() => { setFilter(s); load(s || undefined) }}
+            className="font-condensed font-bold uppercase text-[10px] tracking-[0.15em] px-3 py-1.5 border cursor-pointer transition-all"
+            style={{
+              borderColor: statusFilter === s ? '#8b0000' : '#222226',
+              color:       statusFilter === s ? '#f0ece4' : '#7a7672',
+              background:  statusFilter === s ? 'rgba(139,0,0,0.1)' : 'transparent',
+            }}>
+            {s || 'All'}
+          </button>
+        ))}
+      </div>
+
+      {msg && <ActionMsg msg={msg} />}
+
+      {loading ? <DashSkeleton /> : !convs.length ? (
+        <EmptyState icon="💬" title="No Conversations" body="No conversations match the current filter." />
+      ) : (
+        <div className="space-y-2">
+          {convs.map((c: any) => (
+            <div key={c.id} className="dash-card flex items-center gap-4"
+              style={{ borderLeft: `2px solid ${CONV_STATUS_COLOR[c.status] ?? '#222226'}` }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-2 py-0.5"
+                    style={{ background: CONV_STATUS_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
+                    {c.status ?? 'open'}
+                  </span>
+                  <span className="font-condensed text-[10px] text-gray-3">{c.context_type}</span>
+                </div>
+                <div className="font-condensed font-bold text-off-white text-[13px] truncate">
+                  {c.subject || `${c.context_type} conversation`}
+                </div>
+                {c.last_message_at && (
+                  <div className="font-condensed text-[10px] text-gray-3 mt-0.5">
+                    {new Date(c.last_message_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                {c.status !== 'locked' && (
+                  <button onClick={() => changeStatus(c.id, 'locked')} disabled={actingId === c.id}
+                    className="font-condensed uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+                    {actingId === c.id ? <Spinner /> : 'Lock'}
+                  </button>
+                )}
+                {c.status !== 'archived' && (
+                  <button onClick={() => changeStatus(c.id, 'archived')} disabled={actingId === c.id}
+                    className="font-condensed uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-charcoal-3 transition-all disabled:opacity-40">
+                    Archive
+                  </button>
+                )}
+                {c.status !== 'open' && (
+                  <button onClick={() => changeStatus(c.id, 'open')} disabled={actingId === c.id}
+                    className="font-condensed uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-off-white transition-all disabled:opacity-40">
+                    Re-open
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 const VIEWS: Record<string, React.FC> = {
   overview:    Overview,
   setup:       Setup,
@@ -1228,6 +1337,7 @@ const VIEWS: Record<string, React.FC> = {
   content:     Content,
   marketplace: Marketplace,
   contracts:   AdminContracts,
+  messaging:   AdminMessaging,
   reports:     Reports,
   mentors:     Mentors,
   sponsorforge:SponsorForgeAdmin,

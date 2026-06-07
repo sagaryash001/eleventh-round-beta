@@ -6,7 +6,61 @@ import { childLogger } from '../lib/logger.js'
 const router = Router()
 const log    = childLogger('conversations')
 
-const CONVERSATION_COLS = 'id, subject, context_type, context_id, created_by, last_message_at, created_at, updated_at, deleted_at'
+// Context ownership guard: non-admin users may only create conversations
+// attached to their own applications/contracts/obligations.
+async function validateContextAccess(uid, role, context_type, context_id) {
+  if (role === 'admin') return null
+
+  if (!context_type || !context_id) {
+    return 'A valid context_type and context_id are required to start a conversation.'
+  }
+
+  if (context_type === 'application') {
+    const { data: app } = await adminSupabase
+      .from('applications')
+      .select('fighter_id, sponsor_id, status')
+      .eq('id', context_id)
+      .maybeSingle()
+    if (!app) return 'Application not found.'
+    if (app.fighter_id !== uid && app.sponsor_id !== uid) return 'You are not a participant in this application.'
+    return null
+  }
+
+  if (context_type === 'contract') {
+    const { data: c } = await adminSupabase
+      .from('contracts')
+      .select('sponsor_id, fighter_id')
+      .eq('id', context_id)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (!c) return 'Contract not found.'
+    if (c.sponsor_id !== uid && c.fighter_id !== uid) return 'You are not a participant in this contract.'
+    return null
+  }
+
+  if (context_type === 'obligation') {
+    const { data: ob } = await adminSupabase
+      .from('obligations')
+      .select('owner_id, contract_id')
+      .eq('id', context_id)
+      .maybeSingle()
+    if (!ob) return 'Obligation not found.'
+    if (ob.contract_id) {
+      const { data: c } = await adminSupabase
+        .from('contracts').select('sponsor_id, fighter_id').eq('id', ob.contract_id).maybeSingle()
+      if (ob.owner_id !== uid && c?.sponsor_id !== uid && c?.fighter_id !== uid) {
+        return 'You are not a participant in this obligation.'
+      }
+    } else if (ob.owner_id !== uid) {
+      return 'You are not a participant in this obligation.'
+    }
+    return null
+  }
+
+  return 'Unsupported context_type.'
+}
+
+const CONVERSATION_COLS = 'id, subject, context_type, context_id, status, created_by, last_message_at, created_at, updated_at, deleted_at'
 const MESSAGE_COLS      = 'id, conversation_id, sender_id, body, message_type, attachments, edited_at, deleted_at, created_at'
 
 // ── GET /api/conversations — list user's conversations ───────────────────────
@@ -117,6 +171,10 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'participant_ids[] required.' })
     }
 
+    // Context ownership check — prevents users starting conversations outside their contexts
+    const accessErr = await validateContextAccess(uid, req.user.role, context_type, context_id)
+    if (accessErr) return res.status(403).json({ error: accessErr })
+
     // Deduplicate — always include the creator
     const allParticipants = [...new Set([uid, ...participant_ids])]
 
@@ -185,8 +243,8 @@ router.post('/', requireAuth, async (req, res) => {
       if (mErr) throw mErr
       firstMessage = msg
 
-      // Queue outbox event for notification fan-out
-      await adminSupabase.from('outbox_events').insert({
+      // Queue outbox event for notification fan-out (fire-and-forget — message is already saved)
+      adminSupabase.from('outbox_events').insert({
         event_type:     'message.received',
         aggregate_type: 'message',
         aggregate_id:   msg.id,
@@ -197,7 +255,7 @@ router.post('/', requireAuth, async (req, res) => {
           body_preview:    initial_message.trim().slice(0, 120),
           recipient_ids:   allParticipants.filter(p => p !== uid),
         },
-      })
+      }).then(() => {}).catch(() => {})
     }
 
     res.status(201).json({ ok: true, conversation: conv, first_message: firstMessage })
@@ -270,6 +328,13 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
 
     if (!part) return res.status(403).json({ error: 'Not a participant in this conversation.' })
 
+    // Block sends in locked conversations (admins can still post)
+    const { data: convCheck } = await adminSupabase
+      .from('conversations').select('status').eq('id', id).maybeSingle()
+    if (convCheck?.status === 'locked' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'This conversation is locked.' })
+    }
+
     const { data: msg, error: mErr } = await adminSupabase
       .from('messages')
       .insert({
@@ -300,9 +365,9 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
 
     const recipientIds = (allParts ?? []).map(p => p.user_id).filter(pid => pid !== uid)
 
-    // Queue outbox event for recipients
+    // Queue outbox event for recipients (fire-and-forget — message is already saved)
     if (recipientIds.length) {
-      await adminSupabase.from('outbox_events').insert({
+      adminSupabase.from('outbox_events').insert({
         event_type:     'message.received',
         aggregate_type: 'message',
         aggregate_id:   msg.id,
@@ -313,7 +378,7 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
           body_preview:    (body ?? '').trim().slice(0, 120),
           recipient_ids:   recipientIds,
         },
-      })
+      }).then(() => {}).catch(() => {})
     }
 
     res.status(201).json({ ok: true, message: fullMsg ?? msg })
@@ -336,6 +401,79 @@ router.post('/:id/read', requireAuth, async (req, res) => {
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'POST /conversations/:id/read threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/conversations/:id — get a single conversation ───────────────────
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const uid = req.user.id
+
+    const { data: part } = await adminSupabase
+      .from('conversation_participants')
+      .select('user_id, unread_count, last_read_at, muted')
+      .eq('conversation_id', req.params.id)
+      .eq('user_id', uid)
+      .is('left_at', null)
+      .maybeSingle()
+
+    if (!part && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not a participant in this conversation.' })
+    }
+
+    const { data: conv, error: cErr } = await adminSupabase
+      .from('conversations')
+      .select(CONVERSATION_COLS)
+      .eq('id', req.params.id)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (cErr) throw cErr
+    if (!conv) return res.status(404).json({ error: 'Not found.' })
+
+    const { data: participants } = await adminSupabase
+      .from('conversation_participants')
+      .select('user_id, role_in_thread, unread_count, last_read_at, muted')
+      .eq('conversation_id', req.params.id)
+      .is('left_at', null)
+
+    const pids = (participants ?? []).map(p => p.user_id)
+    const { data: profiles } = pids.length
+      ? await adminSupabase.from('profiles').select('id, name, role').in('id', pids)
+      : { data: [] }
+
+    const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+
+    res.json({
+      ok: true,
+      conversation: { ...conv, my_unread_count: part?.unread_count ?? 0 },
+      participants: participants ?? [],
+      profiles: profileMap,
+    })
+  } catch (err) {
+    log.error({ err }, 'GET /conversations/:id threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/conversations/:id/archive — archive a conversation (admin only) ─
+// Archiving affects the conversation for ALL participants (no per-user archive in schema).
+// Restricted to admin to prevent one participant silently hiding the thread for everyone.
+router.patch('/:id/archive', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can archive conversations.' })
+    }
+
+    const { error } = await adminSupabase
+      .from('conversations')
+      .update({ status: 'archived' })
+      .eq('id', req.params.id)
+    if (error) throw error
+
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'PATCH /conversations/:id/archive threw')
     res.status(500).json({ error: err.message })
   }
 })

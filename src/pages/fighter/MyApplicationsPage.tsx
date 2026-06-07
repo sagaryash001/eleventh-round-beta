@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import { getMyApplications, updateApplicationStatus, type Application } from '../../lib/api/applications'
 import { useAuth } from '../../hooks/useAuth'
+import { createConversation } from '../../lib/api/conversations'
 
 const STATUS_LABEL: Record<string, string> = {
   applied: 'Submitted', under_review: 'In Review', shortlisted: 'Shortlisted',
@@ -18,6 +19,7 @@ export default function MyApplicationsPage() {
   const navigate = useNavigate()
   const [apps, setApps]     = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
+  const [messaging, setMessaging] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) { navigate('/login', { replace: true }); return }
@@ -31,6 +33,25 @@ export default function MyApplicationsPage() {
       const res = await updateApplicationStatus(id, 'withdrawn')
       setApps(prev => prev.map(a => a.id === id ? res.application : a))
     } catch {}
+  }
+
+  const openConversation = async (app: Application) => {
+    setMessaging(app.id)
+    try {
+      await createConversation(
+        [app.sponsor_id],
+        {
+          context_type: 'application',
+          context_id:   app.id,
+          subject:      app.opportunity?.title ? `Re: ${app.opportunity.title}` : 'Sponsorship',
+        },
+      )
+      navigate('/inbox')
+    } catch (e: any) {
+      console.error('Could not open conversation', e)
+    } finally {
+      setMessaging(null)
+    }
   }
 
   return (
@@ -90,6 +111,15 @@ export default function MyApplicationsPage() {
                       <button onClick={() => withdraw(app.id)}
                         className="font-condensed uppercase text-[10px] tracking-[0.15em] text-gray-3 hover:text-blood-glow bg-transparent border-0 cursor-pointer flex-shrink-0">
                         Withdraw
+                      </button>
+                    )}
+                    {['shortlisted', 'accepted'].includes(app.status) && (
+                      <button
+                        onClick={() => openConversation(app)}
+                        disabled={messaging === app.id}
+                        className="font-condensed uppercase text-[10px] tracking-[0.15em] text-gray-3 hover:text-off-white bg-transparent border-0 cursor-pointer flex-shrink-0 disabled:opacity-40"
+                      >
+                        {messaging === app.id ? '…' : 'Message Sponsor'}
                       </button>
                     )}
                   </div>

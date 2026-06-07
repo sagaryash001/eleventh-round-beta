@@ -824,4 +824,93 @@ router.get('/disputes', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/admin/conversations — list all conversations ─────────────────────
+router.get('/conversations', ...guard, async (req, res) => {
+  try {
+    const sb     = adminSupabase
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+    const status = req.query.status
+
+    let q = sb.from('conversations')
+      .select('id, subject, context_type, context_id, status, created_by, last_message_at, created_at, updated_at', { count: 'exact' })
+      .is('deleted_at', null)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .range(offset, offset + limit - 1)
+    if (status) q = q.eq('status', status)
+
+    const { data: convs, error, count } = await q.catch(() => ({ data: [], count: 0, error: null }))
+    if (error) throw error
+
+    res.json({ ok: true, conversations: convs ?? [], total: count ?? 0 })
+  } catch (err) {
+    log.error({ err }, '/admin/conversations threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/admin/conversations/:id — view conversation with messages ────────
+router.get('/conversations/:id', ...guard, async (req, res) => {
+  try {
+    const sb = adminSupabase
+
+    const [{ data: conv, error: cErr }, { data: participants }, { data: messages }] = await Promise.all([
+      sb.from('conversations')
+        .select('id, subject, context_type, context_id, status, created_by, last_message_at, created_at, updated_at')
+        .eq('id', req.params.id)
+        .maybeSingle(),
+      sb.from('conversation_participants')
+        .select('user_id, role_in_thread, unread_count, last_read_at')
+        .eq('conversation_id', req.params.id),
+      sb.from('messages')
+        .select('id, conversation_id, sender_id, body, message_type, attachments, edited_at, deleted_at, created_at')
+        .eq('conversation_id', req.params.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true })
+        .limit(100),
+    ])
+
+    if (cErr) throw cErr
+    if (!conv) return res.status(404).json({ error: 'Not found.' })
+
+    const pids = (participants ?? []).map(p => p.user_id)
+    const { data: profiles } = pids.length
+      ? await sb.from('profiles').select('id, name, role').in('id', pids)
+      : { data: [] }
+
+    res.json({
+      ok:           true,
+      conversation: conv,
+      participants: participants ?? [],
+      messages:     messages ?? [],
+      profiles:     Object.fromEntries((profiles ?? []).map(p => [p.id, p])),
+    })
+  } catch (err) {
+    log.error({ err }, '/admin/conversations/:id threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/admin/conversations/:id/status — lock or archive ───────────────
+router.patch('/conversations/:id/status', ...guard, async (req, res) => {
+  try {
+    const { status } = req.body
+    if (!status || !['open', 'archived', 'locked'].includes(status)) {
+      return res.status(400).json({ error: 'status must be open | archived | locked.' })
+    }
+
+    const { error } = await adminSupabase
+      .from('conversations')
+      .update({ status })
+      .eq('id', req.params.id)
+    if (error) throw error
+
+    log.info({ id: req.params.id, status, by: req.user.id }, 'admin updated conversation status')
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'PATCH /admin/conversations/:id/status threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router

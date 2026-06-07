@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import { getOppApplications, getSponsorMatches, recomputeMatches, updateMatchStatus } from '../../lib/api/opportunities'
 import { updateApplicationStatus, acceptAndCreateContract, type Application } from '../../lib/api/applications'
+import { createConversation } from '../../lib/api/conversations'
 
 const STATUS_LABEL: Record<string, string> = {
   applied: 'New', under_review: 'In Review', shortlisted: 'Shortlisted',
@@ -204,6 +205,27 @@ function ApplicantsView({ id }: { id: string }) {
   const [msg, setMsg]           = useState('')
   // contractIds tracks appId → contractId for contracts created this session
   const [contractIds, setContractIds] = useState<Record<string, string>>({})
+  const navigate = useNavigate()
+  const [messaging, setMessaging] = useState<string | null>(null)
+
+  const openConversation = async (appId: string, fighterId: string, opportunityTitle?: string) => {
+    setMessaging(appId)
+    try {
+      await createConversation(
+        [fighterId],
+        {
+          context_type:   'application',
+          context_id:     appId,
+          subject:        opportunityTitle ? `Re: ${opportunityTitle}` : 'Sponsorship',
+        },
+      )
+      navigate('/inbox')
+    } catch (e: any) {
+      setMsg(e.message ?? 'Could not open conversation.')
+    } finally {
+      setMessaging(null)
+    }
+  }
 
   useEffect(() => {
     if (!id) return
@@ -337,6 +359,15 @@ function ApplicantsView({ id }: { id: string }) {
                       <span className="font-condensed text-[10px] tracking-[0.15em] text-gray-3 uppercase">
                         {STATUS_LABEL[app.status]}
                       </span>
+                    )}
+                    {['shortlisted', 'accepted'].includes(app.status) && (
+                      <button
+                        onClick={() => openConversation(app.id, app.fighter_id, app.opportunity?.title)}
+                        disabled={messaging === app.id}
+                        className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] text-gray-2 border border-charcoal-3 hover:border-blood hover:text-off-white px-3 py-1.5 bg-transparent cursor-pointer transition-all disabled:opacity-40"
+                      >
+                        {messaging === app.id ? '…' : 'Message'}
+                      </button>
                     )}
                   </div>
                 </div>

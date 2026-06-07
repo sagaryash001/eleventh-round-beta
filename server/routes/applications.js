@@ -74,6 +74,20 @@ router.post('/', requireAuth, async (req, res) => {
       .eq('id', opportunity_id)
       .then(() => {}).catch(() => {})
 
+    // Notify sponsor of the new application
+    adminSupabase.from('outbox_events').insert({
+      event_type:     'application.received',
+      aggregate_type: 'application',
+      aggregate_id:   data.id,
+      payload: {
+        sponsor_id:        opp.sponsor_id,
+        fighter_name:      req.user.name ?? req.user.email ?? 'A fighter',
+        opportunity_title: opp.title ?? null,
+        application_id:    data.id,
+        opportunity_id:    opportunity_id,
+      },
+    }).then(() => {}).catch(() => {})
+
     res.status(201).json({ ok: true, application: data })
   } catch (err) {
     log.error({ err }, 'POST /applications threw')
@@ -202,6 +216,32 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .eq('id', req.params.id)
       .maybeSingle()
     if (refetchErr) throw refetchErr
+
+    // Emit notification for key status transitions (fully fire-and-forget)
+    if (['shortlisted', 'accepted', 'rejected'].includes(newStatus)) {
+      const opportunityId = data.opportunity_id
+      const eventType = newStatus === 'shortlisted' ? 'application.shortlisted'
+                      : newStatus === 'accepted'     ? 'application.accepted'
+                      : 'application.rejected'
+      ;(async () => {
+        const { data: opp } = await adminSupabase
+          .from('sponsorship_opportunities')
+          .select('title')
+          .eq('id', opportunityId)
+          .maybeSingle()
+        await adminSupabase.from('outbox_events').insert({
+          event_type:     eventType,
+          aggregate_type: 'application',
+          aggregate_id:   data.id,
+          payload: {
+            fighter_id:        data.fighter_id,
+            sponsor_id:        data.sponsor_id,
+            opportunity_title: opp?.title ?? null,
+            application_id:    data.id,
+          },
+        })
+      })().catch(() => {})
+    }
 
     res.json({ ok: true, application: data })
   } catch (err) {
@@ -336,6 +376,22 @@ router.post('/:applicationId/accept-contract', requireAuth, async (req, res) => 
       .from('applications').select(APPLICATION_COLS).eq('id', req.params.applicationId).maybeSingle()
 
     log.info({ appId: req.params.applicationId, contractId: contract?.id }, 'application accepted + contract draft created')
+
+    // Notify both parties that a contract draft has been created
+    if (contract?.id) {
+      adminSupabase.from('outbox_events').insert({
+        event_type:     'contract.created',
+        aggregate_type: 'contract',
+        aggregate_id:   contract.id,
+        payload: {
+          contract_id: contract.id,
+          sponsor_id:  app.sponsor_id,
+          fighter_id:  app.fighter_id,
+          value_usd:   contract.value_usd,
+        },
+      }).then(() => {}).catch(() => {})
+    }
+
     res.status(201).json({ ok: true, application: updatedApp ?? app, contract, created: true })
   } catch (err) {
     log.error({ err }, 'POST /applications/:id/accept-contract threw')

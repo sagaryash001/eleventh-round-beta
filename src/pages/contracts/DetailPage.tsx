@@ -16,6 +16,7 @@ import {
   createPaymentIntent, getContractPayments, getMilestones, addMilestone,
   type SponsorshipPayment, type PaymentMilestone,
 } from '../../lib/api/payments'
+import { createConversation } from '../../lib/api/conversations'
 
 const stripePromise = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY
   ? loadStripe((import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY as string)
@@ -483,6 +484,8 @@ export default function ContractDetailPage() {
   const [reviewModal, setReviewModal] = useState<string | null>(null)
   const [showTerminate, setShowTerminate] = useState(false)
   const [terminateReason, setTerminateReason] = useState('')
+  const [messaging, setMessaging] = useState(false)
+  const [msgError, setMsgError]   = useState('')
 
   useEffect(() => {
     if (!user) { navigate('/login', { replace: true }); return }
@@ -550,6 +553,25 @@ export default function ContractDetailPage() {
   const isSponsor = user.id === contract.sponsor_id
   const isFighter = user.id === contract.fighter_id
 
+  const openContractConversation = async () => {
+    setMessaging(true); setMsgError('')
+    try {
+      const otherId = isSponsor ? contract.fighter_id : contract.sponsor_id
+      await createConversation(
+        [otherId],
+        {
+          context_type: 'contract',
+          context_id:   contract.id,
+          subject:      `Contract — $${contract.value_usd.toLocaleString()}`,
+        },
+      )
+      navigate('/inbox')
+    } catch (e: any) {
+      setMsgError(e.message ?? 'Could not open conversation.')
+      setMessaging(false)
+    }
+  }
+
   const canAccept =
     (isSponsor && contract.status === 'draft' && !contract.sponsor_accepted_at) ||
     (isFighter && contract.status === 'pending_fighter' && !contract.fighter_accepted_at)
@@ -588,9 +610,17 @@ export default function ContractDetailPage() {
               ${contract.value_usd.toLocaleString()} Contract
             </h1>
           </div>
-          <Link to="/contracts" className="text-[10px] uppercase tracking-widest" style={{ color: '#4a4846', textDecoration: 'none' }}>
-            ← Contracts
-          </Link>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {contract.status !== 'terminated' && (
+              <Btn onClick={openContractConversation} disabled={messaging || acting} variant="ghost">
+                {messaging ? 'Opening…' : 'Message'}
+              </Btn>
+            )}
+            {msgError && <p className="text-xs" style={{ color: '#ef4444' }}>{msgError}</p>}
+            <Link to="/contracts" className="text-[10px] uppercase tracking-widest" style={{ color: '#4a4846', textDecoration: 'none' }}>
+              ← Contracts
+            </Link>
+          </div>
         </div>
 
         {msg && <p className="text-sm mb-4" style={{ color: '#ef4444' }}>{msg}</p>}
