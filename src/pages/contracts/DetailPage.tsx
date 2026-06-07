@@ -17,6 +17,7 @@ import {
   type SponsorshipPayment, type PaymentMilestone,
 } from '../../lib/api/payments'
 import { createConversation } from '../../lib/api/conversations'
+import { uploadFile } from '../../lib/api/uploads'
 
 const stripePromise = (import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY
   ? loadStripe((import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY as string)
@@ -141,11 +142,25 @@ function ObligationRow({
 // ── Proof submit modal ────────────────────────────────────────────────────────
 
 function ProofModal({ obligationId, onDone, onClose }: { obligationId: string; onDone: () => void; onClose: () => void }) {
-  const [type, setType]   = useState<'url'|'file'|'text'>('url')
-  const [value, setValue] = useState('')
-  const [caption, setCaption] = useState('')
-  const [saving, setSaving]   = useState(false)
-  const [err, setErr]         = useState('')
+  const [type, setType]         = useState<'url'|'file'|'text'>('url')
+  const [value, setValue]       = useState('')
+  const [caption, setCaption]   = useState('')
+  const [saving, setSaving]     = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [err, setErr]           = useState('')
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setErr(''); setUploading(true)
+    try {
+      const { publicUrl } = await uploadFile('obligation-proof', file, obligationId)
+      setValue(publicUrl)
+    } catch (ex: any) {
+      setErr(ex.message ?? 'Upload failed.')
+    } finally { setUploading(false) }
+  }
 
   const submit = async () => {
     if (!value.trim()) { setErr('Proof value required.'); return }
@@ -168,7 +183,7 @@ function ProofModal({ obligationId, onDone, onClose }: { obligationId: string; o
           {(['url','text','file'] as const).map(t => (
             <button
               key={t}
-              onClick={() => setType(t)}
+              onClick={() => { setType(t); setValue('') }}
               className="px-3 py-1.5 text-[10px] uppercase tracking-widest transition-colors"
               style={{
                 background: type === t ? '#8b0000' : 'transparent',
@@ -181,13 +196,41 @@ function ProofModal({ obligationId, onDone, onClose }: { obligationId: string; o
             </button>
           ))}
         </div>
-        <input
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          placeholder={type === 'url' ? 'https://…' : type === 'file' ? 'File path or storage key' : 'Describe what you did…'}
-          className="w-full px-4 py-3 text-sm mb-3 outline-none"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0ece4' }}
-        />
+
+        {type === 'file' ? (
+          <div className="mb-3">
+            <p className="text-[10px] mb-2" style={{ color: '#b45309' }}>
+              ⚠ Uploaded files are stored in a shared space and accessible via a direct link.
+              Do not upload sensitive or private documents.
+            </p>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full px-4 py-6 text-sm text-center outline-none cursor-pointer border border-dashed transition-colors"
+              style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.12)', color: '#7a7672' }}
+            >
+              {uploading ? (
+                <span>Uploading…</span>
+              ) : value ? (
+                <span style={{ color: '#00c060' }}>✓ File uploaded — click to replace</span>
+              ) : (
+                <span>Click to upload file · jpg, png, pdf · max 10 MB</span>
+              )}
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+            {value && (
+              <p className="text-xs mt-1 truncate" style={{ color: '#4a4846' }}>{value}</p>
+            )}
+          </div>
+        ) : (
+          <input
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            placeholder={type === 'url' ? 'https://…' : 'Describe what you did…'}
+            className="w-full px-4 py-3 text-sm mb-3 outline-none"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0ece4' }}
+          />
+        )}
+
         <input
           value={caption}
           onChange={e => setCaption(e.target.value)}
@@ -197,7 +240,7 @@ function ProofModal({ obligationId, onDone, onClose }: { obligationId: string; o
         />
         {err && <p className="text-xs mb-3" style={{ color: '#ef4444' }}>{err}</p>}
         <div className="flex gap-3">
-          <Btn onClick={submit} disabled={saving}>{saving ? 'Saving…' : 'Submit'}</Btn>
+          <Btn onClick={submit} disabled={saving || uploading}>{saving ? 'Saving…' : 'Submit'}</Btn>
           <Btn onClick={onClose} variant="ghost">Cancel</Btn>
         </div>
       </div>

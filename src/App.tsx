@@ -25,6 +25,8 @@ const OpportunityDetailPage  = lazy(() => import('./pages/opportunities/DetailPa
 const InboxPage              = lazy(() => import('./pages/InboxPage'))
 const ContractsListPage      = lazy(() => import('./pages/contracts/ListPage'))
 const ContractDetailPage     = lazy(() => import('./pages/contracts/DetailPage'))
+const FighterPublicPage      = lazy(() => import('./pages/public/FighterPublicPage'))
+const TeamPublicPage         = lazy(() => import('./pages/public/TeamPublicPage'))
 
 // Onboarding pages
 const FighterOnboarding = lazy(() => import('./pages/onboarding/FighterOnboarding'))
@@ -148,6 +150,10 @@ function AppRoutes() {
       <Route path="/inbox"          element={<InboxPage />} />
       <Route path="/contracts"      element={<ContractsListPage />} />
       <Route path="/contracts/:id"  element={<ContractDetailPage />} />
+
+      {/* Public profiles */}
+      <Route path="/fighters/:slug"  element={<FighterPublicPage />} />
+      <Route path="/team/:slug"      element={<TeamPublicPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

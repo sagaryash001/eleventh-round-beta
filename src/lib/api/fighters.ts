@@ -13,6 +13,7 @@ export interface SocialAccount {
 export interface FighterProfile {
   name: string
   email: string
+  nickname: string | null
   division: string | null
   record: string
   record_wins: number
@@ -29,6 +30,14 @@ export interface FighterProfile {
   public_slug: string | null
   socials: SocialAccount[]
   profile_completeness: number
+  // media + public profile
+  headshot_path: string | null
+  banner_path: string | null
+  media_kit_url: string | null
+  highlight_video_urls: string[]
+  bio: string | null
+  gym_name: string | null
+  coach_name: string | null
 }
 
 export const getFighterProfile = () =>
@@ -37,7 +46,9 @@ export const getFighterProfile = () =>
 export const updateFighterProfile = (
   updates: Partial<Pick<FighterProfile,
     'weight_class' | 'current_promotion' | 'pro_status' | 'nationality' |
-    'visibility' | 'is_open_to_sponsorship' | 'record_wins' | 'record_losses' | 'record_draws'>>
+    'visibility' | 'is_open_to_sponsorship' | 'record_wins' | 'record_losses' | 'record_draws' |
+    'nickname' | 'bio' | 'gym_name' | 'coach_name' |
+    'headshot_path' | 'banner_path' | 'media_kit_url' | 'highlight_video_urls'>>
     & { division?: string; base_city?: string; name?: string },
 ) => apiPatch<{ ok: boolean }>('/api/fighter/profile', updates)
 

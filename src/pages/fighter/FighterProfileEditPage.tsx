@@ -5,6 +5,7 @@ import {
   getFighterProfile, updateFighterProfile, updateFighterSocials,
   type FighterProfile, type SocialAccount, type SocialPlatform,
 } from '../../lib/api/fighters'
+import ImageUpload from '../../components/ImageUpload'
 import Navbar from '../../components/Navbar'
 
 const WEIGHT_CLASSES = [
@@ -74,15 +75,20 @@ export default function FighterProfileEditPage() {
     setSaving(true); setMsg('')
     try {
       await updateFighterProfile({
-        weight_class: p.weight_class ?? undefined,
-        current_promotion: p.current_promotion ?? undefined,
-        pro_status: p.pro_status ?? undefined,
-        nationality: p.nationality ?? undefined,
-        visibility: p.visibility,
+        weight_class:           p.weight_class           ?? undefined,
+        current_promotion:      p.current_promotion      ?? undefined,
+        pro_status:             p.pro_status             ?? undefined,
+        nationality:            p.nationality            ?? undefined,
+        visibility:             p.visibility,
         is_open_to_sponsorship: p.is_open_to_sponsorship,
-        record_wins: p.record_wins,
-        record_losses: p.record_losses,
-        record_draws: p.record_draws,
+        record_wins:            p.record_wins,
+        record_losses:          p.record_losses,
+        record_draws:           p.record_draws,
+        // public profile text fields
+        nickname:               p.nickname               ?? undefined,
+        bio:                    p.bio                    ?? undefined,
+        gym_name:               p.gym_name               ?? undefined,
+        coach_name:             p.coach_name             ?? undefined,
       })
       await updateFighterSocials((p.socials ?? []).filter(s => s.handle?.trim()))
       setMsg('Saved.')
@@ -118,6 +124,74 @@ export default function FighterProfileEditPage() {
             <Link to="/dashboard/fighter" className="font-condensed font-bold uppercase text-gray-3 hover:text-off-white no-underline" style={{ fontSize: 11, letterSpacing: '0.2em' }}>
               ← Dashboard
             </Link>
+          </div>
+
+          {/* Profile media */}
+          <div className="bg-charcoal border border-charcoal-3 p-6 mb-4" style={{ borderLeft: '2px solid #8b0000' }}>
+            <div className="font-condensed font-bold uppercase text-[10px] tracking-[0.3em] text-blood-glow mb-4">Profile Images</div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <ImageUpload
+                uploadType="fighter-headshot"
+                currentPath={p.headshot_path}
+                label="Headshot"
+                hint="Square photo, max 5 MB"
+                accept="image/jpeg,image/png,image/webp"
+                onUploaded={(path) => {
+                  set({ headshot_path: path })
+                  updateFighterProfile({ headshot_path: path } as any).catch(() => {})
+                }}
+              />
+              <ImageUpload
+                uploadType="fighter-banner"
+                currentPath={p.banner_path}
+                label="Banner"
+                hint="Wide image (16:9), max 5 MB"
+                accept="image/jpeg,image/png,image/webp"
+                onUploaded={(path) => {
+                  set({ banner_path: path })
+                  updateFighterProfile({ banner_path: path } as any).catch(() => {})
+                }}
+              />
+            </div>
+            <ImageUpload
+              uploadType="fighter-media-kit"
+              currentPath={null}
+              bucket="public-assets"
+              label="Media Kit PDF"
+              hint="PDF, max 10 MB — replaces any existing URL"
+              accept="application/pdf"
+              onUploaded={(_, publicUrl) => {
+                set({ media_kit_url: publicUrl })
+                updateFighterProfile({ media_kit_url: publicUrl } as any).catch(() => {})
+              }}
+            />
+            {p.media_kit_url && (
+              <p className="font-condensed text-[11px] text-gray-3 mt-2">
+                Current: <a href={p.media_kit_url} target="_blank" rel="noopener noreferrer" className="text-blood-glow hover:underline">View PDF</a>
+              </p>
+            )}
+          </div>
+
+          {/* Bio */}
+          <div className="bg-charcoal border border-charcoal-3 p-6 mb-4" style={{ borderLeft: '2px solid #8b0000' }}>
+            <div className="font-condensed font-bold uppercase text-[10px] tracking-[0.3em] text-blood-glow mb-4">Public Bio</div>
+            <div className="space-y-3">
+              <div><Label>Nickname</Label><Input value={p.nickname ?? ''} onChange={v => set({ nickname: v })} placeholder='e.g. "The Predator"' /></div>
+              <div>
+                <Label>Short Bio</Label>
+                <textarea
+                  value={p.bio ?? ''}
+                  onChange={e => set({ bio: e.target.value })}
+                  rows={3}
+                  maxLength={600}
+                  placeholder="A few sentences about your career and what you're looking for in a sponsor…"
+                  className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[14px] px-4 py-3 outline-none resize-none focus:border-blood placeholder:text-gray-3"
+                />
+                <p className="font-condensed text-[10px] text-gray-3 mt-1">{(p.bio ?? '').length}/600 characters</p>
+              </div>
+              <div><Label>Gym / Team</Label><Input value={p.gym_name ?? ''} onChange={v => set({ gym_name: v })} placeholder="e.g. American Top Team" /></div>
+              <div><Label>Coach</Label><Input value={p.coach_name ?? ''} onChange={v => set({ coach_name: v })} placeholder="Head coach name" /></div>
+            </div>
           </div>
 
           {/* Fight identity */}
@@ -173,10 +247,16 @@ export default function FighterProfileEditPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving…' : 'Save Profile'}</button>
             {msg && <span className="font-condensed text-[12px] text-gray-2">{msg}</span>}
             <span className="font-condensed text-[11px] text-gray-3 ml-auto">{p.profile_completeness}% complete</span>
+            {p.public_slug && p.visibility === 'public' && (
+              <Link to={`/fighters/${p.public_slug}`}
+                className="font-condensed text-[11px] text-blood-glow hover:underline no-underline">
+                View Public Profile →
+              </Link>
+            )}
           </div>
         </div>
       </div>

@@ -268,6 +268,7 @@ router.get('/profile', ...guard, async (req, res) => {
     res.json({
       name:                  req.user.name,
       email:                 req.user.email,
+      nickname:              fp?.nickname ?? null,
       division:              fp?.division  ?? null,
       record:                `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`,
       record_wins:           wins,
@@ -285,6 +286,14 @@ router.get('/profile', ...guard, async (req, res) => {
       public_slug:           fp?.public_slug ?? null,
       socials:               socials ?? [],
       profile_completeness:  Math.min(completeness, 100),
+      // media + public profile fields
+      headshot_path:         fp?.headshot_path ?? null,
+      banner_path:           fp?.banner_path ?? null,
+      media_kit_url:         fp?.media_kit_url ?? null,
+      highlight_video_urls:  fp?.highlight_video_urls ?? [],
+      bio:                   fp?.bio ?? null,
+      gym_name:              fp?.gym_name ?? null,
+      coach_name:            fp?.coach_name ?? null,
     })
   } catch (err) {
     log.error({ err }, '/fighter/profile threw')
@@ -299,6 +308,9 @@ const FIGHTER_WRITABLE = [
   // marketplace core (Phase 1)
   'weight_class', 'current_promotion', 'pro_status', 'nationality',
   'visibility', 'is_open_to_sponsorship',
+  // uploads + public profile (Phase Storage)
+  'headshot_path', 'banner_path', 'media_kit_url', 'highlight_video_urls', 'bio',
+  'nickname', 'gym_name', 'coach_name',
 ]
 
 function pick(body, keys) {

@@ -7,6 +7,8 @@ import { DashSkeleton, EmptyState, ApiError, SectionHeading } from './DashWidget
 import { getSponsorDashboard, updateSponsorProfile, type SponsorProfile } from '../../lib/api/sponsors'
 import { getMyOpportunities, changeOpportunityStatus, type Opportunity } from '../../lib/api/opportunities'
 import { getContracts, type Contract } from '../../lib/api/contracts'
+import ImageUpload from '../../components/ImageUpload'
+import { storageUrl } from '../../lib/api/public'
 
 const NAV = [
   { id: 'overview',    label: 'Overview',    icon: '◈' },
@@ -490,6 +492,26 @@ export default function SponsorDashboard() {
           <div className="max-w-2xl space-y-4">
             <Card>
               <div className="space-y-4">
+                {/* Logo upload */}
+                <div>
+                  <Label>Company Logo</Label>
+                  {sp.logo_path && (
+                    <div className="mb-2 w-16 h-16 border border-charcoal-3 overflow-hidden" style={{ background: '#141416' }}>
+                      <img src={storageUrl(sp.logo_path) ?? ''} alt="Logo" className="w-full h-full object-contain p-1" />
+                    </div>
+                  )}
+                  <ImageUpload
+                    uploadType="sponsor-logo"
+                    currentPath={sp.logo_path ?? null}
+                    label="Company Logo"
+                    hint="Square image recommended · max 5 MB"
+                    accept="image/jpeg,image/png,image/webp"
+                    onUploaded={(path) => {
+                      patch({ logo_path: path })
+                      updateSponsorProfile({ logo_path: path } as any).catch(() => {})
+                    }}
+                  />
+                </div>
                 <div><Label>Company Name</Label><Input value={sp.company_name} onChange={v => patch({ company_name: v })} /></div>
                 <div><Label>Website</Label><Input value={sp.website_url ?? ''} onChange={v => patch({ website_url: v })} placeholder="https://…" /></div>
                 <div><Label>Industry</Label><Input value={sp.industry ?? ''} onChange={v => patch({ industry: v })} /></div>
