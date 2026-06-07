@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
-import { getMyOpportunities, type Opportunity } from '../../lib/api/opportunities'
+import { getMyOpportunities, changeOpportunityStatus, type Opportunity } from '../../lib/api/opportunities'
 import { useAuth } from '../../hooks/useAuth'
 
 const STATUS_COLORS: Record<string, string> = {
   draft:     '#7a7672',
   published: '#00c060',
-  paused:    '#C41E3A',
   closed:    '#4a4846',
   archived:  '#4a4846',
+  cancelled: '#4a4846',
 }
 
-function OppRow({ opp, onManage }: { opp: Opportunity; onManage: (id: string) => void }) {
+function OppRow({ opp, onManage, onStatusChange, acting }: {
+  opp: Opportunity
+  onManage: (id: string) => void
+  onStatusChange: (id: string, status: 'closed' | 'draft') => void
+  acting: boolean
+}) {
   return (
     <div className="bg-charcoal border border-charcoal-3 p-5 flex items-center justify-between gap-4"
       style={{ borderLeft: `2px solid ${STATUS_COLORS[opp.status] ?? '#222226'}` }}>
@@ -30,14 +35,28 @@ function OppRow({ opp, onManage }: { opp: Opportunity; onManage: (id: string) =>
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <Link to={`/sponsor/opportunities/${opp.id}/edit`}
-          className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] text-gray-3 hover:text-off-white no-underline border border-charcoal-3 px-3 py-1.5">
-          Edit
-        </Link>
+        {(opp.status === 'draft' || opp.status === 'closed') && (
+          <Link to={`/sponsor/opportunities/${opp.id}/edit`}
+            className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] text-gray-3 hover:text-off-white no-underline border border-charcoal-3 px-3 py-1.5">
+            Edit
+          </Link>
+        )}
         {opp.status === 'published' && (
-          <button onClick={() => onManage(opp.id)}
-            className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] text-off-white bg-transparent border border-charcoal-3 px-3 py-1.5 cursor-pointer hover:border-blood">
-            Applicants
+          <>
+            <button onClick={() => onManage(opp.id)}
+              className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] text-off-white bg-transparent border border-charcoal-3 px-3 py-1.5 cursor-pointer hover:border-blood">
+              Applicants
+            </button>
+            <button onClick={() => onStatusChange(opp.id, 'closed')} disabled={acting}
+              className="font-condensed uppercase text-[10px] tracking-[0.15em] text-gray-3 border border-charcoal-3 px-3 py-1.5 bg-transparent cursor-pointer hover:border-blood hover:text-blood-glow disabled:opacity-40">
+              {acting ? '…' : 'Close'}
+            </button>
+          </>
+        )}
+        {opp.status === 'closed' && (
+          <button onClick={() => onStatusChange(opp.id, 'draft')} disabled={acting}
+            className="font-condensed uppercase text-[10px] tracking-[0.15em] text-gray-3 border border-charcoal-3 px-3 py-1.5 bg-transparent cursor-pointer hover:border-blood hover:text-off-white disabled:opacity-40">
+            {acting ? '…' : 'Reopen'}
           </button>
         )}
         <Link to={`/opportunities/${opp.id}`}
@@ -54,13 +73,29 @@ export default function SponsorOpportunitiesPage() {
   const navigate   = useNavigate()
   const [opps, setOpps]       = useState<Opportunity[]>([])
   const [loading, setLoading] = useState(true)
+  const [actingId, setActingId] = useState<string|null>(null)
+  const [msg, setMsg] = useState('')
 
-  useEffect(() => {
-    if (!user) { navigate('/login', { replace: true }); return }
+  const load = useCallback(() => {
     getMyOpportunities()
       .then(r => { setOpps(r.data ?? []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [user, navigate])
+  }, [])
+
+  useEffect(() => {
+    if (!user) { navigate('/login', { replace: true }); return }
+    load()
+  }, [user, navigate, load])
+
+  const handleStatusChange = async (id: string, status: 'closed' | 'draft') => {
+    setActingId(id); setMsg('')
+    try {
+      await changeOpportunityStatus(id, status)
+      setMsg(status === 'closed' ? 'Opportunity closed.' : 'Reopened as draft.')
+      load()
+    } catch (e: any) { setMsg(e.message ?? 'Failed.') }
+    finally { setActingId(null) }
+  }
 
   const stats = {
     total:     opps.length,
@@ -108,9 +143,17 @@ export default function SponsorOpportunitiesPage() {
             <Link to="/sponsor/opportunities/new" className="btn-primary no-underline">Post an Opportunity</Link>
           </div>
         ) : (
-          <div className="space-y-2">
-            {opps.map(o => <OppRow key={o.id} opp={o} onManage={id => navigate(`/sponsor/opportunities/${id}/applicants`)} />)}
-          </div>
+          <>
+            {msg && <p className="font-condensed text-[12px] mb-2" style={{ color: msg.includes('ailed') ? '#C41E3A' : '#7a7672' }}>{msg}</p>}
+            <div className="space-y-2">
+              {opps.map(o => (
+                <OppRow key={o.id} opp={o}
+                  onManage={id => navigate(`/sponsor/opportunities/${id}/applicants`)}
+                  onStatusChange={handleStatusChange}
+                  acting={actingId === o.id} />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -498,6 +498,50 @@ router.get('/playbooks', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/manager/applications ────────────────────────────────────────────
+// Applications for all active roster fighters, enriched with opp + sponsor + fighter name.
+router.get('/applications', ...guard, async (req, res) => {
+  try {
+    const sb   = adminSupabase
+    const mid  = req.user.id
+    const fids = await activeFighterIds(mid)
+    if (!fids.length) return res.json({ applications: [] })
+
+    const { data: apps, error } = await sb
+      .from('applications')
+      .select('id, opportunity_id, fighter_id, sponsor_id, status, match_score, cover_message, created_at, updated_at')
+      .in('fighter_id', fids)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (error) throw error
+
+    const oppIds     = [...new Set((apps ?? []).map(a => a.opportunity_id))]
+    const sponsorIds = [...new Set((apps ?? []).map(a => a.sponsor_id))]
+
+    const [{ data: opps }, { data: sponsors }, { data: fighters }] = await Promise.all([
+      oppIds.length     ? sb.from('sponsorship_opportunities').select('id, title, status').in('id', oppIds) : { data: [] },
+      sponsorIds.length ? sb.from('sponsor_profiles').select('user_id, company_name').in('user_id', sponsorIds) : { data: [] },
+      sb.from('profiles').select('id, name').in('id', fids),
+    ])
+
+    const oppMap     = Object.fromEntries((opps     ?? []).map(o => [o.id,      o]))
+    const sponsorMap = Object.fromEntries((sponsors ?? []).map(s => [s.user_id, s]))
+    const fighterMap = Object.fromEntries((fighters ?? []).map(f => [f.id,      f]))
+
+    const applications = (apps ?? []).map(a => ({
+      ...a,
+      opportunity:    oppMap[a.opportunity_id]  ?? null,
+      sponsor_detail: sponsorMap[a.sponsor_id]  ?? null,
+      fighter:        fighterMap[a.fighter_id]  ?? null,
+    }))
+
+    res.json({ applications })
+  } catch (err) {
+    log.error({ err }, '/manager/applications threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 router.get('/reports', ...guard, async (req, res) => {
   try {
     const sb   = adminSupabase

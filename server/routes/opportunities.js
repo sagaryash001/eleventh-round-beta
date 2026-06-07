@@ -220,6 +220,20 @@ router.post('/:id/publish', requireAuth, requireSponsor, async (req, res) => {
     if (!opp.title) return res.status(400).json({ error: 'Title required before publishing.' })
     if (opp.status === 'published') return res.json({ ok: true, message: 'Already published.' })
 
+    // Verified-sponsor gate: only admins can bypass vetting
+    if (req.user.role !== 'admin') {
+      const { data: sp } = await adminSupabase
+        .from('sponsor_profiles')
+        .select('is_verified')
+        .eq('user_id', req.user.id)
+        .maybeSingle()
+      if (!sp?.is_verified) {
+        return res.status(403).json({
+          error: 'Your sponsor profile must be approved by an admin before you can publish opportunities.',
+        })
+      }
+    }
+
     const { data, error } = await adminSupabase
       .from('sponsorship_opportunities')
       .update({ status: 'published', published_at: new Date().toISOString() })
@@ -274,6 +288,52 @@ router.delete('/:id', requireAuth, requireSponsor, async (req, res) => {
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'DELETE /opportunities/:id threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/opportunities/:id/status — close / reopen ─────────────────────
+// Allowed transitions: published → closed, closed → draft, draft → closed
+const STATUS_TRANSITIONS = {
+  published: ['closed'],
+  closed:    ['draft'],
+  draft:     ['closed'],
+}
+
+router.patch('/:id/status', requireAuth, requireSponsor, async (req, res) => {
+  try {
+    const { status: newStatus } = req.body
+    if (!newStatus) return res.status(400).json({ error: 'status required.' })
+
+    const { data: opp, error: fetchErr } = await adminSupabase
+      .from('sponsorship_opportunities')
+      .select('id, sponsor_id, status')
+      .eq('id', req.params.id)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (fetchErr) throw fetchErr
+    if (!opp) return res.status(404).json({ error: 'Not found.' })
+    if (opp.sponsor_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not your opportunity.' })
+    }
+
+    const allowed = STATUS_TRANSITIONS[opp.status] ?? []
+    if (!allowed.includes(newStatus)) {
+      return res.status(400).json({ error: `Cannot transition from '${opp.status}' to '${newStatus}'.` })
+    }
+
+    const { data, error } = await adminSupabase
+      .from('sponsorship_opportunities')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .maybeSingle()
+    if (error) throw error
+
+    log.info({ id: req.params.id, from: opp.status, to: newStatus }, 'opportunity status changed')
+    res.json({ ok: true, opportunity: data })
+  } catch (err) {
+    log.error({ err }, 'PATCH /opportunities/:id/status threw')
     res.status(500).json({ error: err.message })
   }
 })

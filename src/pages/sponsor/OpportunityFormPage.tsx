@@ -290,7 +290,7 @@ export default function OpportunityFormPage() {
           <div>
             <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-2.5">Visibility</label>
             <div className="flex flex-wrap gap-2">
-              {[{ value: 'public', label: 'Public Feed' }, { value: 'invited_only', label: 'Invite Only' }].map(v => {
+              {[{ value: 'public', label: 'Public Feed' }, { value: 'private', label: 'Invite Only' }].map(v => {
                 const on = form.visibility === v.value
                 return <button key={v.value} type="button" onClick={() => set('visibility')(v.value)}
                   className="font-condensed font-semibold uppercase text-[11px] tracking-[0.1em] px-3 py-1.5 border cursor-pointer transition-all"

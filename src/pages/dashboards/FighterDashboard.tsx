@@ -544,6 +544,49 @@ function Profile() {
   )
 }
 
+// ── Compact recent applications list ─────────────────────────────────────────
+const APP_SC: Record<string,string> = {
+  applied:'#7a7672',under_review:'#C41E3A',shortlisted:'#f5a623',
+  accepted:'#00c060',rejected:'#4a4846',withdrawn:'#4a4846',
+}
+const APP_SL: Record<string,string> = {
+  applied:'Submitted',under_review:'In Review',shortlisted:'Shortlisted',
+  accepted:'Accepted',rejected:'Rejected',withdrawn:'Withdrawn',
+}
+function RecentApplications() {
+  const { data, loading } = useApi<any>('/api/applications/mine')
+  const apps = (data?.applications ?? []).slice(0, 5)
+  if (loading) return <div className="dash-sub">Loading…</div>
+  if (!apps.length) return (
+    <EmptyState icon="🤝" title="No Applications Yet"
+      body="You haven't applied to any opportunities yet."
+      action={<Link to="/opportunities" className="btn-ghost text-[11px] py-2 px-4 no-underline">Browse Opportunities →</Link>} />
+  )
+  return (
+    <div className="space-y-2">
+      {apps.map((a: any) => (
+        <div key={a.id} className="dash-card flex items-center gap-3"
+          style={{ borderLeft:`2px solid ${APP_SC[a.status]??'#222226'}` }}>
+          <div className="flex-1 min-w-0">
+            <div className="font-condensed font-bold text-[12px] text-off-white truncate">
+              {a.opportunity?.title ?? 'Opportunity'}
+            </div>
+            <div className="font-condensed text-[11px] text-gray-3">{a.sponsor_detail?.company_name ?? '—'}</div>
+          </div>
+          <span className="font-condensed text-[10px] uppercase tracking-[0.1em] flex-shrink-0"
+            style={{ color: APP_SC[a.status] }}>
+            {APP_SL[a.status] ?? a.status}
+          </span>
+        </div>
+      ))}
+      <Link to="/fighter/applications"
+        className="font-condensed text-[11px] text-gray-3 hover:text-off-white block text-center mt-1 no-underline">
+        View all applications →
+      </Link>
+    </div>
+  )
+}
+
 function Sponsorships() {
   const { data, loading, error } = useApi<any>('/api/fighter/marketplace')
   if (loading) return <DashSkeleton />
@@ -608,6 +651,10 @@ function Sponsorships() {
               className="btn-ghost text-[11px] py-2 text-center block no-underline">{l.label}</Link>
           ))}
         </div>
+      </div>
+      <div className="dash-card space-y-3">
+        <div className="dash-label">Recent Applications</div>
+        <RecentApplications />
       </div>
     </div>
   )

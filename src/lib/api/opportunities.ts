@@ -15,7 +15,7 @@ export interface Opportunity {
   application_deadline?: string | null
   campaign_start?: string | null
   campaign_end?: string | null
-  status: 'draft' | 'published' | 'paused' | 'closed' | 'archived'
+  status: 'draft' | 'published' | 'closed' | 'archived' | 'cancelled'
   visibility?: string
   location_country?: string | null
   location_region?: string | null
@@ -56,3 +56,6 @@ export const publishOpportunity = (id: string) =>
 
 export const getOppApplications = (oppId: string) =>
   apiGet<{ ok: boolean; applications: any[] }>(`/api/opportunities/${oppId}/applications`)
+
+export const changeOpportunityStatus = (id: string, status: 'closed' | 'draft') =>
+  apiPatch<{ ok: boolean; opportunity: Opportunity }>(`/api/opportunities/${id}/status`, { status })

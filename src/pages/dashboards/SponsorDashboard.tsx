@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState, useCallback } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import DashShell from './DashShell'
 import { useApi } from '../../hooks/useApi'
 import { useAuth } from '../../hooks/useAuth'
-import { DashSkeleton, EmptyState, ApiError, StatCard } from './DashWidgets'
+import { DashSkeleton, EmptyState, ApiError, SectionHeading } from './DashWidgets'
 import { getSponsorDashboard, updateSponsorProfile, type SponsorProfile } from '../../lib/api/sponsors'
+import { getMyOpportunities, changeOpportunityStatus, type Opportunity } from '../../lib/api/opportunities'
 
 const NAV = [
-  { id: 'overview',    label: 'Overview',    icon: '' },
+  { id: 'overview',    label: 'Overview',    icon: '◈' },
+  { id: 'campaigns',   label: 'Campaigns',   icon: '🎯' },
   { id: 'analytics',   label: 'Analytics',   icon: '📊' },
-  { id: 'profile',     label: 'Company',     icon: '' },
-  { id: 'preferences', label: 'Preferences', icon: '' },
+  { id: 'profile',     label: 'Company',     icon: '🏢' },
+  { id: 'preferences', label: 'Preferences', icon: '⚙' },
 ]
 
 const WEIGHT_CLASSES = [
@@ -66,6 +68,108 @@ function Chips({ options, selected, onToggle }: {
           </button>
         )
       })}
+    </div>
+  )
+}
+
+// ── Sponsor Campaigns tab ─────────────────────────────────────────────────────
+const OPP_STATUS_COLOR: Record<string, string> = {
+  draft: '#7a7672', published: '#00c060', closed: '#4a4846', archived: '#4a4846',
+}
+
+function SponsorCampaigns({ isVerified }: { isVerified: boolean }) {
+  const [opps,    setOpps]    = useState<Opportunity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState<string|null>(null)
+  const [actingId, setActingId] = useState<string|null>(null)
+  const [msg, setMsg] = useState<{type:'ok'|'err';text:string}|null>(null)
+
+  const load = useCallback(() => {
+    setLoading(true); setError(null)
+    getMyOpportunities()
+      .then(d => { setOpps(d.data ?? []); setLoading(false) })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const handleStatus = async (id: string, status: 'closed'|'draft') => {
+    setActingId(id); setMsg(null)
+    try {
+      await changeOpportunityStatus(id, status)
+      setMsg({ type:'ok', text: status === 'closed' ? 'Opportunity closed.' : 'Reopened as draft.' })
+      load()
+    } catch (e: any) {
+      setMsg({ type:'err', text: e.message ?? 'Failed.' })
+    } finally { setActingId(null) }
+  }
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} retry={load} />
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <SectionHeading>Campaigns ({opps.length})</SectionHeading>
+        <div className="flex gap-2">
+          {!isVerified && (
+            <span className="font-condensed text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 border"
+              style={{ borderColor:'#c9a82c', color:'#c9a82c' }}>
+              Pending Vetting — Cannot Publish
+            </span>
+          )}
+          <Link to="/sponsor/opportunities/new"
+            className="btn-primary text-[11px] py-2 px-4 no-underline">+ New Campaign</Link>
+        </div>
+      </div>
+
+      {msg && <p className={`font-condensed text-[11px] ${msg.type==='ok'?'text-green-400':'text-blood-glow'}`}>{msg.text}</p>}
+
+      {!opps.length ? (
+        <EmptyState icon="🎯" title="No Campaigns Yet"
+          body="Create your first sponsorship campaign to start connecting with fighters." />
+      ) : (
+        <div className="space-y-2">
+          {opps.map(o => (
+            <div key={o.id} className="dash-card flex items-center gap-4"
+              style={{ borderLeft:`2px solid ${OPP_STATUS_COLOR[o.status]??'#222226'}` }}>
+              <div className="flex-1 min-w-0">
+                <div className="font-condensed font-bold text-off-white text-[14px] truncate">{o.title}</div>
+                <div className="flex items-center gap-4 mt-1 font-condensed text-[11px]">
+                  <span style={{ color: OPP_STATUS_COLOR[o.status]??'#7a7672' }}>{o.status.toUpperCase()}</span>
+                  <span className="text-gray-3">{o.application_count??0} applicants</span>
+                  <span className="text-gray-3">{o.view_count??0} views</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {o.status === 'published' && (
+                  <>
+                    <Link to={`/sponsor/opportunities/${o.id}/applicants`}
+                      className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-2 no-underline hover:border-blood hover:text-off-white transition-all">
+                      Applicants
+                    </Link>
+                    <button onClick={() => handleStatus(o.id, 'closed')} disabled={actingId===o.id}
+                      className="font-condensed uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+                      {actingId===o.id?'…':'Close'}
+                    </button>
+                  </>
+                )}
+                {(o.status === 'draft' || o.status === 'closed') && (
+                  <Link to={`/sponsor/opportunities/${o.id}/edit`}
+                    className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-2 no-underline hover:border-blood hover:text-off-white transition-all">
+                    Edit
+                  </Link>
+                )}
+                {o.status === 'closed' && (
+                  <button onClick={() => handleStatus(o.id, 'draft')} disabled={actingId===o.id}
+                    className="font-condensed uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-off-white transition-all disabled:opacity-40">
+                    {actingId===o.id?'…':'Reopen'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -269,6 +373,13 @@ export default function SponsorDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )
+
+        if (tab === 'campaigns') return (
+          <div className="max-w-3xl">
+            {!sp.is_verified && <VettingBanner />}
+            <SponsorCampaigns isVerified={sp.is_verified ?? false} />
           </div>
         )
 

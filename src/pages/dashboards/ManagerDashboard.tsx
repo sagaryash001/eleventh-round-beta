@@ -36,13 +36,14 @@ function Msg({ msg }: { msg: {type:'ok'|'err';text:string}|null }) {
 }
 
 const NAV = [
-  { id: 'overview',    label: 'Overview',      icon: '◈' },
-  { id: 'roster',      label: 'Roster',        icon: '👥' },
-  { id: 'obligations', label: 'Obligations',   icon: '📋' },
-  { id: 'sponsorforge',label: 'SponsorForge',  icon: '⚡' },
-  { id: 'playbooks',   label: 'Playbooks',     icon: '📖' },
-  { id: 'budget',      label: 'Budget & Camp', icon: '💰' },
-  { id: 'reports',     label: 'Reports',       icon: '📊' },
+  { id: 'overview',     label: 'Overview',      icon: '◈' },
+  { id: 'roster',       label: 'Roster',        icon: '👥' },
+  { id: 'applications', label: 'Applications',  icon: '🤝' },
+  { id: 'obligations',  label: 'Obligations',   icon: '📋' },
+  { id: 'sponsorforge', label: 'SponsorForge',  icon: '⚡' },
+  { id: 'playbooks',    label: 'Playbooks',     icon: '📖' },
+  { id: 'budget',       label: 'Budget & Camp', icon: '💰' },
+  { id: 'reports',      label: 'Reports',       icon: '📊' },
 ]
 
 function Overview() {
@@ -501,6 +502,66 @@ function Roster() {
   )
 }
 
+// ── Applications tab ──────────────────────────────────────────────────────────
+const APP_STATUS_COLOR: Record<string,string> = {
+  applied: '#7a7672', under_review: '#C41E3A', shortlisted: '#f5a623',
+  accepted: '#00c060', rejected: '#4a4846', withdrawn: '#4a4846',
+}
+const APP_STATUS_LABEL: Record<string,string> = {
+  applied: 'Submitted', under_review: 'In Review', shortlisted: 'Shortlisted',
+  accepted: 'Accepted', rejected: 'Rejected', withdrawn: 'Withdrawn',
+}
+
+function Applications() {
+  const { data, loading, error } = useApi<any>('/api/manager/applications')
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} />
+
+  const apps = data?.applications ?? []
+
+  if (!apps.length) return (
+    <div className="space-y-4">
+      <SectionHeading>Fighter Applications</SectionHeading>
+      <EmptyState icon="🤝" title="No Applications Yet"
+        body="Applications for your roster fighters will appear here once they apply to sponsorship opportunities." />
+    </div>
+  )
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Fighter Applications ({apps.length})</SectionHeading>
+      <div className="space-y-2">
+        {apps.map((app: any) => (
+          <div key={app.id} className="dash-card flex items-center gap-4"
+            style={{ borderLeft:`2px solid ${APP_STATUS_COLOR[app.status]??'#222226'}` }}>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-0.5">
+                <span className="font-condensed font-bold text-off-white text-[13px]">
+                  {app.fighter?.name ?? '—'}
+                </span>
+                <span className="font-condensed text-[9px] uppercase tracking-[0.15em]"
+                  style={{ color: APP_STATUS_COLOR[app.status] }}>
+                  {APP_STATUS_LABEL[app.status] ?? app.status}
+                </span>
+              </div>
+              <div className="font-condensed text-[11px] text-gray-3">
+                {app.opportunity?.title ?? '—'}
+                {app.sponsor_detail?.company_name ? ` · ${app.sponsor_detail.company_name}` : ''}
+              </div>
+            </div>
+            <div className="font-condensed text-[10px] text-gray-3 flex-shrink-0">
+              {new Date(app.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' })}
+            </div>
+            {app.match_score != null && (
+              <div className="font-condensed text-[11px] text-blood-glow flex-shrink-0">{app.match_score}% match</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Obligations() {
   const { data, loading, error } = useApi<any>('/api/manager/obligations')
   if (loading) return <DashSkeleton />
@@ -686,7 +747,7 @@ function Playbooks() {
 }
 
 const VIEWS: Record<string,React.FC> = {
-  overview: Overview, roster: Roster, obligations: Obligations,
+  overview: Overview, roster: Roster, applications: Applications, obligations: Obligations,
   sponsorforge: SponsorForge, playbooks: Playbooks, budget: Budget, reports: Reports,
 }
 
