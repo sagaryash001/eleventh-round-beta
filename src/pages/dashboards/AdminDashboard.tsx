@@ -11,22 +11,23 @@ import {
   getPendingSponsors, verifySponsor,
   getAdminModules, createModule, updateModule,
   getAdminPackages, createPackage, updatePackage,
-  getAdminDashboard,
+  getAdminDashboard, getAdminContracts,
   type AdminUser, type PendingSponsor, type AdminModule, type AdminPackage,
 } from '../../lib/api/admin'
 import { adminRecompute } from '../../lib/api/opportunities'
 
 const NAV = [
-  { id: 'overview',  label: 'Overview',        icon: '◈' },
-  { id: 'setup',     label: 'Setup Checklist', icon: '✓' },
-  { id: 'users',     label: 'Users',           icon: '👥' },
-  { id: 'vetting',   label: 'Sponsor Vetting', icon: '🛡' },
-  { id: 'packages',  label: 'Packages',        icon: '📦' },
-  { id: 'content',   label: 'Modules',         icon: '📚' },
-  { id: 'marketplace',label:'Marketplace',     icon: '🤝' },
-  { id: 'reports',   label: 'Reports',         icon: '📊' },
-  { id: 'mentors',   label: 'Mentors',         icon: '🎯' },
-  { id: 'sponsorforge',label:'SponsorForge',   icon: '⚡' },
+  { id: 'overview',    label: 'Overview',        icon: '◈' },
+  { id: 'setup',       label: 'Setup Checklist', icon: '✓' },
+  { id: 'users',       label: 'Users',           icon: '👥' },
+  { id: 'vetting',     label: 'Sponsor Vetting', icon: '🛡' },
+  { id: 'packages',    label: 'Packages',        icon: '📦' },
+  { id: 'content',     label: 'Modules',         icon: '📚' },
+  { id: 'marketplace', label: 'Marketplace',     icon: '🤝' },
+  { id: 'contracts',   label: 'Contracts',       icon: '📄' },
+  { id: 'reports',     label: 'Reports',         icon: '📊' },
+  { id: 'mentors',     label: 'Mentors',         icon: '🎯' },
+  { id: 'sponsorforge',label: 'SponsorForge',    icon: '⚡' },
 ]
 
 // ── Small form primitives ─────────────────────────────────────────────────────
@@ -1102,6 +1103,122 @@ function SponsorForgeAdmin() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// CONTRACTS TAB
+// ═════════════════════════════════════════════════════════════════════════════
+const AC_COLOR: Record<string, string> = {
+  draft:'#4a4846', pending_fighter:'#b45309', active:'#166534',
+  in_dispute:'#7f1d1d', completed:'#1e3a5f', terminated:'#374151',
+}
+const AC_LABEL: Record<string, string> = {
+  draft:'Draft', pending_fighter:'Awaiting Fighter', active:'Active',
+  in_dispute:'In Dispute', completed:'Completed', terminated:'Terminated',
+}
+
+function AdminContracts() {
+  const { data: metrics, loading: mLoad } = useApi<any>('/api/admin/dashboard')
+  const [contracts, setContracts]         = useState<any[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [error, setError]                 = useState('')
+  const [statusFilter, setStatusFilter]   = useState('')
+
+  const load = useCallback((status?: string) => {
+    setLoading(true); setError('')
+    getAdminContracts({ status: status || undefined, limit: 50 })
+      .then(r => { setContracts(r.contracts ?? []); setLoading(false) })
+      .catch(e => { setError(e.message ?? 'Failed.'); setLoading(false) })
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const handleFilter = (s: string) => {
+    setStatusFilter(s)
+    load(s || undefined)
+  }
+
+  if (mLoad || loading) return <DashSkeleton />
+  if (error) return <ApiError message={error} retry={() => load(statusFilter || undefined)} />
+
+  const m = metrics ?? {}
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Contracts</SectionHeading>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <StatCard label="Total Contracts"       value={String(m.total_contracts ?? 0)}          sub="All time"         barPct={100} />
+        <StatCard label="Active Contracts"       value={String(m.active_contracts ?? 0)}         sub="Live"             barPct={50} barColor="#00c060" />
+        <StatCard label="Proofs Pending Review"  value={<span className={(m.proofs_pending_review??0)>0?'text-blood-glow':''}>{m.proofs_pending_review ?? 0}</span>}
+          sub="Awaiting sponsor review" barPct={(m.proofs_pending_review??0)>0?30:0} barColor="#c9a82c" />
+        <StatCard label="Disputed Contracts"     value={<span className={(m.disputed_contracts??0)>0?'text-blood-glow':''}>{m.disputed_contracts ?? 0}</span>}
+          sub="In dispute" barPct={(m.disputed_contracts??0)>0?30:0} barColor="#c00000" />
+      </div>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+        <StatCard label="Overdue Obligations"   value={<span className={(m.overdue_obligations??0)>0?'text-blood-glow':''}>{m.overdue_obligations ?? 0}</span>}
+          sub="Need attention" barPct={(m.overdue_obligations??0)>0?25:0} barColor="#c00000" />
+        <StatCard label="Total Obligations"     value={String(m.total_obligations ?? 0)}         sub="All active"       barPct={100} />
+        <StatCard label="Completed Obligations" value={String(m.completed_obligations ?? 0)}      sub="All time"         barPct={100} barColor="#00c060" />
+      </div>
+
+      {/* Filter + list */}
+      <div className="flex gap-2 flex-wrap">
+        {['', 'draft', 'pending_fighter', 'active', 'in_dispute', 'completed', 'terminated'].map(s => (
+          <button key={s} onClick={() => handleFilter(s)}
+            className="font-condensed font-bold uppercase text-[10px] tracking-[0.15em] px-3 py-1.5 border cursor-pointer transition-all"
+            style={{
+              borderColor: statusFilter === s ? '#8b0000' : '#222226',
+              color:       statusFilter === s ? '#f0ece4' : '#7a7672',
+              background:  statusFilter === s ? 'rgba(139,0,0,0.1)' : 'transparent',
+            }}>
+            {s ? AC_LABEL[s] ?? s : 'All'}
+          </button>
+        ))}
+      </div>
+
+      {!contracts.length ? (
+        <EmptyState icon="📄" title="No Contracts" body="No contracts match the current filter." />
+      ) : (
+        <div className="space-y-2">
+          {contracts.map((c: any) => {
+            const oblPct = c.obligations_total > 0
+              ? Math.round(c.obligations_completed / c.obligations_total * 100) : 0
+            return (
+              <div key={c.id} className="dash-card flex items-center gap-4"
+                style={{ borderLeft: `2px solid ${AC_COLOR[c.status] ?? '#222226'}` }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1 flex-wrap">
+                    <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-2 py-0.5"
+                      style={{ background: AC_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
+                      {AC_LABEL[c.status] ?? c.status}
+                    </span>
+                    {c.fighter && <span className="font-condensed text-[12px] font-bold text-off-white">{c.fighter.name}</span>}
+                    {c.sponsor_detail && <span className="font-condensed text-[11px] text-gray-3">{c.sponsor_detail.company_name}</span>}
+                  </div>
+                  <div className="font-condensed text-[12px] text-gray-2">
+                    ${c.value_usd?.toLocaleString()} · {c.payment_schedule}
+                  </div>
+                  {c.obligations_total > 0 && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <div style={{ width: 80, height: 3, background: '#222226', borderRadius: 2 }}>
+                        <div style={{ width: `${oblPct}%`, height: '100%', background: oblPct === 100 ? '#00c060' : '#8b0000', borderRadius: 2 }} />
+                      </div>
+                      <span className="font-condensed text-[10px] text-gray-3">{c.obligations_completed}/{c.obligations_total} obligations</span>
+                    </div>
+                  )}
+                </div>
+                <a href={`/contracts/${c.id}`}
+                  className="font-condensed text-[10px] text-gray-3 hover:text-off-white no-underline flex-shrink-0 transition-colors">
+                  View →
+                </a>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 const VIEWS: Record<string, React.FC> = {
   overview:    Overview,
   setup:       Setup,
@@ -1110,6 +1227,7 @@ const VIEWS: Record<string, React.FC> = {
   packages:    Packages,
   content:     Content,
   marketplace: Marketplace,
+  contracts:   AdminContracts,
   reports:     Reports,
   mentors:     Mentors,
   sponsorforge:SponsorForgeAdmin,

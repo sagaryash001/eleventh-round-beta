@@ -261,4 +261,86 @@ router.post('/invite', requireAuth, async (req, res) => {
   }
 })
 
+// ── POST /api/applications/:applicationId/accept-contract ─────────────────────
+// Atomically accepts a shortlisted application and creates a draft contract.
+// Idempotent: if a contract already exists for the application, returns it.
+router.post('/:applicationId/accept-contract', requireAuth, async (req, res) => {
+  try {
+    const { role, id: uid } = req.user
+    if (role !== 'sponsor' && role !== 'admin') {
+      return res.status(403).json({ error: 'Only sponsors can accept applications.' })
+    }
+
+    const { data: app, error: appErr } = await adminSupabase
+      .from('applications')
+      .select(APPLICATION_COLS)
+      .eq('id', req.params.applicationId)
+      .maybeSingle()
+    if (appErr) throw appErr
+    if (!app) return res.status(404).json({ error: 'Application not found.' })
+    if (app.sponsor_id !== uid && role !== 'admin') {
+      return res.status(403).json({ error: 'Not your application.' })
+    }
+    if (!['shortlisted', 'accepted'].includes(app.status)) {
+      return res.status(400).json({ error: `Application must be shortlisted to accept. Current status: ${app.status}` })
+    }
+
+    // Idempotent: return existing contract if one exists
+    const { data: existing } = await adminSupabase
+      .from('contracts')
+      .select('id, opportunity_id, application_id, sponsor_id, fighter_id, value_usd, payment_schedule, start_date, end_date, status, created_at, updated_at')
+      .eq('application_id', req.params.applicationId)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (existing) {
+      return res.json({ ok: true, application: app, contract: existing, created: false })
+    }
+
+    // Accept application if not already accepted
+    if (app.status !== 'accepted') {
+      const now = new Date().toISOString()
+      const { error: uErr } = await adminSupabase
+        .from('applications')
+        .update({ status: 'accepted', reviewed_by: uid, reviewed_at: now, decided_at: now, updated_at: now })
+        .eq('id', req.params.applicationId)
+      if (uErr) throw uErr
+    }
+
+    // Fetch opportunity for deliverables + budget default
+    const { data: opp } = await adminSupabase
+      .from('sponsorship_opportunities')
+      .select('id, deliverables, budget_min_usd')
+      .eq('id', app.opportunity_id)
+      .maybeSingle()
+
+    const value_usd = opp?.budget_min_usd ?? 0
+
+    const { data: contract, error: cErr } = await adminSupabase
+      .from('contracts')
+      .insert({
+        application_id:        req.params.applicationId,
+        opportunity_id:        app.opportunity_id,
+        sponsor_id:            app.sponsor_id,
+        fighter_id:            app.fighter_id,
+        value_usd,
+        platform_fee_bps:      0,
+        payment_schedule:      'upfront',
+        deliverables_snapshot: opp?.deliverables ?? [],
+        status:                'draft',
+      })
+      .select('id, opportunity_id, application_id, sponsor_id, fighter_id, value_usd, payment_schedule, start_date, end_date, status, created_at, updated_at')
+      .maybeSingle()
+    if (cErr) throw cErr
+
+    const { data: updatedApp } = await adminSupabase
+      .from('applications').select(APPLICATION_COLS).eq('id', req.params.applicationId).maybeSingle()
+
+    log.info({ appId: req.params.applicationId, contractId: contract?.id }, 'application accepted + contract draft created')
+    res.status(201).json({ ok: true, application: updatedApp ?? app, contract, created: true })
+  } catch (err) {
+    log.error({ err }, 'POST /applications/:id/accept-contract threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router

@@ -542,6 +542,51 @@ router.get('/applications', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/manager/contracts — contracts for active roster fighters ──────────
+router.get('/contracts', ...guard, async (req, res) => {
+  try {
+    const sb   = adminSupabase
+    const mid  = req.user.id
+    const fids = await activeFighterIds(mid)
+    if (!fids.length) return res.json({ contracts: [] })
+
+    const { data: contracts, error } = await sb
+      .from('contracts')
+      .select('id, opportunity_id, application_id, sponsor_id, fighter_id, value_usd, payment_schedule, start_date, end_date, status, created_at, updated_at')
+      .in('fighter_id', fids)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (error) throw error
+
+    const cids = (contracts ?? []).map(c => c.id)
+    const [{ data: profiles }, { data: obs }] = await Promise.all([
+      fids.length ? sb.from('profiles').select('id, name').in('id', fids) : { data: [] },
+      cids.length ? sb.from('obligations').select('contract_id, status').in('contract_id', cids) : { data: [] },
+    ])
+
+    const prMap  = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+    const obsMap = {}
+    for (const o of (obs ?? [])) {
+      if (!obsMap[o.contract_id]) obsMap[o.contract_id] = { total: 0, completed: 0 }
+      obsMap[o.contract_id].total++
+      if (o.status === 'completed') obsMap[o.contract_id].completed++
+    }
+
+    const enriched = (contracts ?? []).map(c => ({
+      ...c,
+      fighter:               prMap[c.fighter_id] ?? null,
+      obligations_total:     obsMap[c.id]?.total     ?? 0,
+      obligations_completed: obsMap[c.id]?.completed ?? 0,
+    }))
+
+    res.json({ contracts: enriched })
+  } catch (err) {
+    log.error({ err }, '/manager/contracts threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 router.get('/reports', ...guard, async (req, res) => {
   try {
     const sb   = adminSupabase

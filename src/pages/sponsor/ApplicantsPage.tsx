@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import { getOppApplications, getSponsorMatches, recomputeMatches, updateMatchStatus } from '../../lib/api/opportunities'
-import { updateApplicationStatus, type Application } from '../../lib/api/applications'
+import { updateApplicationStatus, acceptAndCreateContract, type Application } from '../../lib/api/applications'
 
 const STATUS_LABEL: Record<string, string> = {
   applied: 'New', under_review: 'In Review', shortlisted: 'Shortlisted',
@@ -196,12 +196,14 @@ function MatchesView({ opportunityId }: { opportunityId: string }) {
   )
 }
 
-// ── Applicants view (original) ────────────────────────────────────────────────
+// ── Applicants view ───────────────────────────────────────────────────────────
 function ApplicantsView({ id }: { id: string }) {
-  const [apps, setApps]   = useState<Application[]>([])
-  const [loading, setLoading] = useState(true)
+  const [apps, setApps]         = useState<Application[]>([])
+  const [loading, setLoading]   = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
-  const [msg, setMsg] = useState('')
+  const [msg, setMsg]           = useState('')
+  // contractIds tracks appId → contractId for contracts created this session
+  const [contractIds, setContractIds] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!id) return
@@ -219,6 +221,19 @@ function ApplicantsView({ id }: { id: string }) {
     finally { setUpdating(null) }
   }
 
+  const acceptWithContract = async (appId: string) => {
+    setUpdating(appId); setMsg('')
+    try {
+      const res = await acceptAndCreateContract(appId)
+      setApps(prev => prev.map(a => a.id === appId ? res.application : a))
+      if (res.contract?.id) {
+        setContractIds(prev => ({ ...prev, [appId]: res.contract.id }))
+        setMsg(res.created ? 'Contract draft created.' : 'Already accepted.')
+      }
+    } catch (e: any) { setMsg(e.message ?? 'Failed to accept application.') }
+    finally { setUpdating(null) }
+  }
+
   if (loading) return (
     <div className="flex justify-center py-16">
       <div className="w-8 h-8 border-2 border-charcoal-3 border-t-blood-glow rounded-full animate-spin" />
@@ -227,7 +242,10 @@ function ApplicantsView({ id }: { id: string }) {
 
   return (
     <>
-      {msg && <p className="font-condensed text-blood-glow text-[12px] mb-4">{msg}</p>}
+      {msg && <p className="font-condensed text-[12px] mb-4"
+        style={{ color: msg.includes('created') || msg.includes('accepted') ? '#00c060' : '#C41E3A' }}>
+        {msg}
+      </p>}
       {!apps.length ? (
         <div className="text-center py-16 bg-charcoal border border-charcoal-3" style={{ borderLeft: '2px solid #8b0000' }}>
           <p className="font-condensed text-gray-3 uppercase tracking-widest text-[10px]">No Applications Yet</p>
@@ -235,8 +253,9 @@ function ApplicantsView({ id }: { id: string }) {
       ) : (
         <div className="space-y-3">
           {apps.map(app => {
-            const f  = app.fighter ?? {}
-            const fd = app.fighter_detail ?? {}
+            const f   = app.fighter ?? {}
+            const fd  = app.fighter_detail ?? {}
+            const cid = contractIds[app.id]
             return (
               <div key={app.id} className="bg-charcoal border border-charcoal-3 p-5"
                 style={{ borderLeft: `2px solid ${STATUS_COLOR[app.status] ?? '#222226'}` }}>
@@ -286,9 +305,9 @@ function ApplicantsView({ id }: { id: string }) {
                     )}
                     {app.status === 'shortlisted' && (
                       <>
-                        <button onClick={() => move(app.id, 'accepted')} disabled={updating === app.id}
-                          className="btn-primary text-[10px] py-1.5">
-                          Accept
+                        <button onClick={() => acceptWithContract(app.id)} disabled={updating === app.id}
+                          className="btn-primary text-[10px] py-1.5 disabled:opacity-50">
+                          {updating === app.id ? <Spinner /> : 'Accept & Create Contract'}
                         </button>
                         <button onClick={() => move(app.id, 'rejected')} disabled={updating === app.id}
                           className="font-condensed uppercase text-[10px] tracking-[0.2em] text-gray-3 border border-charcoal-3 px-3 py-1.5 bg-transparent cursor-pointer">
@@ -296,7 +315,25 @@ function ApplicantsView({ id }: { id: string }) {
                         </button>
                       </>
                     )}
-                    {['accepted', 'rejected', 'withdrawn'].includes(app.status) && (
+                    {app.status === 'accepted' && (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="font-condensed text-[10px] tracking-[0.15em] uppercase" style={{ color: '#00c060' }}>
+                          Accepted
+                        </span>
+                        {cid ? (
+                          <Link to={`/contracts/${cid}`}
+                            className="font-condensed font-bold uppercase text-[10px] tracking-[0.15em] text-off-white border border-charcoal-3 hover:border-blood px-3 py-1.5 text-center no-underline transition-all">
+                            View Contract →
+                          </Link>
+                        ) : (
+                          <Link to="/contracts"
+                            className="font-condensed text-[10px] tracking-[0.1em] text-gray-3 hover:text-off-white no-underline transition-colors">
+                            View Contracts →
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                    {['rejected', 'withdrawn'].includes(app.status) && (
                       <span className="font-condensed text-[10px] tracking-[0.15em] text-gray-3 uppercase">
                         {STATUS_LABEL[app.status]}
                       </span>

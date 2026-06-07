@@ -89,3 +89,13 @@ export const requestManager = (data: {
 
 export const cancelManagerRequest = (connectionId: string) =>
   apiPatch<{ ok: boolean }>(`/api/fighter/manager/request/${connectionId}`, { status: 'removed' })
+
+export const getManagerContracts = () =>
+  apiGet<{ contracts: Array<{
+    id: string; fighter_id: string; sponsor_id: string
+    value_usd: number; status: string; payment_schedule: string
+    start_date: string | null; end_date: string | null
+    created_at: string; updated_at: string
+    fighter: { id: string; name: string } | null
+    obligations_total: number; obligations_completed: number
+  }> }>('/api/manager/contracts')

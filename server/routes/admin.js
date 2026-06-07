@@ -93,8 +93,11 @@ router.get('/dashboard', ...guard, async (req, res) => {
       { count: oppCount },
       { count: appCount },
       { count: activeContractCount },
+      { count: totalContractCount },
+      { count: disputedContractCount },
       { data: obsRows },
       { data: gmvRows },
+      { count: proofsPendingCount },
     ] = await Promise.all([
       sb.from('profiles').select('id, role, status'),
       sb.from('sponsorship_opportunities').select('*', { count: 'exact', head: true })
@@ -103,9 +106,15 @@ router.get('/dashboard', ...guard, async (req, res) => {
         .catch(() => ({ count: 0 })),
       sb.from('contracts').select('*', { count: 'exact', head: true })
         .eq('status', 'active').is('deleted_at', null).catch(() => ({ count: 0 })),
+      sb.from('contracts').select('*', { count: 'exact', head: true })
+        .is('deleted_at', null).catch(() => ({ count: 0 })),
+      sb.from('contracts').select('*', { count: 'exact', head: true })
+        .eq('status', 'in_dispute').is('deleted_at', null).catch(() => ({ count: 0 })),
       sb.from('obligations').select('status').catch(() => ({ data: [] })),
       sb.from('sponsorship_payments').select('amount_usd').eq('status', 'succeeded')
         .catch(() => ({ data: [] })),
+      sb.from('obligation_proofs').select('*', { count: 'exact', head: true })
+        .eq('review_status', 'pending').catch(() => ({ count: 0 })),
     ])
 
     const obs           = obsRows ?? []
@@ -121,16 +130,71 @@ router.get('/dashboard', ...guard, async (req, res) => {
       managers:         users.filter(u => u.role === 'manager').length,
       sponsors:         users.filter(u => u.role === 'sponsor').length,
       admins:           users.filter(u => u.role === 'admin').length,
-      active_opportunities: oppCount ?? 0,
-      total_applications:   appCount ?? 0,
-      active_contracts:     activeContractCount ?? 0,
-      total_obligations:    totalObs,
-      overdue_obligations:  overdueObs,
-      completed_obligations:completedObs,
-      total_revenue_usd:    totalRevenue,
+      active_opportunities:    oppCount           ?? 0,
+      total_applications:      appCount           ?? 0,
+      active_contracts:        activeContractCount ?? 0,
+      total_contracts:         totalContractCount  ?? 0,
+      disputed_contracts:      disputedContractCount ?? 0,
+      proofs_pending_review:   proofsPendingCount  ?? 0,
+      total_obligations:       totalObs,
+      overdue_obligations:     overdueObs,
+      completed_obligations:   completedObs,
+      total_revenue_usd:       totalRevenue,
     })
   } catch (err) {
     log.error({ err }, '/admin/dashboard threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/admin/contracts — paginated list of all contracts ────────────────
+router.get('/contracts', ...guard, async (req, res) => {
+  try {
+    const sb     = adminSupabase
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+    const status = req.query.status
+
+    let q = sb.from('contracts')
+      .select('id, opportunity_id, application_id, sponsor_id, fighter_id, value_usd, payment_schedule, start_date, end_date, status, created_at, updated_at', { count: 'exact' })
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    if (status) q = q.eq('status', status)
+
+    const { data: contracts, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    if (error) throw error
+
+    const fids = [...new Set((contracts ?? []).map(c => c.fighter_id))]
+    const sids = [...new Set((contracts ?? []).map(c => c.sponsor_id))]
+    const cids = (contracts ?? []).map(c => c.id)
+
+    const [{ data: fighters }, { data: sponsors }, { data: obs }] = await Promise.all([
+      fids.length ? sb.from('profiles').select('id, name').in('id', fids) : { data: [] },
+      sids.length ? sb.from('sponsor_profiles').select('user_id, company_name').in('user_id', sids) : { data: [] },
+      cids.length ? sb.from('obligations').select('contract_id, status').in('contract_id', cids) : { data: [] },
+    ])
+
+    const fMap   = Object.fromEntries((fighters ?? []).map(p => [p.id, p]))
+    const sMap   = Object.fromEntries((sponsors ?? []).map(s => [s.user_id, s]))
+    const obsMap = {}
+    for (const o of (obs ?? [])) {
+      if (!obsMap[o.contract_id]) obsMap[o.contract_id] = { total: 0, completed: 0 }
+      obsMap[o.contract_id].total++
+      if (o.status === 'completed') obsMap[o.contract_id].completed++
+    }
+
+    const enriched = (contracts ?? []).map(c => ({
+      ...c,
+      fighter:               fMap[c.fighter_id]  ?? null,
+      sponsor_detail:        sMap[c.sponsor_id]  ?? null,
+      obligations_total:     obsMap[c.id]?.total     ?? 0,
+      obligations_completed: obsMap[c.id]?.completed ?? 0,
+    }))
+
+    res.json({ ok: true, contracts: enriched, total: count ?? 0 })
+  } catch (err) {
+    log.error({ err }, '/admin/contracts threw')
     res.status(500).json({ error: err.message })
   }
 })

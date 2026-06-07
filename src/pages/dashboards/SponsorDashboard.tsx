@@ -6,10 +6,12 @@ import { useAuth } from '../../hooks/useAuth'
 import { DashSkeleton, EmptyState, ApiError, SectionHeading } from './DashWidgets'
 import { getSponsorDashboard, updateSponsorProfile, type SponsorProfile } from '../../lib/api/sponsors'
 import { getMyOpportunities, changeOpportunityStatus, type Opportunity } from '../../lib/api/opportunities'
+import { getContracts, type Contract } from '../../lib/api/contracts'
 
 const NAV = [
   { id: 'overview',    label: 'Overview',    icon: '◈' },
   { id: 'campaigns',   label: 'Campaigns',   icon: '🎯' },
+  { id: 'contracts',   label: 'Contracts',   icon: '📄' },
   { id: 'analytics',   label: 'Analytics',   icon: '📊' },
   { id: 'profile',     label: 'Company',     icon: '🏢' },
   { id: 'preferences', label: 'Preferences', icon: '⚙' },
@@ -252,6 +254,94 @@ function SponsorAnalytics() {
   )
 }
 
+// ── Sponsor Contracts tab ─────────────────────────────────────────────────────
+const CONTRACT_STATUS_COLOR: Record<string, string> = {
+  draft: '#4a4846', pending_fighter: '#b45309', active: '#166534',
+  in_dispute: '#7f1d1d', completed: '#1e3a5f', terminated: '#374151',
+}
+const CONTRACT_STATUS_LABEL: Record<string, string> = {
+  draft: 'Draft', pending_fighter: 'Awaiting Fighter', active: 'Active',
+  in_dispute: 'In Dispute', completed: 'Completed', terminated: 'Terminated',
+}
+
+function SponsorContracts() {
+  const [contracts, setContracts] = useState<Contract[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState('')
+
+  const load = useCallback(() => {
+    setLoading(true); setError('')
+    getContracts()
+      .then(r => { setContracts(r.contracts); setLoading(false) })
+      .catch(e => { setError(e.message ?? 'Failed to load contracts.'); setLoading(false) })
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} retry={load} />
+  if (!contracts.length) return (
+    <div className="space-y-4">
+      <SectionHeading>Contracts</SectionHeading>
+      <EmptyState icon="📄" title="No Contracts Yet"
+        body="Accept a fighter application to create a contract. Contracts track deliverables and obligations."
+        action={<Link to="/sponsor/opportunities" className="btn-ghost text-[11px] py-2 px-4 no-underline">My Opportunities →</Link>} />
+    </div>
+  )
+
+  const active    = contracts.filter(c => c.status === 'active').length
+  const pending   = contracts.filter(c => c.status === 'pending_fighter').length
+  const completed = contracts.filter(c => c.status === 'completed').length
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Contracts ({contracts.length})</SectionHeading>
+
+      <div className="grid grid-cols-3 gap-4 max-w-2xl">
+        {[
+          { label: 'Active',    value: active,    color: '#00c060' },
+          { label: 'Pending',   value: pending,   color: '#c9a82c' },
+          { label: 'Completed', value: completed, color: '#4a4846' },
+        ].map(s => (
+          <div key={s.label} className="dash-card text-center" style={{ borderTop: `2px solid ${s.color}` }}>
+            <div className="dash-label">{s.label}</div>
+            <div className="font-display text-off-white mt-1" style={{ fontSize: 28, color: s.color }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {contracts.map(c => (
+          <Link key={c.id} to={`/contracts/${c.id}`}
+            className="dash-card flex items-center gap-4 no-underline block"
+            style={{ borderLeft: `2px solid ${CONTRACT_STATUS_COLOR[c.status] ?? '#222226'}` }}>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-2 py-0.5"
+                  style={{ background: CONTRACT_STATUS_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
+                  {CONTRACT_STATUS_LABEL[c.status] ?? c.status}
+                </span>
+                <span className="font-condensed text-[11px] text-gray-3">
+                  {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+              <div className="font-condensed font-bold text-off-white text-[14px]">
+                ${c.value_usd.toLocaleString()} · {c.payment_schedule}
+              </div>
+              {c.start_date && c.end_date && (
+                <div className="font-condensed text-[11px] text-gray-3 mt-0.5">
+                  {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} –{' '}
+                  {new Date(c.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              )}
+            </div>
+            <span className="font-condensed text-[11px] text-gray-3 flex-shrink-0">View →</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main dashboard ─────────────────────────────────────────────────────────────
 export default function SponsorDashboard() {
   const { token } = useAuth()
@@ -380,6 +470,12 @@ export default function SponsorDashboard() {
           <div className="max-w-3xl">
             {!sp.is_verified && <VettingBanner />}
             <SponsorCampaigns isVerified={sp.is_verified ?? false} />
+          </div>
+        )
+
+        if (tab === 'contracts') return (
+          <div className="max-w-3xl">
+            <SponsorContracts />
           </div>
         )
 

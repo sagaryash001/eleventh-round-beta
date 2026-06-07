@@ -7,6 +7,7 @@ import { StatCard, ListCard, ReadinessRing, BarChart, SparkLine, RadarChart,
 import { useApi } from '../../hooks/useApi'
 import { getFighterManager, requestManager, cancelManagerRequest, type ManagerConnection } from '../../lib/api/manager'
 import { apiPatch } from '../../lib/api/client'
+import { getContracts, type Contract } from '../../lib/api/contracts'
 
 const NAV = [
   { id: 'overview',     label: 'Overview',     icon: '◈' },
@@ -585,6 +586,58 @@ function Profile() {
   )
 }
 
+// ── Compact contracts list for fighter ───────────────────────────────────────
+const FC_COLOR: Record<string, string> = {
+  draft:'#4a4846', pending_fighter:'#b45309', active:'#166534',
+  in_dispute:'#7f1d1d', completed:'#1e3a5f', terminated:'#374151',
+}
+const FC_LABEL: Record<string, string> = {
+  draft:'Draft', pending_fighter:'Awaiting Your Signature', active:'Active',
+  in_dispute:'In Dispute', completed:'Completed', terminated:'Terminated',
+}
+
+function FighterContractsList() {
+  const [contracts, setContracts] = useState<Contract[]>([])
+  const [loading, setLoading]     = useState(true)
+
+  useEffect(() => {
+    getContracts()
+      .then(r => { setContracts((r.contracts ?? []).slice(0, 5)); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div className="dash-sub">Loading contracts…</div>
+  if (!contracts.length) return (
+    <EmptyState icon="📄" title="No Contracts Yet"
+      body="Accepted sponsorship applications will generate contracts here." />
+  )
+  return (
+    <div className="space-y-2">
+      {contracts.map(c => (
+        <Link key={c.id} to={`/contracts/${c.id}`}
+          className="dash-card flex items-center gap-3 no-underline block"
+          style={{ borderLeft: `2px solid ${FC_COLOR[c.status] ?? '#222226'}` }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5"
+                style={{ background: FC_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
+                {FC_LABEL[c.status] ?? c.status}
+              </span>
+            </div>
+            <div className="font-condensed font-bold text-off-white text-[13px]">
+              ${c.value_usd.toLocaleString()} · {c.payment_schedule}
+            </div>
+          </div>
+          <span className="font-condensed text-[11px] text-gray-3 flex-shrink-0">View →</span>
+        </Link>
+      ))}
+      <Link to="/contracts" className="font-condensed text-[11px] text-gray-3 hover:text-off-white block text-center mt-1 no-underline">
+        View all contracts →
+      </Link>
+    </div>
+  )
+}
+
 // ── Compact recent applications list ─────────────────────────────────────────
 const APP_SC: Record<string,string> = {
   applied:'#7a7672',under_review:'#C41E3A',shortlisted:'#f5a623',
@@ -696,6 +749,10 @@ function Sponsorships() {
       <div className="dash-card space-y-3">
         <div className="dash-label">Recent Applications</div>
         <RecentApplications />
+      </div>
+      <div className="dash-card space-y-3">
+        <div className="dash-label">My Contracts</div>
+        <FighterContractsList />
       </div>
     </div>
   )

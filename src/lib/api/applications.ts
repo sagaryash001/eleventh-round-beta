@@ -34,3 +34,10 @@ export const inviteFighter = (opportunity_id: string, fighter_id: string, cover_
   apiPost<{ ok: boolean; application: Application }>('/api/applications/invite', {
     opportunity_id, fighter_id, cover_message,
   })
+
+// Accept a shortlisted application and atomically create a draft contract.
+// Idempotent: if a contract already exists, returns it with created=false.
+export const acceptAndCreateContract = (applicationId: string) =>
+  apiPost<{ ok: boolean; application: Application; contract: { id: string; status: string; value_usd: number }; created: boolean }>(
+    `/api/applications/${applicationId}/accept-contract`,
+  )

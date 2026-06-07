@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import DashShell from './DashShell'
 import { StatCard, ListCard, ReadinessRing, BarChart, SparkLine,
          SectionHeading, FullWidthCard, StackedBar,
@@ -7,7 +8,7 @@ import { useApi } from '../../hooks/useApi'
 import {
   getManagerRoster, inviteFighter, createPendingFighter,
   updateConnectionStatus, getFighterDetail, updateFighterProfile,
-  type RosterEntry,
+  getManagerContracts, type RosterEntry,
 } from '../../lib/api/manager'
 
 // ── Tiny local primitives ─────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ const NAV = [
   { id: 'overview',     label: 'Overview',      icon: '◈' },
   { id: 'roster',       label: 'Roster',        icon: '👥' },
   { id: 'applications', label: 'Applications',  icon: '🤝' },
+  { id: 'contracts',    label: 'Contracts',     icon: '📄' },
   { id: 'obligations',  label: 'Obligations',   icon: '📋' },
   { id: 'sponsorforge', label: 'SponsorForge',  icon: '⚡' },
   { id: 'playbooks',    label: 'Playbooks',     icon: '📖' },
@@ -746,8 +748,95 @@ function Playbooks() {
   )
 }
 
+// ── Manager Contracts tab ─────────────────────────────────────────────────────
+const MC_COLOR: Record<string, string> = {
+  draft:'#4a4846', pending_fighter:'#b45309', active:'#166534',
+  in_dispute:'#7f1d1d', completed:'#1e3a5f', terminated:'#374151',
+}
+const MC_LABEL: Record<string, string> = {
+  draft:'Draft', pending_fighter:'Awaiting Fighter', active:'Active',
+  in_dispute:'In Dispute', completed:'Completed', terminated:'Terminated',
+}
+
+function ManagerContracts() {
+  const [contracts, setContracts] = useState<any[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState('')
+
+  const load = useCallback(() => {
+    setLoading(true); setError('')
+    getManagerContracts()
+      .then(r => { setContracts(r.contracts ?? []); setLoading(false) })
+      .catch(e => { setError(e.message ?? 'Failed to load contracts.'); setLoading(false) })
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} retry={load} />
+  if (!contracts.length) return (
+    <div className="space-y-4">
+      <SectionHeading>Roster Contracts</SectionHeading>
+      <EmptyState icon="📄" title="No Contracts Yet"
+        body="Contracts for active roster fighters appear here once sponsors accept applications." />
+    </div>
+  )
+
+  const active    = contracts.filter(c => c.status === 'active').length
+  const pending   = contracts.filter(c => c.status === 'pending_fighter').length
+  const overdue   = contracts.reduce((s: number, c: any) => s + Math.max(0, c.obligations_total - c.obligations_completed), 0)
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading>Roster Contracts ({contracts.length})</SectionHeading>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+        <StatCard label="Active Contracts"    value={String(active)}  sub="Live deals"            barPct={contracts.length > 0 ? Math.round(active/contracts.length*100) : 0} />
+        <StatCard label="Awaiting Signature"  value={String(pending)} sub="Fighter to sign"       barPct={pending > 0 ? 30 : 0} barColor="#c9a82c" />
+        <StatCard label="Open Obligations"    value={String(overdue)} sub="Across all fighters"   barPct={overdue > 0 ? 25 : 0} barColor={overdue > 0 ? '#c00000' : '#00c060'} />
+      </div>
+
+      <div className="space-y-2">
+        {contracts.map((c: any) => {
+          const oblPct = c.obligations_total > 0
+            ? Math.round(c.obligations_completed / c.obligations_total * 100) : 0
+          return (
+            <Link key={c.id} to={`/contracts/${c.id}`}
+              className="dash-card flex items-center gap-4 no-underline block"
+              style={{ borderLeft: `2px solid ${MC_COLOR[c.status] ?? '#222226'}` }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-2 py-0.5"
+                    style={{ background: MC_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
+                    {MC_LABEL[c.status] ?? c.status}
+                  </span>
+                  {c.fighter && (
+                    <span className="font-condensed font-bold text-off-white text-[12px]">{c.fighter.name}</span>
+                  )}
+                </div>
+                <div className="font-condensed text-[12px] text-gray-2">
+                  ${c.value_usd?.toLocaleString()} · {c.payment_schedule}
+                </div>
+                {c.obligations_total > 0 && (
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <div style={{ flex: 1, height: 3, background: '#222226', borderRadius: 2 }}>
+                      <div style={{ width: `${oblPct}%`, height: '100%', background: oblPct === 100 ? '#00c060' : '#8b0000', borderRadius: 2 }} />
+                    </div>
+                    <span className="font-condensed text-[10px] text-gray-3">{c.obligations_completed}/{c.obligations_total} done</span>
+                  </div>
+                )}
+              </div>
+              <span className="font-condensed text-[11px] text-gray-3 flex-shrink-0">View →</span>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const VIEWS: Record<string,React.FC> = {
-  overview: Overview, roster: Roster, applications: Applications, obligations: Obligations,
+  overview: Overview, roster: Roster, applications: Applications,
+  contracts: ManagerContracts, obligations: Obligations,
   sponsorforge: SponsorForge, playbooks: Playbooks, budget: Budget, reports: Reports,
 }
 

@@ -241,21 +241,43 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
 
     const { data: updated } = await adminSupabase.from('contracts').select(CONTRACT_COLS).eq('id', req.params.id).maybeSingle()
 
-    // When contract becomes active, generate obligations from deliverables_snapshot
-    if (updated.status === 'active' && Array.isArray(updated.deliverables_snapshot) && updated.deliverables_snapshot.length) {
-      const obligationRows = updated.deliverables_snapshot.map(d => ({
-        owner_id:         updated.fighter_id,
-        contract_id:      updated.id,
-        title:            d.notes ? `${d.type}: ${d.notes}` : d.type,
-        description:      d.notes ?? null,
-        due_date:         updated.end_date ? new Date(updated.end_date).toISOString() : new Date(Date.now() + 30 * 86400_000).toISOString(),
-        status:           'pending',
-        priority:         'medium',
-        deliverable_type: d.type,
-        recurrence:       'once',
-        proof_required:   true,
-        category:         'sponsor',
-      }))
+    // When contract becomes active, generate obligations from deliverables_snapshot.
+    // If deliverables are absent, create one generic obligation so the contract
+    // always has something for the fighter to complete and the sponsor to review.
+    if (updated.status === 'active') {
+      const deliverables = Array.isArray(updated.deliverables_snapshot) ? updated.deliverables_snapshot : []
+      const dueDate = updated.end_date
+        ? new Date(updated.end_date).toISOString()
+        : new Date(Date.now() + 30 * 86400_000).toISOString()
+
+      const obligationRows = deliverables.length
+        ? deliverables.map(d => ({
+            owner_id:         updated.fighter_id,
+            contract_id:      updated.id,
+            title:            d.notes ? `${d.type}: ${d.notes}` : d.type,
+            description:      d.notes ?? null,
+            due_date:         dueDate,
+            status:           'pending',
+            priority:         'medium',
+            deliverable_type: d.type,
+            recurrence:       'once',
+            proof_required:   true,
+            category:         'sponsor',
+          }))
+        : [{
+            owner_id:         updated.fighter_id,
+            contract_id:      updated.id,
+            title:            'Complete sponsorship deliverables',
+            description:      null,
+            due_date:         dueDate,
+            status:           'pending',
+            priority:         'medium',
+            deliverable_type: null,
+            recurrence:       'once',
+            proof_required:   true,
+            category:         'sponsor',
+          }]
+
       await adminSupabase.from('obligations').insert(obligationRows)
     }
 

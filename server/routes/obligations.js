@@ -169,12 +169,17 @@ router.post('/:id/proof/:pid/review', requireAuth, async (req, res) => {
     }).eq('id', req.params.pid)
     if (uErr) throw uErr
 
-    // If approved, transition obligation through the state machine
-    if (review_status === 'approved') {
-      const { data: ob } = await adminSupabase
-        .from('obligations').select('status, owner_id').eq('id', req.params.id).maybeSingle()
-      if (ob && !['completed','canceled'].includes(ob.status)) {
+    // Transition obligation status based on review outcome.
+    // Re-fetch status so we don't act on stale data from before the proof update.
+    const { data: currentOb } = await adminSupabase
+      .from('obligations').select('status').eq('id', req.params.id).maybeSingle()
+
+    if (currentOb && !['completed', 'canceled'].includes(currentOb.status)) {
+      if (review_status === 'approved') {
         await adminSupabase.from('obligations').update({ status: 'completed' }).eq('id', req.params.id)
+      } else {
+        // Rejected: reset to pending so the fighter knows to resubmit.
+        await adminSupabase.from('obligations').update({ status: 'pending' }).eq('id', req.params.id)
       }
     }
 

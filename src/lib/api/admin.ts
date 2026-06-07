@@ -127,7 +127,18 @@ export const updatePackage = (id: string, data: Partial<PackageCreateInput> & { 
 export const getAdminDashboard = () =>
   apiGet<{
     total_users: number; fighters: number; managers: number; sponsors: number; admins: number
-    active_opportunities: number; total_applications: number; active_contracts: number
+    active_opportunities: number; total_applications: number
+    active_contracts: number; total_contracts: number
+    disputed_contracts: number; proofs_pending_review: number
     total_obligations: number; overdue_obligations: number; completed_obligations: number
     total_revenue_usd: number
   }>('/api/admin/dashboard')
+
+export const getAdminContracts = (params?: { status?: string; limit?: number; offset?: number }) => {
+  const q = new URLSearchParams()
+  if (params?.status) q.set('status', params.status)
+  if (params?.limit)  q.set('limit',  String(params.limit))
+  if (params?.offset) q.set('offset', String(params.offset))
+  const qs = q.toString()
+  return apiGet<{ ok: boolean; contracts: any[]; total: number }>(`/api/admin/contracts${qs ? `?${qs}` : ''}`)
+}
