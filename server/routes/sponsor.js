@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { adminSupabase } from '../db/supabase.js'
 import { requireAuth } from '../middleware/auth.js'
 import { childLogger } from '../lib/logger.js'
+import { computeMatchesForOpp } from '../lib/matching.js'
 
 const router = Router()
 const log = childLogger('sponsor')
@@ -192,6 +193,133 @@ router.get('/marketplace', ...guard, async (req, res) => {
     })
   } catch (err) {
     log.error({ err }, 'GET /sponsor/marketplace threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── Shared: verify sponsor is verified and owns an opportunity ─────────────────
+async function ownedVerifiedOpp(uid, oid, role) {
+  if (role !== 'admin') {
+    const { data: sp } = await adminSupabase
+      .from('sponsor_profiles').select('is_verified').eq('user_id', uid).maybeSingle()
+    if (!sp?.is_verified) return { err: 'Sponsor profile must be verified to access matches.' }
+  }
+  const { data: opp } = await adminSupabase
+    .from('sponsorship_opportunities')
+    .select('*').eq('id', oid).is('deleted_at', null).maybeSingle()
+  if (!opp) return { err: 'Opportunity not found.' }
+  if (opp.sponsor_id !== uid && role !== 'admin') return { err: 'Not your opportunity.' }
+  return { opp }
+}
+
+// ── GET /api/sponsor/opportunities/:id/matches ────────────────────────────────
+router.get('/opportunities/:id/matches', ...guard, async (req, res) => {
+  try {
+    const { err, opp } = await ownedVerifiedOpp(req.user.id, req.params.id, req.user.role)
+    if (err) return res.status(403).json({ error: err })
+
+    const { data: rows, error } = await adminSupabase
+      .from('matches')
+      .select('id, fighter_id, score, breakdown, reasons, status, computed_at')
+      .eq('opportunity_id', opp.id)
+      .eq('stale', false)
+      .neq('status', 'dismissed')
+      .order('score', { ascending: false })
+      .limit(50)
+    if (error) throw error
+
+    if (!(rows ?? []).length) return res.json({ ok: true, matches: [], recomputed: false })
+
+    const fids = rows.map(m => m.fighter_id)
+    const [{ data: profiles }, { data: fps }, { data: socials }] = await Promise.all([
+      adminSupabase.from('profiles').select('id, name, avatar_url').in('id', fids),
+      adminSupabase.from('fighter_profiles').select('user_id, weight_class, current_promotion, base_city, sponsorship_interests').in('user_id', fids),
+      adminSupabase.from('social_accounts').select('user_id, platform, follower_count').in('user_id', fids),
+    ])
+
+    const prMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+    const fpMap = Object.fromEntries((fps ?? []).map(f => [f.user_id, f]))
+    const socMap = {}
+    for (const s of (socials ?? [])) {
+      if (!socMap[s.user_id]) socMap[s.user_id] = []
+      socMap[s.user_id].push(s)
+    }
+
+    const matches = rows.map(m => ({
+      ...m,
+      fighter:         prMap[m.fighter_id] ?? null,
+      fighter_detail:  fpMap[m.fighter_id] ?? null,
+      total_followers: (socMap[m.fighter_id] ?? []).reduce((s, a) => s + (a.follower_count || 0), 0),
+      platforms:       (socMap[m.fighter_id] ?? []).map(a => a.platform),
+    }))
+
+    res.json({ ok: true, matches })
+  } catch (err) {
+    log.error({ err }, 'GET /sponsor/opportunities/:id/matches threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/sponsor/opportunities/:id/recompute-matches ─────────────────────
+router.post('/opportunities/:id/recompute-matches', ...guard, async (req, res) => {
+  try {
+    const { err, opp } = await ownedVerifiedOpp(req.user.id, req.params.id, req.user.role)
+    if (err) return res.status(403).json({ error: err })
+
+    await adminSupabase.from('matches').update({ stale: true }).eq('opportunity_id', opp.id)
+
+    const computed = await computeMatchesForOpp(opp, adminSupabase)
+    if (computed.length) {
+      await adminSupabase.from('matches').upsert(
+        computed.map(m => ({
+          opportunity_id: opp.id,
+          sponsor_id:     opp.sponsor_id,
+          fighter_id:     m.fighter_id,
+          score:          m.score,
+          breakdown:      m.breakdown,
+          reasons:        m.reasons,
+          algorithm_ver:  'v1-rule',
+          status:         'suggested',
+          stale:          false,
+          computed_at:    new Date().toISOString(),
+        })),
+        { onConflict: 'opportunity_id,fighter_id' },
+      )
+    }
+
+    log.info({ oid: opp.id, count: computed.length }, 'sponsor recomputed matches')
+    res.json({ ok: true, computed: computed.length })
+  } catch (err) {
+    log.error({ err }, 'POST /sponsor/opportunities/:id/recompute-matches threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/sponsor/matches/:matchId/status ────────────────────────────────
+router.patch('/matches/:matchId/status', ...guard, async (req, res) => {
+  try {
+    const { status } = req.body
+    const ALLOWED = ['viewed', 'dismissed', 'invited']
+    if (!ALLOWED.includes(status)) {
+      return res.status(400).json({ error: `status must be one of: ${ALLOWED.join(', ')}` })
+    }
+
+    const { data: match } = await adminSupabase
+      .from('matches').select('id, sponsor_id')
+      .eq('id', req.params.matchId).maybeSingle()
+    if (!match) return res.status(404).json({ error: 'Match not found.' })
+    if (match.sponsor_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not your match.' })
+    }
+
+    const { error } = await adminSupabase.from('matches')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', match.id)
+    if (error) throw error
+
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'PATCH /sponsor/matches/:id/status threw')
     res.status(500).json({ error: err.message })
   }
 })

@@ -251,44 +251,85 @@ function Education() {
   )
 }
 
-function SponsorForge() {
-  const { data, loading, error } = useApi<any>('/api/fighter/sponsorforge')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
+const IMPACT_COLOR: Record<string, string> = {
+  critical: '#c00000', high: '#c00000', medium: '#c9a82c', low: '#7a7672',
+}
 
-  const score    = data?.eligibility_score ?? 0
-  const locked   = data?.is_locked         ?? true
-  const reqs     = data?.requirements      ?? []
-  const progress = data?.eligibility_progress ?? []
+function SponsorForge() {
+  const { data: sfData, loading: sfLoading, error: sfError } = useApi<any>('/api/fighter/sponsorforge')
+  const { data: gapData, loading: gapLoading }               = useApi<any>('/api/fighter/sponsorforge/gaps')
+
+  if (sfLoading) return <DashSkeleton />
+  if (sfError)   return <ApiError message={sfError} />
+
+  const score    = sfData?.eligibility_score  ?? 0
+  const locked   = sfData?.is_locked          ?? true
+  const reqs     = sfData?.requirements       ?? []
+  const progress = sfData?.eligibility_progress ?? []
+  const gaps     = gapData?.gaps              ?? []
+  const readiness = gapData?.readiness_score  ?? 0
 
   return (
     <div className="space-y-4">
       <SectionHeading>SponsorForge</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 220px' }}>
+
+      {/* Status + score */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 200px' }}>
         <div className="dash-card" style={{ borderLeft: locked ? '2px solid #c00000' : '2px solid #00c060' }}>
           <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase mb-3"
                style={{ color: locked ? '#c00000' : '#00c060' }}>
-            Status: {locked ? 'Locked' : 'Unlocked'}
+            Status: {locked ? 'Locked — Complete Requirements' : 'Unlocked'}
           </div>
-          {locked && (
-            <p className="font-body text-gray-1 text-[13px] leading-relaxed mb-5">
-              Complete Pipeline Stage 4 (Sponsor Readiness) to unlock access to the vetted sponsor network.
-            </p>
-          )}
           {reqs.length > 0
             ? <ListCard label="Requirements" items={reqs} />
-            : <EmptyState title="Requirements Loading" body="Complete your fighter profile to see SponsorForge requirements." />
+            : <EmptyState title="No requirements yet" body="Complete your fighter profile to see requirements." />
           }
         </div>
         <div className="dash-card flex flex-col items-center text-center">
           <div className="dash-label mb-2">Eligibility Score</div>
           <ReadinessRing pct={score} size={90} />
           <div className="dash-sub mt-2">{score < 100 ? `${100 - score} pts to unlock` : 'Eligible!'}</div>
+          <div className="dash-sub mt-1">Readiness: {readiness}/100</div>
         </div>
       </div>
+
+      {/* Gaps checklist */}
+      {!gapLoading && gaps.length > 0 && (
+        <div className="dash-card space-y-3">
+          <div className="dash-label">Improve Your Match Score</div>
+          <p className="font-condensed text-[11px] text-gray-3">
+            Fix these gaps to appear higher in sponsor match rankings.
+          </p>
+          <div className="space-y-2">
+            {gaps.map((g: any, i: number) => (
+              <div key={i} className="flex items-start gap-3 py-2 border-b border-charcoal-3 last:border-0">
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                  style={{ background: IMPACT_COLOR[g.impact] ?? '#7a7672' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-condensed font-bold text-[12px] text-off-white">{g.label}</div>
+                  <div className="font-condensed text-[11px] text-gray-3 mt-0.5">{g.message}</div>
+                  <div className="font-condensed text-[11px] mt-1" style={{ color: '#8b0000' }}>→ {g.action}</div>
+                </div>
+                <span className="font-condensed text-[9px] uppercase tracking-[0.1em] flex-shrink-0"
+                  style={{ color: IMPACT_COLOR[g.impact] }}>
+                  {g.impact}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!gapLoading && gaps.length === 0 && score > 0 && (
+        <div className="dash-card text-center py-4">
+          <div className="font-condensed text-green-400 text-[13px]">✓ No major gaps detected — your profile is match-ready</div>
+        </div>
+      )}
+
+      {/* Progress chart */}
       {progress.length > 0 && (
         <div className="dash-card">
-          <div className="dash-label mb-3">Eligibility Progress</div>
+          <div className="dash-label mb-3">Eligibility Breakdown</div>
           <BarChart height={80} data={progress} />
         </div>
       )}

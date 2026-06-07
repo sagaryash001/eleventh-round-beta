@@ -14,6 +14,7 @@ import {
   getAdminDashboard,
   type AdminUser, type PendingSponsor, type AdminModule, type AdminPackage,
 } from '../../lib/api/admin'
+import { adminRecompute } from '../../lib/api/opportunities'
 
 const NAV = [
   { id: 'overview',  label: 'Overview',        icon: '◈' },
@@ -1026,20 +1027,76 @@ function Mentors() {
 
 function SponsorForgeAdmin() {
   const { data, loading, error } = useApi<any>('/api/admin/sponsorforge')
+  const [recomputing, setRecomputing]   = useState(false)
+  const [recomputeMsg, setRecomputeMsg] = useState<{type:'ok'|'err';text:string}|null>(null)
+
+  const recompute = async () => {
+    setRecomputing(true); setRecomputeMsg(null)
+    try {
+      const r = await adminRecompute()
+      setRecomputeMsg({ type:'ok', text:`Recomputed ${r.computed} matches across ${r.opportunities} opportunities.` })
+    } catch (e: any) {
+      setRecomputeMsg({ type:'err', text: e.message ?? 'Recompute failed.' })
+    } finally { setRecomputing(false) }
+  }
+
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
 
+  const matchCount = data?.active_matches       ?? 0
+  const activeOpps = data?.active_opportunities ?? 0
+  const sponsors   = data?.sponsors             ?? 0
+  const eligible   = data?.eligible_fighters    ?? 0
+
   return (
     <div className="space-y-4">
-      <SectionHeading>SponsorForge Network</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns:'repeat(4,1fr)' }}>
-        <div className="dash-card text-center"><div className="dash-label">Verified Sponsors</div><div className="dash-stat mt-1">{data?.sponsors ?? 0}</div></div>
-        <StatCard label="Eligible Fighters" value={String(data?.eligible_fighters ?? 0)} sub="Unlocked" barPct={24} />
-        <StatCard label="Active Matches"    value={String(data?.active_matches ?? 0)}   sub="In negotiation" barPct={0} />
-        <StatCard label="Deals Closed"      value={String(data?.deals_closed ?? 0)}     sub="90 days" barPct={0} />
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <SectionHeading>SponsorForge Network</SectionHeading>
+        <div className="flex items-center gap-3">
+          {recomputeMsg && (
+            <p className={`font-condensed text-[11px] ${recomputeMsg.type==='ok'?'text-green-400':'text-blood-glow'}`}>
+              {recomputeMsg.text}
+            </p>
+          )}
+          <button onClick={recompute} disabled={recomputing}
+            className="btn-ghost text-[11px] py-2 px-4 disabled:opacity-50">
+            {recomputing ? '↻ Computing…' : '↻ Recompute All'}
+          </button>
+        </div>
       </div>
-      <EmptyState icon="⚡" title="SponsorForge Matching Coming Soon"
-        body="The full SponsorForge ranking engine is built and ready to compute. It activates once you have vetted sponsors and eligible fighters." />
+
+      <div className="grid gap-4" style={{ gridTemplateColumns:'repeat(4,1fr)' }}>
+        <div className="dash-card text-center">
+          <div className="dash-label">Verified Sponsors</div>
+          <div className="dash-stat mt-1">{sponsors}</div>
+        </div>
+        <StatCard label="Eligible Fighters"  value={String(eligible)}   sub="Profile unlocked"   barPct={eligible   > 0 ? 60 : 0} />
+        <StatCard label="Active Matches"     value={String(matchCount)} sub="Non-dismissed"       barPct={matchCount > 0 ? 50 : 0} />
+        <StatCard label="Live Opportunities" value={String(activeOpps)} sub="Published campaigns" barPct={activeOpps > 0 ? 80 : 0} />
+      </div>
+
+      {matchCount === 0 ? (
+        <div className="dash-card text-center py-6">
+          <div className="font-condensed text-gray-3 text-[13px] mb-3">
+            {sponsors === 0 ? 'No verified sponsors yet.' : 'No matches computed — click Recompute All to generate.'}
+          </div>
+          {sponsors > 0 && (
+            <button onClick={recompute} disabled={recomputing} className="btn-primary text-[11px] py-2 px-6">
+              {recomputing ? 'Computing…' : 'Compute Matches Now'}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="dash-card">
+          <div className="dash-label mb-1">Match Engine</div>
+          <div className="font-condensed text-[13px] text-gray-2">
+            V1 rule engine · {matchCount} active matches across {activeOpps} opportunit{activeOpps === 1 ? 'y' : 'ies'}
+          </div>
+          <div className="font-condensed text-[11px] text-gray-3 mt-1.5">
+            Readiness 40% · Brand Fit 20% · Audience 15% · Location 10% · Availability 10% · Content 5%
+          </div>
+        </div>
+      )}
     </div>
   )
 }

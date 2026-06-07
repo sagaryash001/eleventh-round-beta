@@ -1,165 +1,205 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Rule-based matching engine (v1-rule)
+// SponsorForge V1 rule-based matching engine
 //
-// Scores a fighter against an opportunity on 7 weighted factors → 0–100.
-// Stored in matches.factor_breakdown so the UI can show "why".
-// Algorithm version is baked into every row so a v2-ai model can coexist.
+// Weights (sum = 100):
+//   readiness    40 — readiness_scores.overall
+//   brand_fit    20 — sponsorship_interests vs campaign category/deliverables
+//   location     10 — nationality/base_city vs opp location
+//   audience     15 — social follower count (log scale)
+//   availability 10 — campaign timing vs fighter schedule
+//   content       5 — media asset completeness
 //
-// Input contract:
-//   opp    — sponsorship_opportunities row
-//   fp     — fighter_profiles row (with weight_class, current_promotion, nationality)
-//   socials — social_accounts[] for the fighter (sum for total reach)
+// computeMatchScore(opp, fp, socials, readinessScore?)
+//   → { score, breakdown, reasons }
+//   score     : 0–100 integer
+//   breakdown : { readiness, brand_fit, location, audience, availability, content }
+//   reasons   : { readiness, brand_fit, location, audience, availability, content }
 //
-// Returns: { score, breakdown, reasons }
+// computeMatchesForOpp(opp, sb)
+//   → Array<{ fighter_id, score, breakdown, reasons }> sorted desc
 // ─────────────────────────────────────────────────────────────────────────────
 
-const WEIGHTS = {
-  geography:    15,
-  weight_class: 15,
-  promotion:    10,
-  reach:        20,
-  engagement:   15,
-  demographics: 15,
-  reliability:  10,
-}
-
-export function computeMatchScore(opp, fp, socials = [], reliabilityPct = null) {
+// ── Score one fighter against one opportunity ─────────────────────────────────
+// readinessScore: readiness_scores.overall (0-100), or null if not yet computed
+export function computeMatchScore(opp, fp, socials = [], readinessScore = null) {
   const breakdown = {}
-  const reasons   = []
+  const reasons   = {}
 
-  // ── 1. Geography (15 pts) ──────────────────────────────────────────────────
+  // ── 1. Readiness (40 pts) ──────────────────────────────────────────────────
   {
-    const fCountry = (fp.nationality  || '').toUpperCase()
-    const oCountry = (opp.location_country || '').toUpperCase()
-    let pts = 0
-    if (oCountry && fCountry) {
-      if (fCountry === oCountry) { pts = 15; reasons.push('Same country as campaign') }
-      else pts = 5
-    } else {
-      pts = 8 // no geo filter → partial credit
-    }
-    breakdown.geography = pts
+    const rs  = readinessScore ?? 0
+    const pts = Math.round((rs / 100) * 40)
+    breakdown.readiness = pts
+    reasons.readiness   = rs >= 70
+      ? `Readiness score is ${rs}/100 — above the 70+ SponsorForge threshold`
+      : rs > 0
+        ? `Readiness score is ${rs}/100 — complete pipeline stages to reach 70+`
+        : 'No readiness score yet — complete your profile to unlock this score'
   }
 
-  // ── 2. Weight class (15 pts) ───────────────────────────────────────────────
+  // ── 2. Brand / category fit (20 pts) ──────────────────────────────────────
   {
-    const req = opp.requirements?.weight_classes || []
-    const fw  = fp.weight_class
-    let pts = 0
-    if (!req.length) {
-      pts = 12; reasons.push('Open to all weight classes')
-    } else if (fw && req.includes(fw)) {
-      pts = 15; reasons.push(`Weight class match (${fw})`)
+    const campaignType = (opp.campaign_type || '').toLowerCase().replace(/_/g, ' ')
+    const delivTypes   = (opp.deliverables || []).map(d => (d.type || '').toLowerCase().replace(/_/g, ' '))
+    const interests    = (fp.sponsorship_interests || []).map(i => i.toLowerCase())
+
+    const targets  = [campaignType, ...delivTypes].filter(Boolean)
+    const overlaps = interests.filter(i => targets.some(t => t.includes(i) || i.includes(t)))
+
+    let pts
+    if (overlaps.length > 0) {
+      pts = Math.min(20, 12 + overlaps.length * 4)
+      reasons.brand_fit = `Fighter interests align with campaign (${overlaps.slice(0, 2).join(', ')})`
+    } else if (interests.length > 0) {
+      pts = 6
+      reasons.brand_fit = 'Sponsorship interests on profile — no direct category match'
     } else {
-      pts = 0
+      pts = 2
+      reasons.brand_fit = 'No sponsorship interests listed — add them to boost brand fit score'
     }
-    breakdown.weight_class = pts
+    breakdown.brand_fit = pts
   }
 
-  // ── 3. Promotion fit (10 pts) ──────────────────────────────────────────────
+  // ── 3. Location fit (10 pts) ──────────────────────────────────────────────
   {
-    const preferred = opp.requirements?.promotions || []
-    const fp_promo  = fp.current_promotion
-    let pts = 0
-    if (!preferred.length) {
-      pts = 8
-    } else if (fp_promo && preferred.includes(fp_promo)) {
-      pts = 10; reasons.push(`Promotion match (${fp_promo})`)
+    const fNat     = (fp.nationality || '').toUpperCase().trim()
+    const fCity    = (fp.base_city   || '').toLowerCase().trim()
+    const oCountry = (opp.location_country || '').toUpperCase().trim()
+    const oRegion  = (opp.location_region  || '').toLowerCase().trim()
+
+    let pts
+    if (!oCountry) {
+      pts = 7
+      reasons.location = 'No location filter on this campaign — all regions eligible'
+    } else if (fNat && fNat === oCountry) {
+      const cityMatch = oRegion && fCity && (fCity.includes(oRegion) || oRegion.includes(fCity))
+      pts = cityMatch ? 10 : 8
+      reasons.location = cityMatch
+        ? `Fighter is based in the target region (${oRegion})`
+        : `Fighter is in the target country (${oCountry})`
+    } else if (fNat) {
+      pts = 2
+      reasons.location = `Campaign targets ${oCountry}; fighter is from ${fNat}`
     } else {
-      pts = 0
+      pts = 4
+      reasons.location = 'Fighter location not set — add nationality and city to improve'
     }
-    breakdown.promotion = pts
+    breakdown.location = pts
   }
 
-  // ── 4. Social reach (20 pts) ───────────────────────────────────────────────
+  // ── 4. Audience / social fit (15 pts) ─────────────────────────────────────
   {
     const totalFollowers = (socials || []).reduce((s, a) => s + (a.follower_count || 0), 0)
     const minRequired    = opp.requirements?.min_followers || 0
-    let pts = 0
-    if (totalFollowers >= minRequired) {
-      // log10 scale: 0→0, 1k→10, 10k→14, 100k→18, 1M→20
-      pts = Math.min(20, Math.round((Math.log10(Math.max(totalFollowers, 1)) / 6) * 20))
-      if (totalFollowers >= 50000) reasons.push(`Strong social reach (${(totalFollowers/1000).toFixed(0)}k followers)`)
+
+    let pts
+    if (!socials.length) {
+      pts = 1
+      reasons.audience = 'No social accounts linked — connect Instagram or TikTok to score audience reach'
+    } else if (minRequired > 0 && totalFollowers < minRequired) {
+      pts = Math.round((totalFollowers / minRequired) * 7)
+      reasons.audience = `${totalFollowers.toLocaleString()} followers — campaign requires ${minRequired.toLocaleString()}+`
     } else {
-      // partial credit proportional to requirement gap
-      pts = Math.round((totalFollowers / minRequired) * 10)
+      // log10 scale: 1k→5, 10k→8, 100k→12, 1M→15
+      pts = Math.min(15, Math.round((Math.log10(Math.max(totalFollowers, 100)) / 6) * 15))
+      reasons.audience = totalFollowers >= 100000
+        ? `Strong reach: ${(totalFollowers / 1000).toFixed(0)}k total followers`
+        : totalFollowers >= 10000
+          ? `Good reach: ${(totalFollowers / 1000).toFixed(1)}k total followers`
+          : `Social presence: ${totalFollowers.toLocaleString()} followers`
     }
-    breakdown.reach = Math.max(0, pts)
+    breakdown.audience = Math.max(0, Math.min(15, Math.round(pts)))
   }
 
-  // ── 5. Engagement (15 pts) ────────────────────────────────────────────────
+  // ── 5. Availability / timing (10 pts) ─────────────────────────────────────
   {
-    const accountsWithEng  = (socials || []).filter(a => a.engagement_rate_bps)
-    const avgEngBps        = accountsWithEng.length
-      ? Math.round(accountsWithEng.reduce((s, a) => s + a.engagement_rate_bps, 0) / accountsWithEng.length)
-      : null
-    const minEngBps        = opp.requirements?.min_engagement_bps || 0
-    let pts = 0
-    if (avgEngBps === null) {
-      pts = 7 // unknown → half credit
-    } else if (avgEngBps >= minEngBps) {
-      // 100bps = 1%; 700bps (7%) = max score
-      pts = Math.min(15, Math.round((avgEngBps / 700) * 15))
-      if (avgEngBps >= 300) reasons.push(`Good engagement (${(avgEngBps/100).toFixed(1)}%)`)
+    // V1: neutral 6–7 pts; full 10 only when campaign has no deadline (open-ended)
+    // Future: compare campaign_start with fighter event calendar
+    let pts
+    if (!opp.application_deadline && !opp.campaign_start) {
+      pts = 7
+      reasons.availability = 'Open-ended campaign — no scheduling conflicts detected'
+    } else if (opp.application_deadline) {
+      const daysLeft = Math.ceil((new Date(opp.application_deadline) - Date.now()) / 86400000)
+      if (daysLeft > 30) {
+        pts = 8
+        reasons.availability = `${daysLeft} days until application deadline — good availability window`
+      } else if (daysLeft > 7) {
+        pts = 6
+        reasons.availability = `${daysLeft} days to apply — check your schedule before committing`
+      } else {
+        pts = 4
+        reasons.availability = `Deadline in ${daysLeft} days — act quickly if interested`
+      }
+    } else {
+      pts = 6
+      reasons.availability = 'Campaign has a start date — confirm availability'
     }
-    breakdown.engagement = Math.max(0, pts)
+    breakdown.availability = pts
   }
 
-  // ── 6. Demographics (15 pts) — self-reported placeholder ──────────────────
+  // ── 6. Content quality (5 pts) ────────────────────────────────────────────
   {
-    // Full implementation needs audience_demographics row.
-    // v1: grant 10pts (partial) when fighter has any social reach, else 5.
-    const hasSocials = (socials || []).some(a => a.follower_count > 0)
-    breakdown.demographics = hasSocials ? 10 : 5
+    const assets = [
+      !!fp.media_kit_url,
+      (fp.highlight_video_urls || []).length > 0,
+      !!fp.banner_path,
+    ].filter(Boolean).length
+
+    const pts = assets >= 3 ? 5 : assets === 2 ? 4 : assets === 1 ? 2 : 1
+    reasons.content = assets >= 2
+      ? 'Profile includes media kit and visual content'
+      : assets === 1
+        ? 'Some media assets — add a media kit or highlight reel to strengthen profile'
+        : 'No media assets — upload a media kit, banner, or highlight videos'
+    breakdown.content = pts
   }
 
-  // ── 7. Reliability (10 pts) ────────────────────────────────────────────────
-  {
-    let pts = 7 // default: no history → mostly trust
-    if (reliabilityPct !== null) {
-      pts = Math.round((reliabilityPct / 100) * 10)
-      if (reliabilityPct >= 90) reasons.push('Strong obligation completion record')
-    }
-    breakdown.reliability = pts
-  }
-
-  const raw   = Object.values(breakdown).reduce((s, v) => s + v, 0)
-  const max   = Object.values(WEIGHTS).reduce((s, v) => s + v, 0)
-  const score = Math.max(0, Math.min(100, Math.round((raw / max) * 100)))
+  // ── Total ──────────────────────────────────────────────────────────────────
+  const score = Math.max(0, Math.min(100,
+    Object.values(breakdown).reduce((s, v) => s + v, 0),
+  ))
 
   return { score, breakdown, reasons }
 }
 
 // ── Batch-compute for all eligible fighters against one opportunity ───────────
-// Returns array of { fighter_id, score, breakdown, reasons }
+// Returns [{ fighter_id, score, breakdown, reasons }] sorted desc
 export async function computeMatchesForOpp(opp, sb) {
-  // Fetch fighters who are open to sponsorship
   const { data: fighters } = await sb
     .from('fighter_profiles')
-    .select('user_id, weight_class, current_promotion, nationality')
+    .select('user_id, weight_class, current_promotion, nationality, base_city, sponsorship_interests, media_kit_url, highlight_video_urls, banner_path')
     .eq('is_open_to_sponsorship', true)
     .neq('visibility', 'private')
 
   if (!fighters?.length) return []
 
-  const fighterIds = fighters.map(f => f.user_id)
+  const ids = fighters.map(f => f.user_id)
 
-  // Fetch socials for all fighters in one query
-  const { data: allSocials } = await sb
-    .from('social_accounts')
-    .select('user_id, platform, follower_count, engagement_rate_bps')
-    .in('user_id', fighterIds)
+  const [{ data: allSocials }, { data: allReadiness }] = await Promise.all([
+    sb.from('social_accounts')
+      .select('user_id, platform, follower_count, engagement_rate_bps')
+      .in('user_id', ids),
+    sb.from('readiness_scores')
+      .select('user_id, overall')
+      .in('user_id', ids),
+  ])
 
-  const socialsByFighter = {}
-  for (const s of (allSocials || [])) {
-    if (!socialsByFighter[s.user_id]) socialsByFighter[s.user_id] = []
-    socialsByFighter[s.user_id].push(s)
+  const socialsMap   = {}
+  const readinessMap = {}
+  for (const s of (allSocials   || [])) {
+    if (!socialsMap[s.user_id]) socialsMap[s.user_id] = []
+    socialsMap[s.user_id].push(s)
+  }
+  for (const r of (allReadiness || [])) {
+    readinessMap[r.user_id] = r.overall
   }
 
   const results = []
   for (const fp of fighters) {
-    const socials = socialsByFighter[fp.user_id] || []
-    const { score, breakdown, reasons } = computeMatchScore(opp, fp, socials)
+    const socials   = socialsMap[fp.user_id]   || []
+    const readiness = readinessMap[fp.user_id] ?? null
+    const { score, breakdown, reasons } = computeMatchScore(opp, fp, socials, readiness)
     results.push({ fighter_id: fp.user_id, score, breakdown, reasons })
   }
 

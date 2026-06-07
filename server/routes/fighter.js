@@ -374,6 +374,92 @@ router.patch('/socials', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/fighter/sponsorforge/gaps ───────────────────────────────────────
+// Returns structured gap analysis for the fighter's SponsorForge profile.
+router.get('/sponsorforge/gaps', ...guard, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const sb  = adminSupabase
+
+    const [{ data: rs }, { data: fp }, { data: socials }] = await Promise.all([
+      sb.from('readiness_scores').select('overall, brand, finance, conduct, sponsor, media, pipeline').eq('user_id', uid).maybeSingle(),
+      sb.from('fighter_profiles').select('weight_class, base_city, sponsorship_interests, media_kit_url, highlight_video_urls, banner_path, is_open_to_sponsorship, nationality').eq('user_id', uid).maybeSingle(),
+      sb.from('social_accounts').select('platform, follower_count').eq('user_id', uid),
+    ])
+
+    const gaps = []
+    const readiness      = rs?.overall ?? 0
+    const totalFollowers = (socials ?? []).reduce((s, a) => s + (a.follower_count || 0), 0)
+    const mediaCount     = [!!fp?.media_kit_url, (fp?.highlight_video_urls || []).length > 0, !!fp?.banner_path].filter(Boolean).length
+
+    // Visibility gate
+    if (fp?.is_open_to_sponsorship === false) {
+      gaps.push({ area: 'profile', label: 'Open to Sponsorship', impact: 'critical',
+        message: "Profile is not marked open to sponsorship — you won't appear in any matches.",
+        action: 'Enable "Open to Sponsorship" in your fighter profile' })
+    }
+
+    // Readiness (40% of match score)
+    if (readiness < 70) {
+      gaps.push({ area: 'readiness', label: 'Readiness Score', impact: 'high', score: readiness, target: 70,
+        message: `Readiness is ${readiness}/100. SponsorForge matches weight this at 40% — it's the biggest lever.`,
+        action: 'Complete pipeline stages and education modules to raise this score' })
+    }
+
+    // Sponsorship interests (brand fit 20%)
+    if (!(fp?.sponsorship_interests ?? []).length) {
+      gaps.push({ area: 'profile', label: 'Sponsorship Interests', impact: 'high',
+        message: 'No interests listed. This drives brand/category matching (20% of score).',
+        action: 'Add sponsorship interests in your fighter profile' })
+    }
+
+    // Social accounts (audience 15%)
+    if (!(socials ?? []).length) {
+      gaps.push({ area: 'social', label: 'Social Accounts', impact: 'high',
+        message: 'No social accounts connected. Audience reach is 15% of your match score.',
+        action: 'Link Instagram, TikTok or YouTube in your profile' })
+    } else if (totalFollowers < 10000) {
+      gaps.push({ area: 'social', label: 'Social Reach', impact: 'medium',
+        message: `${totalFollowers.toLocaleString()} total followers. Most sponsors look for 10k+.`,
+        action: 'Grow your audience on social platforms' })
+    }
+
+    // Media assets (content 5%)
+    if (mediaCount < 2) {
+      gaps.push({ area: 'media', label: 'Media Assets', impact: 'medium',
+        message: `${mediaCount}/3 media assets complete. Sponsors want to see your content quality.`,
+        action: 'Upload a media kit, banner image, or highlight reel' })
+    }
+
+    // Location (10%)
+    if (!fp?.base_city && !fp?.nationality) {
+      gaps.push({ area: 'profile', label: 'Location', impact: 'low',
+        message: 'No location set. This affects location-targeted campaign matches (10% of score).',
+        action: 'Add your nationality and base city in your profile' })
+    }
+
+    res.json({
+      readiness_score:  readiness,
+      is_open:          fp?.is_open_to_sponsorship ?? true,
+      total_followers:  totalFollowers,
+      platforms:        (socials ?? []).map(s => s.platform),
+      media_count:      mediaCount,
+      gaps,
+      sub_scores: {
+        brand:    rs?.brand    ?? 0,
+        finance:  rs?.finance  ?? 0,
+        conduct:  rs?.conduct  ?? 0,
+        sponsor:  rs?.sponsor  ?? 0,
+        media:    rs?.media    ?? 0,
+        pipeline: rs?.pipeline ?? 0,
+      },
+    })
+  } catch (err) {
+    log.error({ err }, 'GET /fighter/sponsorforge/gaps threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/fighter/manager ──────────────────────────────────────────────────
 // Returns all non-removed manager connections for this fighter.
 // Auto-links any pending email invites that match this fighter's email.

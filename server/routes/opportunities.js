@@ -247,18 +247,20 @@ router.post('/:id/publish', requireAuth, requireSponsor, async (req, res) => {
       .then(async matches => {
         if (!matches.length) return
         const rows = matches.map(m => ({
-          opportunity_id:    data.id,
-          fighter_id:        m.fighter_id,
-          score:             m.score,
-          factor_breakdown:  m.breakdown,
-          reasons:           m.reasons,
-          algorithm_version: 'v1-rule',
-          stale:             false,
-          computed_at:       new Date().toISOString(),
+          opportunity_id: data.id,
+          sponsor_id:     data.sponsor_id,
+          fighter_id:     m.fighter_id,
+          score:          m.score,
+          breakdown:      m.breakdown,
+          reasons:        m.reasons,
+          algorithm_ver:  'v1-rule',
+          status:         'suggested',
+          stale:          false,
+          computed_at:    new Date().toISOString(),
         }))
         await adminSupabase
           .from('matches')
-          .upsert(rows, { onConflict: 'opportunity_id,fighter_id,algorithm_version' })
+          .upsert(rows, { onConflict: 'opportunity_id,fighter_id' })
       })
       .catch(e => log.warn({ err: e }, 'match recompute failed'))
 

@@ -59,3 +59,15 @@ export const getOppApplications = (oppId: string) =>
 
 export const changeOpportunityStatus = (id: string, status: 'closed' | 'draft') =>
   apiPatch<{ ok: boolean; opportunity: Opportunity }>(`/api/opportunities/${id}/status`, { status })
+
+export const getSponsorMatches = (oppId: string) =>
+  apiGet<{ ok: boolean; matches: any[] }>(`/api/sponsor/opportunities/${oppId}/matches`)
+
+export const recomputeMatches = (oppId: string) =>
+  apiPost<{ ok: boolean; computed: number }>(`/api/sponsor/opportunities/${oppId}/recompute-matches`)
+
+export const updateMatchStatus = (matchId: string, status: 'viewed' | 'dismissed' | 'invited') =>
+  apiPatch<{ ok: boolean }>(`/api/sponsor/matches/${matchId}/status`, { status })
+
+export const adminRecompute = () =>
+  apiPost<{ ok: boolean; computed: number; opportunities: number }>('/api/admin/sponsorforge/recompute')

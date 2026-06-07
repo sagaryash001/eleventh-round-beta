@@ -7,6 +7,7 @@ import { adminSupabase }    from '../db/supabase.js'
 import { requireAuth, requireAdmin } from '../middleware/auth.js'
 import { validate, ModuleCreateSchema, PackageCreateSchema, z } from '../lib/validate.js'
 import { childLogger }      from '../lib/logger.js'
+import { computeMatchesForOpp } from '../lib/matching.js'
 
 const router = Router()
 const log    = childLogger('admin')
@@ -573,23 +574,113 @@ router.get('/mentors', ...guard, async (req, res) => {
 
 router.get('/sponsorforge', ...guard, async (req, res) => {
   try {
-    const [{ data: sf }, { count: sponsorCount }] = await Promise.all([
+    const [{ data: sf }, { count: sponsorCount }, { count: matchCount }, { count: activeOppCount }] = await Promise.all([
       adminSupabase.from('sponsorforge_profiles').select('user_id, is_locked'),
       adminSupabase.from('sponsor_profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
+      adminSupabase.from('matches').select('*', { count: 'exact', head: true }).eq('stale', false).neq('status', 'dismissed').catch(() => ({ count: 0 })),
+      adminSupabase.from('sponsorship_opportunities').select('*', { count: 'exact', head: true }).eq('status', 'published').is('deleted_at', null).catch(() => ({ count: 0 })),
     ])
 
     const eligible = (sf ?? []).filter(s => !s.is_locked).length
 
     res.json({
-      sponsors:          sponsorCount ?? 0,
-      active_matches:    0,
-      deals_closed:      0,
-      total_value:       0,
-      eligible_fighters: eligible,
-      activity:          [],
+      sponsors:             sponsorCount  ?? 0,
+      active_matches:       matchCount    ?? 0,
+      eligible_fighters:    eligible,
+      active_opportunities: activeOppCount ?? 0,
+      deals_closed:         0,
+      total_value:          0,
+      activity:             [],
     })
   } catch (err) {
     log.error({ err }, '/admin/sponsorforge threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/admin/sponsorforge/matches ───────────────────────────────────────
+router.get('/sponsorforge/matches', ...guard, async (req, res) => {
+  try {
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+
+    const { data: rows, error, count } = await adminSupabase
+      .from('matches')
+      .select('id, opportunity_id, fighter_id, sponsor_id, score, breakdown, reasons, status, computed_at', { count: 'exact' })
+      .eq('stale', false)
+      .order('score', { ascending: false })
+      .range(offset, offset + limit - 1)
+    if (error) throw error
+
+    const fids   = [...new Set((rows ?? []).map(m => m.fighter_id))]
+    const oidArr = [...new Set((rows ?? []).map(m => m.opportunity_id))]
+
+    const [{ data: profiles }, { data: opps }] = await Promise.all([
+      fids.length   ? adminSupabase.from('profiles').select('id, name').in('id', fids) : { data: [] },
+      oidArr.length ? adminSupabase.from('sponsorship_opportunities').select('id, title').in('id', oidArr) : { data: [] },
+    ])
+
+    const prMap  = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+    const oppMap = Object.fromEntries((opps ?? []).map(o => [o.id, o]))
+
+    const matches = (rows ?? []).map(m => ({
+      ...m,
+      fighter:     prMap[m.fighter_id]      ?? null,
+      opportunity: oppMap[m.opportunity_id] ?? null,
+    }))
+
+    res.json({ ok: true, matches, total: count ?? 0 })
+  } catch (err) {
+    log.error({ err }, '/admin/sponsorforge/matches threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/admin/sponsorforge/recompute ────────────────────────────────────
+router.post('/sponsorforge/recompute', ...guard, async (req, res) => {
+  try {
+    const { data: opps, error: oppErr } = await adminSupabase
+      .from('sponsorship_opportunities')
+      .select('*')
+      .eq('status', 'published')
+      .is('deleted_at', null)
+    if (oppErr) throw oppErr
+    if (!(opps ?? []).length) return res.json({ ok: true, computed: 0, opportunities: 0 })
+
+    let totalComputed = 0
+    const failures = []
+    for (const opp of opps) {
+      try {
+        await adminSupabase.from('matches').update({ stale: true }).eq('opportunity_id', opp.id)
+        const computed = await computeMatchesForOpp(opp, adminSupabase)
+        if (computed.length) {
+          await adminSupabase.from('matches').upsert(
+            computed.map(m => ({
+              opportunity_id: opp.id,
+              sponsor_id:     opp.sponsor_id,
+              fighter_id:     m.fighter_id,
+              score:          m.score,
+              breakdown:      m.breakdown,
+              reasons:        m.reasons,
+              algorithm_ver:  'v1-rule',
+              status:         'suggested',
+              stale:          false,
+              computed_at:    new Date().toISOString(),
+            })),
+            { onConflict: 'opportunity_id,fighter_id' },
+          )
+          totalComputed += computed.length
+        }
+      } catch (oppErr) {
+        log.error({ err: oppErr, opp_id: opp.id }, 'recompute failed for one opportunity — continuing')
+        failures.push(opp.id)
+      }
+    }
+
+    log.info({ opps: opps.length, computed: totalComputed, failures: failures.length }, 'admin recomputed all matches')
+    res.json({ ok: true, computed: totalComputed, opportunities: opps.length, failures })
+  } catch (err) {
+    log.error({ err }, '/admin/sponsorforge/recompute threw')
     res.status(500).json({ error: err.message })
   }
 })
