@@ -71,7 +71,9 @@
       "Bash(git merge *)",
       "Bash(curl -sS -m 60 -w '\\\\nHTTP:%{http_code}' -X POST https://eleventh-round-beta.onrender.com/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"__TRACKED_VAR__\",\"password\":\"AcVerify123!\"}')",
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\server\" -Name | Where-Object { $_ -ne \"node_modules\" })",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(grep -rA 25 \"CREATE TABLE IF NOT EXISTS public.manager_fighters\" db/migrations/)",
+      "Bash(grep -v \"//\\\\|eq\\('status'\\\\|neq\\('status'\\\\|req.valid\\\\|conn.status\\\\|updates.status\\\\|log\\\\|error\\\\|guard\\\\|requireM\\\\|requireA\\\\|fighter_id\\\\|manager_id\\\\|pending\\\\|active\\\\|declined\\\\|removed\")"
     ]
   }
 }

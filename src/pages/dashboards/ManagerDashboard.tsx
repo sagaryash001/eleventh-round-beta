@@ -1,9 +1,39 @@
-import React from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import DashShell from './DashShell'
 import { StatCard, ListCard, ReadinessRing, BarChart, SparkLine,
          SectionHeading, FullWidthCard, StackedBar,
          DashSkeleton, EmptyState, ApiError } from './DashWidgets'
 import { useApi } from '../../hooks/useApi'
+import {
+  getManagerRoster, inviteFighter, createPendingFighter,
+  updateConnectionStatus, getFighterDetail, updateFighterProfile,
+  type RosterEntry,
+} from '../../lib/api/manager'
+
+// ── Tiny local primitives ─────────────────────────────────────────────────────
+function MI({ label, value, onChange, type='text', placeholder, required=false }: {
+  label: string; value: string|number; onChange:(v:string)=>void
+  type?: string; placeholder?: string; required?: boolean
+}) {
+  const [f, setF] = useState(false)
+  return (
+    <div>
+      <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">
+        {label}{required && <span className="text-blood-glow ml-1">*</span>}
+      </label>
+      <input type={type} value={value} placeholder={placeholder}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setF(true)} onBlur={() => setF(false)}
+        className="w-full bg-charcoal-2 border text-off-white font-body text-[13px] px-3 py-2 outline-none transition-all placeholder:text-gray-3"
+        style={{ borderColor: f ? '#8b0000' : '#222226' }} />
+    </div>
+  )
+}
+function Spinner() { return <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> }
+function Msg({ msg }: { msg: {type:'ok'|'err';text:string}|null }) {
+  if (!msg) return null
+  return <p className={`font-condensed text-[11px] ${msg.type==='ok'?'text-green-400':'text-blood-glow'}`}>{msg.text}</p>
+}
 
 const NAV = [
   { id: 'overview',    label: 'Overview',      icon: '◈' },
@@ -66,44 +96,407 @@ function Overview() {
   )
 }
 
-function Roster() {
-  const { data, loading, error } = useApi<any>('/api/manager/roster')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
+// ── Status badge helper ───────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string,[string,string]> = {
+    active:   ['Active',   'badge-green'],
+    pending:  ['Pending',  'badge-yellow'],
+    declined: ['Declined', 'badge-red'],
+    removed:  ['Removed',  'badge-red'],
+  }
+  const [label, cls] = map[status] ?? [status, 'badge-yellow']
+  return <span className={`badge ${cls}`}>{label}</span>
+}
 
-  const fighters = data?.fighters ?? []
+// ── Fighter edit form ─────────────────────────────────────────────────────────
+function EditFighterPanel({ fighter, onSave, onCancel }: {
+  fighter: any; onSave: (data: any) => Promise<void>; onCancel: () => void
+}) {
+  const [form, setForm] = useState({
+    division:      fighter.division      ?? '',
+    weight_class:  fighter.weight_class  ?? '',
+    record_wins:   String(fighter.record_wins  ?? 0),
+    record_losses: String(fighter.record_losses ?? 0),
+    record_draws:  String(fighter.record_draws  ?? 0),
+    base_city:     fighter.base_city     ?? '',
+    gym_name:      fighter.gym_name      ?? '',
+    coach_name:    fighter.coach_name    ?? '',
+    current_promotion: fighter.current_promotion ?? '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState<{type:'ok'|'err';text:string}|null>(null)
+  const set = (k: keyof typeof form) => (v: string) => setForm(p => ({ ...p, [k]: v }))
 
-  if (!fighters.length) return (
-    <div className="space-y-4">
-      <SectionHeading>Roster Management</SectionHeading>
-      <EmptyState icon="👥" title="No Fighters Connected Yet"
-        body="No fighters connected yet. Invite a fighter by email or create a pending fighter profile to start building your roster." />
+  const save = async () => {
+    setSaving(true); setMsg(null)
+    try {
+      await onSave({
+        division:      form.division      || null,
+        weight_class:  form.weight_class  || null,
+        record_wins:   Number(form.record_wins),
+        record_losses: Number(form.record_losses),
+        record_draws:  Number(form.record_draws),
+        base_city:     form.base_city     || null,
+        gym_name:      form.gym_name      || null,
+        coach_name:    form.coach_name    || null,
+        current_promotion: form.current_promotion || null,
+      })
+      setMsg({ type: 'ok', text: 'Saved.' })
+    } catch (e: any) {
+      setMsg({ type: 'err', text: e.message ?? 'Save failed.' })
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-charcoal-3 space-y-3">
+      <div className="font-condensed text-[10px] font-bold tracking-[0.3em] uppercase text-gray-3">Edit Fighter Profile</div>
+      <div className="grid grid-cols-2 gap-3">
+        <MI label="Division / Style" value={form.division} onChange={set('division')} placeholder="e.g. MMA" />
+        <MI label="Weight Class" value={form.weight_class} onChange={set('weight_class')} placeholder="e.g. Lightweight" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <MI label="Wins"   type="number" value={form.record_wins}   onChange={set('record_wins')} />
+        <MI label="Losses" type="number" value={form.record_losses} onChange={set('record_losses')} />
+        <MI label="Draws"  type="number" value={form.record_draws}  onChange={set('record_draws')} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <MI label="City / Base"    value={form.base_city}   onChange={set('base_city')}   placeholder="e.g. Las Vegas" />
+        <MI label="Gym"            value={form.gym_name}    onChange={set('gym_name')}    placeholder="e.g. AKA" />
+        <MI label="Coach"          value={form.coach_name}  onChange={set('coach_name')}  placeholder="Coach name" />
+        <MI label="Promotion"      value={form.current_promotion} onChange={set('current_promotion')} placeholder="e.g. UFC" />
+      </div>
+      <Msg msg={msg} />
+      <div className="flex gap-2">
+        <button onClick={save} disabled={saving} className="btn-primary text-[11px] py-2 disabled:opacity-50">
+          {saving ? <Spinner /> : 'Save Changes'}
+        </button>
+        <button onClick={onCancel} className="btn-ghost text-[11px] py-2">Cancel</button>
+      </div>
     </div>
   )
+}
+
+// ── Main Roster component ─────────────────────────────────────────────────────
+function Roster() {
+  const [roster,    setRoster]    = useState<RosterEntry[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState<string|null>(null)
+  const [showInvite,setShowInvite]= useState(false)
+  const [showCreate,setShowCreate]= useState(false)
+  const [expandId,  setExpandId]  = useState<string|null>(null)
+  const [editId,    setEditId]    = useState<string|null>(null)
+  const [detail,    setDetail]    = useState<any>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [actingId,  setActingId]  = useState<string|null>(null)
+  const [msg,       setMsg]       = useState<{type:'ok'|'err';text:string}|null>(null)
+
+  // Invite form
+  const [invite, setInvite] = useState({ email:'', name:'', message:'' })
+  const [invSaving, setInvSaving] = useState(false)
+  const [invMsg, setInvMsg] = useState<{type:'ok'|'err';text:string}|null>(null)
+
+  // Create pending form
+  const [cpf, setCpf] = useState({ name:'', sport:'mma', weight_class:'', record_wins:'0', record_losses:'0', record_draws:'0', base_city:'', notes:'' })
+  const [cpfSaving, setCpfSaving] = useState(false)
+  const [cpfMsg, setCpfMsg] = useState<{type:'ok'|'err';text:string}|null>(null)
+
+  const load = useCallback(() => {
+    setLoading(true); setError(null)
+    getManagerRoster()
+      .then(d => { setRoster(d.roster ?? []); setLoading(false) })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const expand = async (id: string, fighterId: string | null) => {
+    if (expandId === id) { setExpandId(null); setDetail(null); setEditId(null); return }
+    setExpandId(id)
+    if (!fighterId) return
+    setDetailLoading(true)
+    getFighterDetail(fighterId)
+      .then(d => { setDetail(d); setDetailLoading(false) })
+      .catch(() => setDetailLoading(false))
+  }
+
+  const changeStatus = async (id: string, status: 'active'|'declined'|'removed') => {
+    setActingId(id); setMsg(null)
+    try {
+      await updateConnectionStatus(id, status)
+      setMsg({ type:'ok', text:`Connection ${status}.` })
+      load()
+    } catch (e: any) {
+      setMsg({ type:'err', text: e.message })
+    } finally { setActingId(null) }
+  }
+
+  const submitInvite = async () => {
+    if (!invite.email.trim()) { setInvMsg({ type:'err', text:'Email is required.' }); return }
+    setInvSaving(true); setInvMsg(null)
+    try {
+      const r = await inviteFighter({ email: invite.email.trim(), name: invite.name || null, message: invite.message || null })
+      setInvMsg({ type:'ok', text: r.matched ? 'Invite sent to existing fighter.' : 'Invite queued — email not yet registered.' })
+      setInvite({ email:'', name:'', message:'' })
+      load()
+    } catch (e: any) {
+      setInvMsg({ type:'err', text: e.message })
+    } finally { setInvSaving(false) }
+  }
+
+  const submitCreate = async () => {
+    if (!cpf.name.trim()) { setCpfMsg({ type:'err', text:'Name is required.' }); return }
+    setCpfSaving(true); setCpfMsg(null)
+    try {
+      await createPendingFighter({
+        name: cpf.name.trim(), sport: cpf.sport,
+        weight_class: cpf.weight_class || null,
+        record_wins: Number(cpf.record_wins), record_losses: Number(cpf.record_losses), record_draws: Number(cpf.record_draws),
+        base_city: cpf.base_city || null, notes: cpf.notes || null,
+      })
+      setCpfMsg({ type:'ok', text:'Pending fighter profile created.' })
+      setCpf({ name:'', sport:'mma', weight_class:'', record_wins:'0', record_losses:'0', record_draws:'0', base_city:'', notes:'' })
+      load()
+    } catch (e: any) {
+      setCpfMsg({ type:'err', text: e.message })
+    } finally { setCpfSaving(false) }
+  }
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} retry={load} />
+
+  const active  = roster.filter(c => c.status === 'active')
+  const pending = roster.filter(c => c.status === 'pending')
+  const other   = roster.filter(c => !['active','pending'].includes(c.status))
 
   return (
     <div className="space-y-4">
-      <SectionHeading>Roster Management</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(fighters.length,5)},1fr)` }}>
-        {fighters.map((f: any) => (
-          <div key={f.name} className="dash-card text-center" style={{ borderTop: `2px solid ${f.color}` }}>
-            <div className="font-condensed text-[11px] font-bold text-off-white mb-0.5">{f.name.split(' ')[0]}</div>
-            <div className="font-condensed text-[9px] text-gray-3 mb-3">{f.div}</div>
-            <ReadinessRing pct={f.readiness} size={70} color={f.color} label="Ready" />
-            <div className="font-condensed text-[9px] text-gray-3 mt-2">{f.record}</div>
-            <div className="dash-bar-track" style={{ margin:'8px 0 4px' }}>
-              <div className="dash-bar-fill" style={{ width:`${f.onboard}%`, background:f.color }} />
-            </div>
-            <div className="font-condensed text-[9px] text-gray-3">Onboard {f.onboard}%</div>
-          </div>
-        ))}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <SectionHeading>Roster Management ({active.length} active)</SectionHeading>
+        <div className="flex gap-2">
+          <button onClick={() => { setShowInvite(v=>!v); setShowCreate(false) }}
+            className="btn-ghost text-[11px] py-2 px-4">{showInvite ? 'Cancel' : '+ Invite Fighter'}</button>
+          <button onClick={() => { setShowCreate(v=>!v); setShowInvite(false) }}
+            className="btn-ghost text-[11px] py-2 px-4">{showCreate ? 'Cancel' : '+ Create Pending'}</button>
+        </div>
       </div>
-      <FullWidthCard label="Roster Comparison">
-        <BarChart height={90} data={fighters.map((f: any) => ({
-          label: f.name.split(' ')[0], value: f.readiness,
-          color: f.readiness >= 80 ? '#00c060' : f.readiness >= 60 ? '#c9a82c' : '#c00000',
-        }))} />
-      </FullWidthCard>
+
+      <Msg msg={msg} />
+
+      {/* Invite form */}
+      {showInvite && (
+        <div className="dash-card space-y-3" style={{ borderLeft:'2px solid #8b0000' }}>
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Invite Fighter by Email</div>
+          <div className="grid grid-cols-2 gap-3">
+            <MI label="Fighter Email" value={invite.email} onChange={v=>setInvite(p=>({...p,email:v}))} placeholder="fighter@email.com" required />
+            <MI label="Name (optional)" value={invite.name} onChange={v=>setInvite(p=>({...p,name:v}))} placeholder="Fighter name" />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Message (optional)</label>
+            <textarea value={invite.message} onChange={e=>setInvite(p=>({...p,message:e.target.value}))} rows={2}
+              placeholder="Add a personal note…"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none resize-none" />
+          </div>
+          <Msg msg={invMsg} />
+          <button onClick={submitInvite} disabled={invSaving} className="btn-primary text-[11px] py-2 disabled:opacity-50">
+            {invSaving ? <><Spinner /> Sending…</> : 'Send Invite'}
+          </button>
+        </div>
+      )}
+
+      {/* Create pending form */}
+      {showCreate && (
+        <div className="dash-card space-y-3" style={{ borderLeft:'2px solid #8b0000' }}>
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Create Pending Fighter Profile</div>
+          <div className="grid grid-cols-2 gap-3">
+            <MI label="Name" value={cpf.name} onChange={v=>setCpf(p=>({...p,name:v}))} required placeholder="Full name" />
+            <div>
+              <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Sport</label>
+              <select value={cpf.sport} onChange={e=>setCpf(p=>({...p,sport:e.target.value}))}
+                className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none">
+                {['mma','boxing','bjj','muay_thai','wrestling','other'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <MI label="Weight Class" value={cpf.weight_class} onChange={v=>setCpf(p=>({...p,weight_class:v}))} placeholder="e.g. Lightweight" />
+            <MI label="City / Base"  value={cpf.base_city}    onChange={v=>setCpf(p=>({...p,base_city:v}))}    placeholder="e.g. Las Vegas" />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <MI label="Wins"   type="number" value={cpf.record_wins}   onChange={v=>setCpf(p=>({...p,record_wins:v}))} />
+            <MI label="Losses" type="number" value={cpf.record_losses} onChange={v=>setCpf(p=>({...p,record_losses:v}))} />
+            <MI label="Draws"  type="number" value={cpf.record_draws}  onChange={v=>setCpf(p=>({...p,record_draws:v}))} />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Notes</label>
+            <textarea value={cpf.notes} onChange={e=>setCpf(p=>({...p,notes:e.target.value}))} rows={2}
+              placeholder="Internal notes about this fighter…"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none resize-none" />
+          </div>
+          <Msg msg={cpfMsg} />
+          <button onClick={submitCreate} disabled={cpfSaving} className="btn-primary text-[11px] py-2 disabled:opacity-50">
+            {cpfSaving ? <><Spinner /> Creating…</> : 'Create Pending Profile'}
+          </button>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!roster.length && (
+        <EmptyState icon="👥" title="No Fighters Connected Yet"
+          body="Invite a fighter by email or create a pending fighter profile to build your roster." />
+      )}
+
+      {/* Active fighters */}
+      {active.length > 0 && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Active Roster</div>
+          {active.map(conn => {
+            const f   = conn.fighter!
+            const col = f.readiness >= 80 ? '#00c060' : f.readiness >= 60 ? '#c9a82c' : '#c00000'
+            const isExpanded = expandId === conn.id
+            return (
+              <div key={conn.id} className="dash-card" style={{ borderLeft:`2px solid ${col}` }}>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-condensed font-bold text-off-white" style={{ fontSize:14 }}>{f.name}</span>
+                      <StatusBadge status={conn.status} />
+                      {f.division && <span className="font-condensed text-[10px] text-gray-3">{f.division}</span>}
+                    </div>
+                    <div className="font-condensed text-[11px] text-gray-3">
+                      {f.record_wins}-{f.record_losses}{f.record_draws > 0 ? `-${f.record_draws}` : ''}
+                      {f.weight_class ? ` · ${f.weight_class}` : ''}
+                      {f.base_city    ? ` · ${f.base_city}`    : ''}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="text-center">
+                      <ReadinessRing pct={f.readiness} size={44} color={col} />
+                      <div className="font-condensed text-[9px] text-gray-3 mt-0.5">Ready</div>
+                    </div>
+                    <button onClick={() => expand(conn.id, conn.fighter_id)}
+                      className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-2 cursor-pointer hover:border-blood hover:text-off-white transition-all">
+                      {isExpanded ? 'Close' : 'View / Edit'}
+                    </button>
+                    <button onClick={() => changeStatus(conn.id, 'removed')} disabled={actingId === conn.id}
+                      className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+                      {actingId === conn.id ? <Spinner /> : 'Remove'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded detail + edit */}
+                {isExpanded && (
+                  <div className="mt-3 pt-3 border-t border-charcoal-3">
+                    {detailLoading ? <div className="dash-sub">Loading…</div> : (
+                      <>
+                        {detail && (
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            {[['Email', detail.email], ['Gym', detail.gym_name||'—'], ['Coach', detail.coach_name||'—'], ['Promotion', detail.current_promotion||'—']].map(([k,v]) => (
+                              <div key={k} className="flex justify-between text-[11px] py-1 border-b border-charcoal-3">
+                                <span className="font-condensed text-gray-3">{k}</span>
+                                <span className="font-condensed text-gray-1">{v as string}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {editId === conn.id ? (
+                          <EditFighterPanel
+                            fighter={detail ?? f}
+                            onSave={data => updateFighterProfile(conn.fighter_id!, data).then(() => {
+                              setEditId(null)
+                              getFighterDetail(conn.fighter_id!).then(setDetail)
+                              load()
+                            })}
+                            onCancel={() => setEditId(null)} />
+                        ) : (
+                          <button onClick={() => setEditId(conn.id)}
+                            className="font-condensed font-bold uppercase text-[10px] tracking-[0.15em] px-3 py-1.5 border border-charcoal-3 text-gray-2 cursor-pointer hover:border-blood hover:text-off-white transition-all">
+                            Edit Allowed Fields
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Pending connections */}
+      {pending.length > 0 && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Pending Connections</div>
+          {pending.map(conn => {
+            const isRequest = conn.requested_by && conn.requested_by !== conn.fighter_id ? false : conn.source === 'fighter_request'
+            const displayName = conn.fighter?.name ?? conn.invited_name ?? conn.pending_fighter_data?.name ?? 'Unknown Fighter'
+            const displayEmail = conn.fighter?.email ?? conn.invited_email ?? null
+            const displayData = conn.pending_fighter_data
+            return (
+              <div key={conn.id} className="dash-card" style={{ borderLeft:'2px solid #c9a82c' }}>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-condensed font-bold text-off-white" style={{ fontSize:13 }}>{displayName}</span>
+                      <StatusBadge status={conn.status} />
+                      <span className="font-condensed text-[9px] text-gray-3 capitalize">{conn.source.replace(/_/g,' ')}</span>
+                    </div>
+                    {displayEmail && <div className="font-condensed text-[11px] text-gray-3">{displayEmail}</div>}
+                    {conn.source === 'manual_create' && displayData?.weight_class && (
+                      <div className="font-condensed text-[11px] text-gray-3">{displayData.weight_class} · {displayData.record_wins||0}-{displayData.record_losses||0}</div>
+                    )}
+                    {conn.request_message && (
+                      <div className="font-condensed text-[11px] text-gray-2 italic mt-0.5">"{conn.request_message}"</div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    {/* Show Accept/Decline for fighter-requested rows */}
+                    {conn.source === 'fighter_request' && (
+                      <>
+                        <button onClick={() => changeStatus(conn.id, 'active')} disabled={actingId === conn.id}
+                          className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border cursor-pointer transition-all disabled:opacity-40"
+                          style={{ borderColor:'#2a5c2a', color:'#00c060' }}>
+                          {actingId === conn.id ? <Spinner /> : 'Accept'}
+                        </button>
+                        <button onClick={() => changeStatus(conn.id, 'declined')} disabled={actingId === conn.id}
+                          className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border cursor-pointer transition-all disabled:opacity-40"
+                          style={{ borderColor:'#4a0000', color:'#c00000' }}>
+                          {actingId === conn.id ? <Spinner /> : 'Decline'}
+                        </button>
+                      </>
+                    )}
+                    {/* Manager-invite or manual-create pending: can activate or remove */}
+                    {conn.source !== 'fighter_request' && (
+                      <button onClick={() => changeStatus(conn.id, 'removed')} disabled={actingId === conn.id}
+                        className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+                        {actingId === conn.id ? <Spinner /> : 'Cancel'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Declined connections */}
+      {other.length > 0 && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">History</div>
+          {other.map(conn => (
+            <div key={conn.id} className="dash-card opacity-60" style={{ borderLeft:'2px solid #222226' }}>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <span className="font-condensed text-[12px] text-gray-2">
+                    {conn.fighter?.name ?? conn.invited_name ?? conn.pending_fighter_data?.name ?? '—'}
+                  </span>
+                </div>
+                <StatusBadge status={conn.status} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

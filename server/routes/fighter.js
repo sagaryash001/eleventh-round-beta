@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { adminSupabase } from '../db/supabase.js'
 import { requireAuth } from '../middleware/auth.js'
+import { validate, FighterManagerRequestSchema } from '../lib/validate.js'
 import { childLogger } from '../lib/logger.js'
 
 const router = Router()
@@ -369,6 +370,180 @@ router.patch('/socials', ...guard, async (req, res) => {
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'PATCH /fighter/socials threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/fighter/manager ──────────────────────────────────────────────────
+// Returns all non-removed manager connections for this fighter.
+// Auto-links any pending email invites that match this fighter's email.
+router.get('/manager', ...guard, async (req, res) => {
+  try {
+    const sb    = adminSupabase
+    const uid   = req.user.id
+    const email = req.user.email
+    const now   = new Date().toISOString()
+
+    // Auto-link pending email invites created before this fighter registered.
+    // Select manager_id so we can check for duplicate rows before linking.
+    const { data: byEmail } = await sb
+      .from('manager_fighters')
+      .select('id, manager_id')
+      .eq('invited_email', email)
+      .eq('status', 'pending')
+      .is('fighter_id', null)
+
+    for (const invite of byEmail ?? []) {
+      // If the fighter already has a row with this manager (e.g. they sent their
+      // own request), linking would violate the (manager_id, fighter_id) unique
+      // partial index. Remove the superseded email-invite row instead.
+      const { data: dupe } = await sb
+        .from('manager_fighters')
+        .select('id')
+        .eq('manager_id', invite.manager_id)
+        .eq('fighter_id', uid)
+        .maybeSingle()
+
+      if (dupe) {
+        await sb.from('manager_fighters')
+          .update({ status: 'removed', removed_at: now, updated_at: now })
+          .eq('id', invite.id)
+      } else {
+        await sb.from('manager_fighters')
+          .update({ fighter_id: uid, invited_email: null, updated_at: now })
+          .eq('id', invite.id)
+      }
+    }
+
+    const { data: connections, error } = await sb
+      .from('manager_fighters')
+      .select('id, manager_id, status, source, request_message, requested_by, team_name, created_at, accepted_at, declined_at')
+      .eq('fighter_id', uid)
+      .neq('status', 'removed')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+
+    if (!(connections ?? []).length) return res.json({ connections: [] })
+
+    const mids = [...new Set((connections ?? []).map(c => c.manager_id).filter(Boolean))]
+    const { data: managers } = mids.length > 0
+      ? await sb.from('profiles').select('id, name, email, team_name').in('id', mids)
+      : { data: [] }
+
+    const mgrMap = Object.fromEntries((managers ?? []).map(m => [m.id, m]))
+    const enriched = (connections ?? []).map(c => ({
+      ...c, manager: c.manager_id ? (mgrMap[c.manager_id] ?? null) : null,
+    }))
+
+    res.json({ connections: enriched })
+  } catch (err) {
+    log.error({ err }, 'GET /fighter/manager threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/fighter/manager/request ─────────────────────────────────────────
+router.post('/manager/request', ...guard, validate(FighterManagerRequestSchema), async (req, res) => {
+  try {
+    const sb  = adminSupabase
+    const uid = req.user.id
+    const { manager_email, team_name, message } = req.valid
+    const now = new Date().toISOString()
+
+    let managerId = null
+
+    if (manager_email) {
+      const { data: mgr } = await sb.from('profiles')
+        .select('id').eq('email', manager_email).in('role', ['manager', 'admin']).maybeSingle()
+      if (!mgr) return res.status(404).json({ error: 'No manager account found with that email address.' })
+      managerId = mgr.id
+    } else if (team_name) {
+      const safe = team_name.replace(/'/g, '')
+      const { data: mgr } = await sb.from('profiles')
+        .select('id').in('role', ['manager', 'admin']).ilike('team_name', `%${safe}%`).limit(1).maybeSingle()
+      if (!mgr) return res.status(404).json({ error: 'No manager found with that team name. Try using their email instead.' })
+      managerId = mgr.id
+    }
+
+    if (!managerId) return res.status(400).json({ error: 'Could not resolve manager.' })
+
+    // Guard against self-linking
+    if (managerId === uid) return res.status(400).json({ error: 'You cannot link to yourself.' })
+
+    const { data: existing } = await sb.from('manager_fighters')
+      .select('id, status').eq('manager_id', managerId).eq('fighter_id', uid).maybeSingle()
+
+    if (existing?.status === 'active') {
+      return res.status(409).json({ error: 'You are already connected to this manager.' })
+    }
+    if (existing?.status === 'pending') {
+      return res.status(409).json({ error: 'A connection request to this manager is already pending.' })
+    }
+
+    if (existing) {
+      const { error } = await sb.from('manager_fighters')
+        .update({ status: 'pending', source: 'fighter_request', request_message: message ?? null,
+          requested_by: uid, declined_at: null, removed_at: null, updated_at: now })
+        .eq('id', existing.id)
+      if (error) throw error
+      return res.json({ ok: true, connection_id: existing.id })
+    }
+
+    const { data, error } = await sb.from('manager_fighters')
+      .insert({ manager_id: managerId, fighter_id: uid, status: 'pending',
+        source: 'fighter_request', team_name: team_name ?? null,
+        request_message: message ?? null, requested_by: uid })
+      .select('id').maybeSingle()
+    if (error) throw error
+
+    log.info({ mid: managerId, fid: uid }, 'fighter submitted manager request')
+    return res.status(201).json({ ok: true, connection_id: data.id })
+  } catch (err) {
+    log.error({ err }, 'POST /fighter/manager/request threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/fighter/manager/request/:connectionId ──────────────────────────
+// Fighter can: remove/cancel their own request, OR accept a manager-initiated invite.
+router.patch('/manager/request/:connectionId', ...guard, async (req, res) => {
+  try {
+    const uid         = req.user.id
+    const { status }  = req.body
+    const now         = new Date().toISOString()
+
+    if (!['removed', 'active'].includes(status)) {
+      return res.status(400).json({ error: 'Only "removed" or "active" are accepted.' })
+    }
+
+    const { data: conn } = await adminSupabase
+      .from('manager_fighters').select('id, status, source')
+      .eq('id', req.params.connectionId).eq('fighter_id', uid).maybeSingle()
+
+    if (!conn) return res.status(404).json({ error: 'Connection not found.' })
+    if (conn.status === 'removed') return res.status(400).json({ error: 'Connection is already removed.' })
+
+    // A fighter may only accept rows the manager created (manager_invite or manual_create).
+    // Fighter cannot self-accept their own outbound requests.
+    if (status === 'active' && conn.source === 'fighter_request') {
+      return res.status(400).json({ error: 'You cannot accept your own outbound request. The manager must accept it.' })
+    }
+    if (status === 'active' && conn.status !== 'pending') {
+      return res.status(400).json({ error: 'Connection is not pending.' })
+    }
+
+    const updates = { status, updated_at: now }
+    if (status === 'active')  updates.accepted_at = now
+    if (status === 'removed') updates.removed_at  = now
+
+    const { error } = await adminSupabase.from('manager_fighters')
+      .update(updates).eq('id', conn.id)
+    if (error) throw error
+
+    log.info({ connectionId: conn.id, uid, status }, 'fighter updated connection status')
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'PATCH /fighter/manager/request/:id threw')
     res.status(500).json({ error: err.message })
   }
 })

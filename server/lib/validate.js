@@ -161,4 +161,50 @@ export const SponsorOnboardSchema = z.object({
   campaign_goals:          z.array(z.string()).default([]),
 })
 
+// ── Manager / Fighter roster schemas ─────────────────────────────────────────
+
+export const ManagerInviteSchema = z.object({
+  email:   z.string().trim().toLowerCase().email('Valid email required.').max(254),
+  name:    z.string().trim().max(120).optional().nullable(),
+  message: z.string().trim().max(1000).optional().nullable(),
+})
+
+export const PendingFighterCreateSchema = z.object({
+  name:          z.string().trim().min(1, 'Name is required.').max(120),
+  sport:         z.enum(['mma','boxing','bjj','muay_thai','wrestling','other']).default('mma'),
+  weight_class:  z.string().trim().max(60).optional().nullable(),
+  record_wins:   z.number().int().min(0).default(0),
+  record_losses: z.number().int().min(0).default(0),
+  record_draws:  z.number().int().min(0).default(0),
+  base_city:     z.string().trim().max(120).optional().nullable(),
+  notes:         z.string().trim().max(2000).optional().nullable(),
+})
+
+export const ManagerConnectionStatusSchema = z.object({
+  status: z.enum(['active','declined','removed']),
+})
+
+export const FighterManagerRequestSchema = z.object({
+  manager_email: z.string().trim().toLowerCase().max(254).optional().nullable(),
+  team_name:     z.string().trim().max(120).optional().nullable(),
+  message:       z.string().trim().max(1000).optional().nullable(),
+}).refine(
+  d => (d.manager_email && d.manager_email.length > 3) || (d.team_name && d.team_name.length > 0),
+  { message: 'Provide a manager email or team name.' }
+)
+
+export const ManagerFighterProfileUpdateSchema = z.object({
+  weight_class:          z.string().trim().max(60).optional().nullable(),
+  division:              z.string().trim().max(60).optional().nullable(),
+  record_wins:           z.number().int().min(0).optional(),
+  record_losses:         z.number().int().min(0).optional(),
+  record_draws:          z.number().int().min(0).optional(),
+  base_city:             z.string().trim().max(120).optional().nullable(),
+  gym_name:              z.string().trim().max(120).optional().nullable(),
+  coach_name:            z.string().trim().max(120).optional().nullable(),
+  current_promotion:     z.string().trim().max(120).optional().nullable(),
+  pro_status:            z.enum(['amateur','pro','retired']).optional().nullable(),
+  sponsorship_interests: z.array(z.string().trim().max(80)).optional(),
+})
+
 export { z }

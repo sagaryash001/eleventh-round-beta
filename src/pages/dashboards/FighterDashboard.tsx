@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import DashShell from './DashShell'
 import { StatCard, ListCard, ReadinessRing, BarChart, SparkLine, RadarChart,
          ActivityHeatmap, Timeline, SectionHeading, FullWidthCard,
          DashSkeleton, EmptyState, ApiError } from './DashWidgets'
 import { useApi } from '../../hooks/useApi'
+import { getFighterManager, requestManager, cancelManagerRequest, type ManagerConnection } from '../../lib/api/manager'
+import { apiPatch } from '../../lib/api/client'
 
 const NAV = [
   { id: 'overview',     label: 'Overview',     icon: '◈' },
@@ -329,6 +331,173 @@ function Mentorship() {
   )
 }
 
+// ── Manager connection card ───────────────────────────────────────────────────
+function ManagerCard() {
+  const [connections, setConnections] = useState<ManagerConnection[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [form,     setForm]     = useState({ manager_email: '', team_name: '', message: '' })
+  const [saving,   setSaving]   = useState(false)
+  const [actingId, setActingId] = useState<string|null>(null)
+  const [msg,      setMsg]      = useState<{type:'ok'|'err';text:string}|null>(null)
+
+  const load = useCallback(() => {
+    setLoading(true)
+    getFighterManager()
+      .then(d => { setConnections(d.connections ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const active  = connections.find(c => c.status === 'active')
+  const pending = connections.filter(c => c.status === 'pending')
+
+  const submitRequest = async () => {
+    if (!form.manager_email.trim() && !form.team_name.trim()) {
+      setMsg({ type: 'err', text: 'Enter a manager email or team name.' }); return
+    }
+    setSaving(true); setMsg(null)
+    try {
+      await requestManager({
+        manager_email: form.manager_email.trim() || null,
+        team_name:     form.team_name.trim()     || null,
+        message:       form.message.trim()       || null,
+      })
+      setMsg({ type: 'ok', text: 'Request sent. Waiting for manager to accept.' })
+      setForm({ manager_email: '', team_name: '', message: '' })
+      setShowForm(false)
+      load()
+    } catch (e: any) {
+      setMsg({ type: 'err', text: e.message ?? 'Request failed.' })
+    } finally { setSaving(false) }
+  }
+
+  const cancel = async (id: string) => {
+    setActingId(id); setMsg(null)
+    try {
+      await cancelManagerRequest(id)
+      setMsg({ type: 'ok', text: 'Request cancelled.' })
+      load()
+    } catch (e: any) {
+      setMsg({ type: 'err', text: e.message })
+    } finally { setActingId(null) }
+  }
+
+  if (loading) return <div className="dash-card"><div className="dash-sub">Loading manager status…</div></div>
+
+  return (
+    <div className="dash-card space-y-3">
+      <div className="dash-label">Manager / Team</div>
+
+      {/* Active manager */}
+      {active && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 py-2 border-b border-charcoal-3">
+            <div className="flex-1">
+              <div className="font-condensed font-bold text-off-white" style={{ fontSize: 13 }}>
+                {active.manager?.name ?? 'Manager'}
+              </div>
+              {active.manager?.team_name && (
+                <div className="font-condensed text-[11px] text-gray-3">{active.manager.team_name}</div>
+              )}
+              <div className="font-condensed text-[11px] text-gray-3">{active.manager?.email}</div>
+            </div>
+            <span className="badge badge-green">Active</span>
+          </div>
+          <button onClick={() => cancel(active.id)} disabled={actingId === active.id}
+            className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+            {actingId === active.id ? '…' : 'Leave / Request Change'}
+          </button>
+        </div>
+      )}
+
+      {/* Pending requests */}
+      {pending.map(c => {
+        const isManagerInvite = c.source === 'manager_invite' || c.source === 'manual_create'
+        const accept = async () => {
+          setActingId(c.id); setMsg(null)
+          try {
+            await apiPatch(`/api/fighter/manager/request/${c.id}`, { status: 'active' })
+            setMsg({ type: 'ok', text: 'Invitation accepted.' })
+            load()
+          } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+          finally { setActingId(null) }
+        }
+        return (
+          <div key={c.id} className="flex items-center gap-3 py-2 border-b border-charcoal-3">
+            <div className="flex-1">
+              <div className="font-condensed text-[12px] text-off-white">
+                {isManagerInvite ? 'Invited by' : 'Request sent to'}{' '}
+                <span className="font-bold">{c.manager?.name ?? c.team_name ?? '—'}</span>
+              </div>
+              {c.request_message && (
+                <div className="font-condensed text-[11px] text-gray-3 italic">"{c.request_message}"</div>
+              )}
+            </div>
+            <span className="badge badge-yellow">Pending</span>
+            {isManagerInvite && (
+              <button onClick={accept} disabled={actingId === c.id}
+                className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2 py-1 border cursor-pointer transition-all disabled:opacity-40"
+                style={{ borderColor: '#2a5c2a', color: '#00c060' }}>
+                {actingId === c.id ? '…' : 'Accept'}
+              </button>
+            )}
+            <button onClick={() => cancel(c.id)} disabled={actingId === c.id}
+              className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2 py-1 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+              {actingId === c.id ? '…' : isManagerInvite ? 'Decline' : 'Cancel'}
+            </button>
+          </div>
+        )
+      })}
+
+      {/* No manager */}
+      {!active && !pending.length && !showForm && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[12px] text-gray-3">No manager connected.</div>
+          <button onClick={() => setShowForm(true)}
+            className="btn-ghost text-[10px] py-2 px-4">Link a Manager →</button>
+        </div>
+      )}
+
+      {/* Request form */}
+      {showForm && (
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Manager Email</label>
+            <input value={form.manager_email} onChange={e => setForm(p=>({...p,manager_email:e.target.value}))}
+              placeholder="manager@email.com" type="email"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none" />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">or Team Name</label>
+            <input value={form.team_name} onChange={e => setForm(p=>({...p,team_name:e.target.value}))}
+              placeholder="Team / gym name"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none" />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Message (optional)</label>
+            <textarea value={form.message} onChange={e => setForm(p=>({...p,message:e.target.value}))} rows={2}
+              placeholder="Introduce yourself…"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none resize-none" />
+          </div>
+          {msg && <p className={`font-condensed text-[11px] ${msg.type==='ok'?'text-green-400':'text-blood-glow'}`}>{msg.text}</p>}
+          <div className="flex gap-2">
+            <button onClick={submitRequest} disabled={saving}
+              className="btn-primary text-[11px] py-2 disabled:opacity-50">
+              {saving ? 'Sending…' : 'Send Request'}
+            </button>
+            <button onClick={() => { setShowForm(false); setMsg(null) }} className="btn-ghost text-[11px] py-2">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {msg && !showForm && (
+        <p className={`font-condensed text-[11px] ${msg.type==='ok'?'text-green-400':'text-blood-glow'}`}>{msg.text}</p>
+      )}
+    </div>
+  )
+}
+
 function Profile() {
   const { data, loading, error } = useApi<any>('/api/fighter/profile')
   if (loading) return <DashSkeleton />
@@ -340,7 +509,6 @@ function Profile() {
   const losses      = data?.record_losses       ?? 0
   const draws       = data?.record_draws        ?? 0
   const base        = data?.base                ?? '—'
-  const manager     = data?.manager             ?? '—'
   const completeness = data?.profile_completeness ?? 0
 
   return (
@@ -350,11 +518,10 @@ function Profile() {
         <div className="dash-card">
           <div className="dash-label">Fighter Info</div>
           {([
-            ['Full Name',  name],
-            ['Division',   division],
-            ['Record',     `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`],
-            ['Base',       base],
-            ['Manager',    manager],
+            ['Full Name', name],
+            ['Division',  division],
+            ['Record',    `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`],
+            ['Base',      base],
           ] as [string,string][]).map(([k,v]) => (
             <div key={k} className="flex justify-between py-2 border-b border-charcoal-3 last:border-0 text-[12px]">
               <span className="font-condensed text-gray-3">{k}</span>
@@ -372,6 +539,7 @@ function Profile() {
           </div>
         </div>
       </div>
+      <ManagerCard />
     </div>
   )
 }
