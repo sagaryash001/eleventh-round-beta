@@ -27,6 +27,7 @@ import stripeRoutes            from './routes/stripe.js'
 import onboardingRoutes        from './routes/onboarding.js'
 import uploadRoutes            from './routes/uploads.js'
 import publicRoutes            from './routes/public.js'
+import billingRoutes           from './routes/billing.js'
 
 const app = express()
 
@@ -94,6 +95,7 @@ app.use('/api/stripe',       stripeRoutes)
 app.use('/api/onboarding',  onboardingRoutes)
 app.use('/api/uploads',    uploadRoutes)
 app.use('/api/public',     publicRoutes)
+app.use('/api/billing',    billingRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({

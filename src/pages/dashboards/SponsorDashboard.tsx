@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import DashShell from './DashShell'
 import { useApi } from '../../hooks/useApi'
 import { useAuth } from '../../hooks/useAuth'
@@ -7,6 +7,7 @@ import { DashSkeleton, EmptyState, ApiError, SectionHeading } from './DashWidget
 import { getSponsorDashboard, updateSponsorProfile, type SponsorProfile } from '../../lib/api/sponsors'
 import { getMyOpportunities, changeOpportunityStatus, type Opportunity } from '../../lib/api/opportunities'
 import { getContracts, type Contract } from '../../lib/api/contracts'
+import { getBillingPackages, getBillingStatus, startCheckout, type BillingPackage, type BillingMembership } from '../../lib/api/billing'
 import ImageUpload from '../../components/ImageUpload'
 import { storageUrl } from '../../lib/api/public'
 
@@ -15,6 +16,7 @@ const NAV = [
   { id: 'campaigns',   label: 'Campaigns',   icon: '🎯' },
   { id: 'contracts',   label: 'Contracts',   icon: '📄' },
   { id: 'analytics',   label: 'Analytics',   icon: '📊' },
+  { id: 'billing',     label: 'Billing',     icon: '💳' },
   { id: 'profile',     label: 'Company',     icon: '🏢' },
   { id: 'preferences', label: 'Preferences', icon: '⚙' },
 ]
@@ -79,6 +81,162 @@ function Chips({ options, selected, onToggle }: {
 // ── Sponsor Campaigns tab ─────────────────────────────────────────────────────
 const OPP_STATUS_COLOR: Record<string, string> = {
   draft: '#7a7672', published: '#00c060', closed: '#4a4846', archived: '#4a4846',
+}
+
+// ── Billing tab ───────────────────────────────────────────────────────────────
+function SponsorBillingTab() {
+  const [searchParams] = useSearchParams()
+  const billingStatus = searchParams.get('billing')
+  const billingPkg    = searchParams.get('package')
+
+  const [packages,    setPackages]    = useState<BillingPackage[]>([])
+  const [membership,  setMembership]  = useState<BillingMembership | null>(null)
+  const [payments,    setPayments]    = useState<any[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState<string | null>(null)
+  const [checkingOut, setCheckingOut] = useState<string | null>(null)
+  const [checkoutErr, setCheckoutErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([getBillingPackages(), getBillingStatus()])
+      .then(([pkgsRes, statusRes]) => {
+        setPackages(pkgsRes.packages ?? [])
+        setMembership(statusRes.membership ?? null)
+        setPayments(statusRes.payments ?? [])
+        setLoading(false)
+      })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [])
+
+  const handleCheckout = async (pkgId: string) => {
+    setCheckingOut(pkgId)
+    setCheckoutErr(null)
+    try {
+      const res = await startCheckout(pkgId)
+      window.location.href = res.url
+    } catch (e: any) {
+      setCheckoutErr(e.message ?? 'Checkout failed.')
+      setCheckingOut(null)
+    }
+  }
+
+  const features = (pkg: BillingPackage): string[] => {
+    if (Array.isArray(pkg.features)) return pkg.features
+    try { return JSON.parse(pkg.features as string) } catch { return [] }
+  }
+
+  const intervalLabel = (interval: string) =>
+    interval === 'one_time' ? 'one-time' : `/${interval === 'annual' ? 'yr' : 'mo'}`
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} />
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      {billingStatus === 'success' && (
+        <div className="font-condensed text-[12px] tracking-[0.15em] uppercase px-4 py-3 border"
+          style={{ borderColor: '#00c060', color: '#00c060', background: 'rgba(0,192,96,0.08)' }}>
+          Payment complete — welcome to {billingPkg ?? 'your new plan'}! Your membership is now active.
+        </div>
+      )}
+      {billingStatus === 'cancel' && (
+        <div className="font-condensed text-[12px] tracking-[0.15em] uppercase px-4 py-3 border"
+          style={{ borderColor: '#c9a82c', color: '#c9a82c', background: 'rgba(201,168,44,0.08)' }}>
+          Checkout cancelled — no charge was made.
+        </div>
+      )}
+
+      {membership ? (
+        <Card>
+          <SectionHeading>Active Plan</SectionHeading>
+          <div className="mt-3 space-y-2 font-condensed text-[13px]">
+            <div><span className="text-gray-3">Package</span>
+              <div className="text-off-white font-bold">{membership.packages?.name ?? '—'}</div>
+            </div>
+            <div><span className="text-gray-3">Status</span>
+              <div className="text-off-white capitalize">{membership.status}</div>
+            </div>
+            {membership.current_period_end && (
+              <div><span className="text-gray-3">Renews / Expires</span>
+                <div className="text-off-white">{new Date(membership.current_period_end).toLocaleDateString()}</div>
+              </div>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <EmptyState icon="💳" title="No Active Plan"
+            body="Purchase a package below to unlock platform features." />
+        </Card>
+      )}
+
+      {checkoutErr && (
+        <p className="font-condensed text-[12px] text-blood-glow">{checkoutErr}</p>
+      )}
+      {!packages.length ? (
+        <EmptyState icon="📦" title="No Packages Available"
+          body="No packages are currently available for your account type." />
+      ) : (
+        <div className="grid gap-4">
+          {packages.map(pkg => (
+            <Card key={pkg.id}>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-display text-off-white uppercase" style={{ fontSize: 20, lineHeight: 1.2 }}>
+                    {pkg.name}
+                  </h3>
+                  {pkg.description && (
+                    <p className="font-body text-gray-2 text-[13px] mt-1">{pkg.description}</p>
+                  )}
+                  <ul className="mt-3 space-y-1">
+                    {features(pkg).map((f, i) => (
+                      <li key={i} className="font-condensed text-[12px] text-gray-2 flex items-center gap-2">
+                        <span style={{ color: '#8b0000' }}>✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex flex-col items-end gap-3 shrink-0">
+                  <div className="text-right">
+                    <span className="font-display text-off-white" style={{ fontSize: 28 }}>
+                      ${(pkg.price_cents / 100).toFixed(0)}
+                    </span>
+                    <span className="font-condensed text-gray-3 text-[12px]"> {intervalLabel(pkg.billing_interval)}</span>
+                  </div>
+                  <button
+                    onClick={() => handleCheckout(pkg.id)}
+                    disabled={!!checkingOut}
+                    className="btn-primary text-[11px] py-2 px-5 whitespace-nowrap"
+                  >
+                    {checkingOut === pkg.id ? 'Loading…' : 'Buy Now'}
+                  </button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {payments.length > 0 && (
+        <div>
+          <SectionHeading>Payment History</SectionHeading>
+          <div className="space-y-2 mt-3">
+            {payments.map(p => (
+              <div key={p.id} className="dash-card flex items-center gap-4 text-[13px] font-condensed">
+                <div className="flex-1">{p.packages?.name ?? 'Package'}</div>
+                <div className="text-gray-2">${((p.amount ?? 0) / 100).toFixed(2)}</div>
+                <div style={{ color: p.status === 'succeeded' ? '#00c060' : p.status === 'failed' ? '#C41E3A' : '#c9a82c' }}>
+                  {p.status}
+                </div>
+                <div className="text-gray-3">{new Date(p.created_at).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function SponsorCampaigns({ isVerified }: { isVerified: boolean }) {
@@ -485,6 +643,12 @@ export default function SponsorDashboard() {
           <div className="max-w-3xl">
             {!sp.is_verified && <VettingBanner />}
             <SponsorAnalytics />
+          </div>
+        )
+
+        if (tab === 'billing') return (
+          <div className="max-w-3xl">
+            <SponsorBillingTab />
           </div>
         )
 

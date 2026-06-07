@@ -98,6 +98,8 @@ router.get('/dashboard', ...guard, async (req, res) => {
       { data: obsRows },
       { data: gmvRows },
       { count: proofsPendingCount },
+      { data: billingPayments },
+      { count: activeMemberships },
     ] = await Promise.all([
       sb.from('profiles').select('id, role, status'),
       sb.from('sponsorship_opportunities').select('*', { count: 'exact', head: true })
@@ -115,6 +117,10 @@ router.get('/dashboard', ...guard, async (req, res) => {
         .catch(() => ({ data: [] })),
       sb.from('obligation_proofs').select('*', { count: 'exact', head: true })
         .eq('review_status', 'pending').catch(() => ({ count: 0 })),
+      sb.from('payments').select('amount, status').not('package_id', 'is', null)
+        .catch(() => ({ data: [] })),
+      sb.from('memberships').select('*', { count: 'exact', head: true }).eq('status', 'active')
+        .not('package_id', 'is', null).catch(() => ({ count: 0 })),
     ])
 
     const obs           = obsRows ?? []
@@ -122,6 +128,11 @@ router.get('/dashboard', ...guard, async (req, res) => {
     const completedObs  = obs.filter(o => o.status === 'completed').length
     const totalObs      = obs.length
     const totalRevenue  = (gmvRows ?? []).reduce((s, p) => s + (p.amount_usd ?? 0), 0)
+
+    const billing       = billingPayments ?? []
+    const billingRevenueCents   = billing.filter(p => p.status === 'succeeded').reduce((s, p) => s + (p.amount ?? 0), 0)
+    const billingSuccessful     = billing.filter(p => p.status === 'succeeded').length
+    const billingFailed         = billing.filter(p => p.status === 'failed').length
 
     const users = userRows ?? []
     res.json({
@@ -140,6 +151,10 @@ router.get('/dashboard', ...guard, async (req, res) => {
       overdue_obligations:     overdueObs,
       completed_obligations:   completedObs,
       total_revenue_usd:       totalRevenue,
+      billing_revenue_cents:   billingRevenueCents,
+      billing_successful:      billingSuccessful,
+      billing_failed:          billingFailed,
+      active_memberships:      activeMemberships ?? 0,
     })
   } catch (err) {
     log.error({ err }, '/admin/dashboard threw')
@@ -820,6 +835,97 @@ router.get('/disputes', ...guard, async (req, res) => {
     res.json({ ok: true, disputes: data ?? [], total: count ?? 0 })
   } catch (err) {
     log.error({ err }, '/admin/disputes threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ═════════════════════════════════════════════════════════════════════════════
+// BILLING — PAYMENTS + MEMBERSHIPS
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── GET /api/admin/payments ───────────────────────────────────────────────────
+router.get('/payments', ...guard, async (req, res) => {
+  try {
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+    const status = req.query.status
+
+    let q = adminSupabase
+      .from('payments')
+      .select('id, user_id, package_id, amount, currency, status, stripe_checkout_session_id, stripe_payment_intent_id, created_at, packages(name, billing_interval)', { count: 'exact' })
+      .not('package_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    if (status) q = q.eq('status', status)
+
+    const { data: rows, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    if (error) throw error
+
+    const uids = [...new Set((rows ?? []).map(r => r.user_id).filter(Boolean))]
+    const { data: profiles } = uids.length
+      ? await adminSupabase.from('profiles').select('id, name, email, role').in('id', uids)
+      : { data: [] }
+    const pMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+
+    const enriched = (rows ?? []).map(r => ({ ...r, user: pMap[r.user_id] ?? null }))
+
+    // Revenue summary
+    const { data: allSucceeded } = await adminSupabase
+      .from('payments')
+      .select('amount, status')
+      .not('package_id', 'is', null)
+      .catch(() => ({ data: [] }))
+
+    const totalRevenueCents    = (allSucceeded ?? []).filter(p => p.status === 'succeeded').reduce((s, p) => s + (p.amount ?? 0), 0)
+    const successfulPayments   = (allSucceeded ?? []).filter(p => p.status === 'succeeded').length
+    const failedPayments       = (allSucceeded ?? []).filter(p => p.status === 'failed').length
+
+    res.json({
+      ok:       true,
+      payments: enriched,
+      total:    count ?? 0,
+      summary: {
+        total_revenue_cents: totalRevenueCents,
+        successful:          successfulPayments,
+        failed:              failedPayments,
+        pending:             (allSucceeded ?? []).filter(p => p.status === 'pending').length,
+      },
+    })
+  } catch (err) {
+    log.error({ err }, '/admin/payments threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/admin/memberships ────────────────────────────────────────────────
+router.get('/memberships', ...guard, async (req, res) => {
+  try {
+    const limit  = Math.min(Number(req.query.limit) || 20, 100)
+    const offset = Math.max(0, Number(req.query.offset) || 0)
+    const status = req.query.status
+
+    let q = adminSupabase
+      .from('memberships')
+      .select('id, user_id, package_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, created_at, packages(name, price_cents)', { count: 'exact' })
+      .not('package_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    if (status) q = q.eq('status', status)
+
+    const { data: rows, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    if (error) throw error
+
+    const uids = [...new Set((rows ?? []).map(r => r.user_id).filter(Boolean))]
+    const { data: profiles } = uids.length
+      ? await adminSupabase.from('profiles').select('id, name, email, role').in('id', uids)
+      : { data: [] }
+    const pMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+
+    const enriched = (rows ?? []).map(r => ({ ...r, user: pMap[r.user_id] ?? null }))
+
+    res.json({ ok: true, memberships: enriched, total: count ?? 0 })
+  } catch (err) {
+    log.error({ err }, '/admin/memberships threw')
     res.status(500).json({ error: err.message })
   }
 })

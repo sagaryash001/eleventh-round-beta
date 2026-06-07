@@ -16,6 +16,7 @@ import {
   type AdminUser, type PendingSponsor, type AdminModule, type AdminPackage,
 } from '../../lib/api/admin'
 import { adminRecompute } from '../../lib/api/opportunities'
+import { getAdminPaymentsList, getAdminMembershipsList } from '../../lib/api/billing'
 
 const NAV = [
   { id: 'overview',    label: 'Overview',        icon: '◈' },
@@ -30,6 +31,7 @@ const NAV = [
   { id: 'reports',     label: 'Reports',         icon: '📊' },
   { id: 'mentors',     label: 'Mentors',         icon: '🎯' },
   { id: 'sponsorforge',label: 'SponsorForge',    icon: '⚡' },
+  { id: 'payments',    label: 'Payments',        icon: '💰' },
 ]
 
 // ── Small form primitives ─────────────────────────────────────────────────────
@@ -1327,6 +1329,107 @@ function AdminMessaging() {
   )
 }
 
+// ── Admin Payments + Memberships ──────────────────────────────────────────────
+function AdminPayments() {
+  const [payments,    setPayments]    = useState<any[]>([])
+  const [memberships, setMemberships] = useState<any[]>([])
+  const [summary,     setSummary]     = useState<{ total_revenue_cents: number; successful: number; failed: number; pending: number } | null>(null)
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState<string | null>(null)
+
+  const load = useCallback(() => {
+    setLoading(true)
+    Promise.all([
+      getAdminPaymentsList({ limit: 20 }),
+      getAdminMembershipsList({ limit: 20 }),
+    ])
+      .then(([pRes, mRes]) => {
+        setPayments(pRes.payments ?? [])
+        setSummary(pRes.summary ?? null)
+        setMemberships(mRes.memberships ?? [])
+        setLoading(false)
+      })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} retry={load} />
+
+  const revUsd = ((summary?.total_revenue_cents ?? 0) / 100).toFixed(2)
+
+  return (
+    <div className="space-y-6">
+      {/* Revenue summary */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[
+          { label: 'Revenue', value: `$${revUsd}` },
+          { label: 'Successful', value: summary?.successful ?? 0 },
+          { label: 'Failed', value: summary?.failed ?? 0 },
+          { label: 'Active Members', value: memberships.filter(m => m.status === 'active').length },
+        ].map(s => (
+          <div key={s.label} className="dash-card text-center">
+            <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">{s.label}</div>
+            <div className="font-display text-off-white mt-1" style={{ fontSize: 28 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Payments list */}
+      <div>
+        <SectionHeading>Recent Package Payments</SectionHeading>
+        {!payments.length ? (
+          <EmptyState icon="💰" title="No Payments Yet" body="Package payments will appear here after checkout." />
+        ) : (
+          <div className="space-y-2 mt-3">
+            {payments.map(p => (
+              <div key={p.id} className="dash-card flex items-center gap-4 flex-wrap text-[13px] font-condensed">
+                <div className="flex-1 min-w-0">
+                  <div className="text-off-white">{p.user?.name ?? p.user_id}</div>
+                  <div className="text-gray-3 text-[11px]">{p.user?.email ?? ''}</div>
+                </div>
+                <div className="text-gray-2">{p.packages?.name ?? '—'}</div>
+                <div className="text-off-white">${((p.amount ?? 0) / 100).toFixed(2)}</div>
+                <div style={{ color: p.status === 'succeeded' ? '#00c060' : p.status === 'failed' ? '#C41E3A' : '#c9a82c' }}>
+                  {p.status}
+                </div>
+                <div className="text-gray-3">{new Date(p.created_at).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Memberships list */}
+      <div>
+        <SectionHeading>Active Memberships</SectionHeading>
+        {!memberships.length ? (
+          <EmptyState icon="🎫" title="No Memberships Yet" body="Memberships will appear here after checkout." />
+        ) : (
+          <div className="space-y-2 mt-3">
+            {memberships.map(m => (
+              <div key={m.id} className="dash-card flex items-center gap-4 flex-wrap text-[13px] font-condensed">
+                <div className="flex-1 min-w-0">
+                  <div className="text-off-white">{m.user?.name ?? m.user_id}</div>
+                  <div className="text-gray-3 text-[11px]">{m.user?.email ?? ''}</div>
+                </div>
+                <div className="text-gray-2">{m.packages?.name ?? '—'}</div>
+                <div style={{ color: m.status === 'active' ? '#00c060' : m.status === 'past_due' ? '#c9a82c' : '#C41E3A' }}>
+                  {m.status}
+                </div>
+                {m.current_period_end && (
+                  <div className="text-gray-3">expires {new Date(m.current_period_end).toLocaleDateString()}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 const VIEWS: Record<string, React.FC> = {
   overview:    Overview,
@@ -1341,6 +1444,7 @@ const VIEWS: Record<string, React.FC> = {
   reports:     Reports,
   mentors:     Mentors,
   sponsorforge:SponsorForgeAdmin,
+  payments:    AdminPayments,
 }
 
 export default function AdminDashboard() {
