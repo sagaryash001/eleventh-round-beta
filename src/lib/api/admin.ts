@@ -157,3 +157,8 @@ export const getAdminConversationList = (params?: { status?: string; limit?: num
 
 export const adminLockConversation = (id: string, status: 'open' | 'archived' | 'locked') =>
   apiPatch<{ ok: boolean }>(`/api/admin/conversations/${id}/status`, { status })
+
+// ── Email ─────────────────────────────────────────────────────────────────────
+
+export const sendTestEmail = (to?: string) =>
+  apiPost<{ ok: boolean; sent_to?: string; error?: string }>('/api/admin/email/test', to ? { to } : {})

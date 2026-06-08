@@ -198,6 +198,7 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
             request_message: message ?? null, requested_by: mid, declined_at: null, removed_at: null, updated_at: now })
           .eq('id', existing.id)
         if (error) throw error
+        adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existing.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
         return res.json({ ok: true, connection_id: existing.id, matched: true })
       }
 
@@ -207,6 +208,7 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
           request_message: message ?? null, requested_by: mid })
         .select('id').maybeSingle()
       if (error) throw error
+      adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
       return res.status(201).json({ ok: true, connection_id: data.id, matched: true })
     }
 
@@ -228,6 +230,7 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
           request_message: message ?? null, updated_at: now })
         .eq('id', existingEmail.id)
       if (error) throw error
+      adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existingEmail.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
       return res.json({ ok: true, connection_id: existingEmail.id, matched: false })
     }
 
@@ -237,6 +240,7 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
         request_message: message ?? null, requested_by: mid })
       .select('id').maybeSingle()
     if (error) throw error
+    adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
     return res.status(201).json({ ok: true, connection_id: data.id, matched: false })
   } catch (err) {
     log.error({ err }, 'POST /manager/roster/invite threw')

@@ -13,6 +13,7 @@ import {
   getAdminPackages, createPackage, updatePackage,
   getAdminDashboard, getAdminContracts,
   getAdminConversationList, adminLockConversation,
+  sendTestEmail,
   type AdminUser, type PendingSponsor, type AdminModule, type AdminPackage,
 } from '../../lib/api/admin'
 import { adminRecompute } from '../../lib/api/opportunities'
@@ -181,28 +182,47 @@ function Setup() {
   const { data: healthData, loading }   = useApi<any>('/api/health')
   const { data: sponsorData }           = useApi<any>('/api/admin/sponsors/pending')
 
-  const hasUsers          = (usersData?.total ?? 0) > 0
-  const hasMentors        = (mentorsData?.active_consultants ?? 0) > 0
-  const hasModules        = (contentData?.published_modules ?? contentData?.total_modules ?? 0) > 0
-  const hasPackages       = (pkgData?.packages?.length ?? 0) > 0
-  const emailConfigured   = !!healthData?.email
-  const supabaseOk        = !!healthData?.supabase
-  const pendingVetting    = (sponsorData?.pending?.length ?? 0)
-  const noPendingVetting  = pendingVetting === 0
+  const [testEmailState, setTestEmailState] = useState<'idle' | 'sending' | 'ok' | 'err'>('idle')
+  const [testEmailMsg,   setTestEmailMsg]   = useState('')
+
+  const hasUsers         = (usersData?.total ?? 0) > 0
+  const hasMentors       = (mentorsData?.active_consultants ?? 0) > 0
+  const hasModules       = (contentData?.published_modules ?? contentData?.total_modules ?? 0) > 0
+  const hasPackages      = (pkgData?.packages?.length ?? 0) > 0
+  const emailConfigured  = !!healthData?.email
+  const sendgridOk       = !!healthData?.sendgrid
+  const anyEmailOk       = sendgridOk || emailConfigured
+  const supabaseOk       = !!healthData?.supabase
+  const pendingVetting   = (sponsorData?.pending?.length ?? 0)
+  const noPendingVetting = pendingVetting === 0
 
   const checklist = [
-    { done: true,          label: 'Admin account active',         detail: `Signed in as ${user?.email}` },
-    { done: supabaseOk,    label: 'Supabase connected',           detail: supabaseOk ? 'Auth and database live' : 'Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY on Render' },
-    { done: emailConfigured,label:'Email (SMTP) configured',      detail: emailConfigured ? 'Verification emails enabled' : 'Set EMAIL_HOST, EMAIL_USER, EMAIL_PASS on Render' },
-    { done: hasUsers,      label: 'First users registered',       detail: hasUsers ? `${usersData?.total ?? '?'} users in the system` : 'Share /register to invite fighters, managers, sponsors' },
-    { done: hasModules,    label: 'Education modules published',   detail: hasModules ? `${contentData?.published_modules ?? contentData?.total_modules} published` : 'Go to Modules tab and publish the seeded modules' },
-    { done: hasPackages,   label: 'Packages created',             detail: hasPackages ? `${pkgData?.packages?.length} packages in catalogue` : 'Packages were seeded — verify in Packages tab' },
-    { done: hasMentors,    label: 'Consultants / mentors added',  detail: hasMentors ? `${mentorsData?.active_consultants} active` : 'Add consultants via Supabase or the Mentors tab' },
-    { done: noPendingVetting, label: 'Sponsor vetting queue clear', detail: noPendingVetting ? 'No sponsors awaiting review' : `${pendingVetting} sponsor${pendingVetting > 1 ? 's' : ''} waiting for approval` },
-    { done: false,         label: 'Stripe connected (future)',    detail: 'Stripe integration — do this after packages are confirmed' },
+    { done: true,            label: 'Admin account active',          detail: `Signed in as ${user?.email}` },
+    { done: supabaseOk,      label: 'Supabase connected',            detail: supabaseOk ? 'Auth and database live' : 'Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY on Render' },
+    { done: sendgridOk,      label: 'SendGrid configured',           detail: sendgridOk ? 'Transactional emails active via SendGrid' : 'Set SENDGRID_API_KEY + SENDGRID_FROM_EMAIL on Render' },
+    { done: emailConfigured, label: 'SMTP fallback configured',      detail: emailConfigured ? 'SMTP transport available' : 'Optional — set EMAIL_HOST, EMAIL_USER, EMAIL_PASS (SendGrid preferred)' },
+    { done: hasUsers,        label: 'First users registered',        detail: hasUsers ? `${usersData?.total ?? '?'} users in the system` : 'Share /register to invite fighters, managers, sponsors' },
+    { done: hasModules,      label: 'Education modules published',   detail: hasModules ? `${contentData?.published_modules ?? contentData?.total_modules} published` : 'Go to Modules tab and publish the seeded modules' },
+    { done: hasPackages,     label: 'Packages created',              detail: hasPackages ? `${pkgData?.packages?.length} packages in catalogue` : 'Packages were seeded — verify in Packages tab' },
+    { done: hasMentors,      label: 'Consultants / mentors added',   detail: hasMentors ? `${mentorsData?.active_consultants} active` : 'Add consultants via Supabase or the Mentors tab' },
+    { done: noPendingVetting,label: 'Sponsor vetting queue clear',   detail: noPendingVetting ? 'No sponsors awaiting review' : `${pendingVetting} sponsor${pendingVetting > 1 ? 's' : ''} waiting for approval` },
+    { done: false,           label: 'Stripe connected (future)',     detail: 'Stripe integration — do this after packages are confirmed' },
   ]
 
   const completed = checklist.filter(c => c.done).length
+
+  const handleTestEmail = async () => {
+    setTestEmailState('sending')
+    setTestEmailMsg('')
+    try {
+      const r = await sendTestEmail(user?.email)
+      setTestEmailState('ok')
+      setTestEmailMsg(`Sent to ${r.sent_to}`)
+    } catch (e: any) {
+      setTestEmailState('err')
+      setTestEmailMsg(e.message ?? 'Send failed.')
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -228,6 +248,32 @@ function Setup() {
             ))
         }
       </div>
+
+      {/* Email test — only shown when some email transport is configured */}
+      {anyEmailOk && (
+        <div className="dash-card" style={{ borderLeft: '2px solid #222226' }}>
+          <div className="dash-label mb-3">Email Delivery Test</div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={handleTestEmail}
+              disabled={testEmailState === 'sending'}
+              className="font-condensed font-bold uppercase text-[11px] tracking-[0.15em] px-4 py-2.5 border cursor-pointer transition-all disabled:opacity-40"
+              style={{ borderColor: '#8b0000', color: '#C41E3A', background: 'rgba(139,0,0,0.08)' }}
+            >
+              {testEmailState === 'sending' ? 'Sending…' : `Send test email to ${user?.email}`}
+            </button>
+            {testEmailMsg && (
+              <span className="font-condensed text-[12px]"
+                style={{ color: testEmailState === 'ok' ? '#00c060' : '#C41E3A' }}>
+                {testEmailMsg}
+              </span>
+            )}
+          </div>
+          <p className="font-condensed text-[11px] text-gray-3 mt-2">
+            {sendgridOk ? 'Using SendGrid' : 'Using SMTP fallback'}
+          </p>
+        </div>
+      )}
 
       <div className="dash-card" style={{ borderLeft: '2px solid #8b0000' }}>
         <div className="dash-label mb-2">Kevin's Handoff Notes</div>

@@ -8,6 +8,7 @@ import { requireAuth, requireAdmin } from '../middleware/auth.js'
 import { validate, ModuleCreateSchema, PackageCreateSchema, z } from '../lib/validate.js'
 import { childLogger }      from '../lib/logger.js'
 import { computeMatchesForOpp } from '../lib/matching.js'
+import { sendEmail, emailHtml, ctaButton, esc, isEmailConfigured } from '../services/email.js'
 
 const router = Router()
 const log    = childLogger('admin')
@@ -344,12 +345,20 @@ router.patch('/sponsors/:userId/verify', ...guard, async (req, res) => {
     }
 
     if (approved) {
-      const { error } = await adminSupabase
+      const { data: sp, error } = await adminSupabase
         .from('sponsor_profiles')
         .update({ is_verified: true, updated_at: new Date().toISOString() })
         .eq('user_id', userId)
+        .select('company_name')
+        .maybeSingle()
       if (error) throw error
       log.info({ userId, by: req.user.id }, 'sponsor approved')
+      adminSupabase.from('outbox_events').insert({
+        event_type:     'sponsor.approved',
+        aggregate_type: 'sponsor_profiles',
+        aggregate_id:   userId,
+        payload: { user_id: userId, company_name: sp?.company_name ?? null },
+      }).then(() => {}).catch(() => {})
       return res.json({ ok: true, action: 'approved' })
     } else {
       // Reject: suspend the user account
@@ -1016,6 +1025,36 @@ router.patch('/conversations/:id/status', ...guard, async (req, res) => {
   } catch (err) {
     log.error({ err }, 'PATCH /admin/conversations/:id/status threw')
     res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/admin/email/test ────────────────────────────────────────────────
+router.post('/email/test', ...guard, async (req, res) => {
+  try {
+    if (!isEmailConfigured()) {
+      return res.status(503).json({
+        ok:    false,
+        error: 'Email is not configured. Set SENDGRID_API_KEY (or EMAIL_HOST + EMAIL_USER + EMAIL_PASS).',
+      })
+    }
+
+    const recipient = (req.body.to || req.user.email || '').trim()
+    if (!recipient) {
+      return res.status(400).json({ ok: false, error: 'No recipient email address.' })
+    }
+
+    await sendEmail(recipient, 'Eleventh Round — email delivery test', emailHtml(`
+      <p>This is a test email from the <strong style="color:#f0ece4">Eleventh Round</strong> admin panel.</p>
+      <p>If you received this, transactional email delivery is working correctly.</p>
+      <p style="font-size:12px;color:#4a4846;margin-top:20px">Sent by: ${esc(req.user.email)}</p>
+      ${ctaButton(process.env.CLIENT_URL || 'http://localhost:5173', 'Open Dashboard')}
+    `))
+
+    log.info({ to: recipient, by: req.user.id }, 'admin test email sent')
+    res.json({ ok: true, sent_to: recipient })
+  } catch (err) {
+    log.error({ err }, 'POST /admin/email/test threw')
+    res.status(500).json({ ok: false, error: err.message })
   }
 })
 

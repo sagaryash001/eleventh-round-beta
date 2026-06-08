@@ -578,12 +578,15 @@ router.post('/manager/request', ...guard, validate(FighterManagerRequestSchema),
       return res.status(409).json({ error: 'A connection request to this manager is already pending.' })
     }
 
+    const outboxPayload = { manager_id: managerId, fighter_id: uid, fighter_name: req.user.name ?? req.user.email, message: message ?? null }
+
     if (existing) {
       const { error } = await sb.from('manager_fighters')
         .update({ status: 'pending', source: 'fighter_request', request_message: message ?? null,
           requested_by: uid, declined_at: null, removed_at: null, updated_at: now })
         .eq('id', existing.id)
       if (error) throw error
+      sb.from('outbox_events').insert({ event_type: 'fighter.manager_request', aggregate_type: 'manager_fighters', aggregate_id: existing.id, payload: outboxPayload }).then(() => {}).catch(() => {})
       return res.json({ ok: true, connection_id: existing.id })
     }
 
@@ -594,6 +597,7 @@ router.post('/manager/request', ...guard, validate(FighterManagerRequestSchema),
       .select('id').maybeSingle()
     if (error) throw error
 
+    sb.from('outbox_events').insert({ event_type: 'fighter.manager_request', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: outboxPayload }).then(() => {}).catch(() => {})
     log.info({ mid: managerId, fid: uid }, 'fighter submitted manager request')
     return res.status(201).json({ ok: true, connection_id: data.id })
   } catch (err) {

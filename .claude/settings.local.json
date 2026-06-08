@@ -75,7 +75,8 @@
       "Bash(grep -rA 25 \"CREATE TABLE IF NOT EXISTS public.manager_fighters\" db/migrations/)",
       "Bash(grep -v \"//\\\\|eq\\('status'\\\\|neq\\('status'\\\\|req.valid\\\\|conn.status\\\\|updates.status\\\\|log\\\\|error\\\\|guard\\\\|requireM\\\\|requireA\\\\|fighter_id\\\\|manager_id\\\\|pending\\\\|active\\\\|declined\\\\|removed\")",
       "Bash(Select-String -Path \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\src\\\\pages\\\\dashboards\\\\AdminDashboard.tsx\" -Pattern \"getAdminConversationList|adminLockConversation|messaging|AdminMessaging|CONV_STATUS_COLOR\")",
-      "Bash(Select-Object LineNumber, Line)"
+      "Bash(Select-Object LineNumber, Line)",
+      "Bash(dir server *)"
     ]
   }
 }

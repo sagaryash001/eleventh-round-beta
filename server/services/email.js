@@ -1,46 +1,87 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Email service — prefers SendGrid, falls back to SMTP nodemailer.
+//
+// Priority:
+//   1. SENDGRID_API_KEY set → use @sendgrid/mail
+//   2. EMAIL_HOST + EMAIL_USER + EMAIL_PASS → use nodemailer SMTP
+//   3. Neither configured → log and skip (server never crashes)
+//
+// Env vars:
+//   SendGrid: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL, SENDGRID_FROM_NAME
+//   SMTP:     EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_SECURE
+//   Shared:   FROM_EMAIL (fallback sender), CLIENT_URL
+// ─────────────────────────────────────────────────────────────────────────────
+
+import sgMail     from '@sendgrid/mail'
 import nodemailer from 'nodemailer'
 
-const FROM    = process.env.FROM_EMAIL  || 'contact@eleventh-rnd.us'
-const CLIENT  = process.env.CLIENT_URL  || 'http://localhost:5173'
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'contact@eleventh-rnd.us'
+const FROM_NAME  = process.env.SENDGRID_FROM_NAME  || 'The Eleventh Round'
+const CLIENT     = process.env.CLIENT_URL           || 'http://localhost:5173'
 
-// Lazily create the transporter so the server boots fine without email config.
-// Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS in .env.
-// For Gmail: host=smtp.gmail.com port=465 secure=true, use an App Password.
-let _transport = null
-function transport() {
-  if (!_transport) {
-    const host = process.env.EMAIL_HOST
-    const user = process.env.EMAIL_USER
-    const pass = process.env.EMAIL_PASS
-    if (!host || !user || !pass) return null
-    _transport = nodemailer.createTransport({
-      host,
-      port:   Number(process.env.EMAIL_PORT  || 465),
-      secure: process.env.EMAIL_SECURE !== 'false', // true by default (SSL)
-      auth:   { user, pass },
-    })
-  }
-  return _transport
+// ── Transport selection ───────────────────────────────────────────────────────
+
+export function isEmailConfigured() {
+  return !!(
+    process.env.SENDGRID_API_KEY ||
+    (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS)
+  )
+}
+
+let _smtp = null
+function smtpTransport() {
+  if (_smtp) return _smtp
+  const { EMAIL_HOST: host, EMAIL_USER: user, EMAIL_PASS: pass } = process.env
+  if (!host || !user || !pass) return null
+  _smtp = nodemailer.createTransport({
+    host,
+    port:   Number(process.env.EMAIL_PORT  || 465),
+    secure: process.env.EMAIL_SECURE !== 'false',
+    auth:   { user, pass },
+  })
+  return _smtp
 }
 
 async function send(to, subject, html) {
-  const t = transport()
-  if (!t) {
-    console.warn('[email] EMAIL_HOST/USER/PASS not set — skipping email to', to)
+  if (!to) return
+
+  if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+    await sgMail.send({
+      to,
+      from:    { email: FROM_EMAIL, name: FROM_NAME },
+      subject,
+      html,
+      text:    html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+    })
     return
   }
-  await t.sendMail({ from: `"The Eleventh Round" <${FROM}>`, to, subject, html })
+
+  const t = smtpTransport()
+  if (!t) {
+    console.warn('[email] No transport configured — skipping email to', to)
+    return
+  }
+  await t.sendMail({ from: `"${FROM_NAME}" <${FROM_EMAIL}>`, to, subject, html })
 }
 
-// Generic plain-text/html email for outbox dispatcher use
-export async function sendEmail(to, subject, html) {
-  return send(to, subject, html)
+// ── HTML escape helper ────────────────────────────────────────────────────────
+// Apply to every user-controlled value interpolated into email HTML.
+// Safe to skip only for server-controlled strings (env vars, hardcoded literals)
+// and UUIDs (which are [0-9a-f-] only).
+export function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
-// ── Shared HTML shell ─────────────────────────────────────────────────────────
-function shell(body) {
-  return `
-<!DOCTYPE html>
+// ── Shared HTML building blocks ───────────────────────────────────────────────
+
+export function emailHtml(body) {
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#080808;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
@@ -58,7 +99,7 @@ function shell(body) {
         </td></tr>
         <tr><td style="padding:16px 36px 24px;border-top:1px solid #1a1a1d">
           <div style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:#4a4846">
-            © The Eleventh Round · Career Infrastructure · Combat Sports
+            You received this because you use The Eleventh Round. &copy; The Eleventh Round.
           </div>
         </td></tr>
       </table>
@@ -68,22 +109,28 @@ function shell(body) {
 </html>`
 }
 
+export function ctaButton(url, label) {
+  return `<div style="margin:28px 0">
+    <a href="${esc(url)}" style="display:inline-block;background:#8b0000;color:#f0ece4;text-decoration:none;padding:14px 28px;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase">${esc(label)} &rarr;</a>
+  </div>`
+}
+
+// ── Public send API ───────────────────────────────────────────────────────────
+
+export async function sendEmail(to, subject, html) {
+  return send(to, subject, html)
+}
+
 // ── Verification email ────────────────────────────────────────────────────────
+
 export async function sendVerificationEmail(to, name, verifyUrlOrToken) {
   const url = verifyUrlOrToken?.startsWith('http')
     ? verifyUrlOrToken
     : `${CLIENT}/verify-email?token=${verifyUrlOrToken}`
-  await send(to, 'Verify your Eleventh Round account', shell(`
+  await send(to, 'Verify your Eleventh Round account', emailHtml(`
     <p>Hey <strong style="color:#f0ece4">${name}</strong>,</p>
     <p>Your account has been created. Click below to verify your email address and unlock your dashboard.</p>
-    <div style="margin:28px 0">
-      <a href="${url}"
-         style="display:inline-block;background:#8b0000;color:#f0ece4;text-decoration:none;
-                padding:14px 28px;font-size:11px;font-weight:700;letter-spacing:0.2em;
-                text-transform:uppercase">
-        Verify Email &rarr;
-      </a>
-    </div>
+    ${ctaButton(url, 'Verify Email')}
     <p style="font-size:12px;color:#4a4846">
       Or paste this link into your browser:<br>
       <span style="color:#7a7672">${url}</span>
@@ -95,12 +142,12 @@ export async function sendVerificationEmail(to, name, verifyUrlOrToken) {
 }
 
 // ── Welcome email ─────────────────────────────────────────────────────────────
+
 export async function sendWelcomeEmail(to, name, role, subdomain) {
   const dashUrl = subdomain
     ? `https://${subdomain}.eleventh-rnd.com`
     : `${CLIENT}/dashboard/${role || 'fighter'}`
-
-  await send(to, "You're in. Welcome to The Eleventh Round.", shell(`
+  await send(to, "You're in. Welcome to The Eleventh Round.", emailHtml(`
     <p>Welcome, <strong style="color:#f0ece4">${name}</strong>.</p>
     <p>Your account is verified and active. You&rsquo;re now part of the only platform
        built around fighter readiness, manager systems, and long-term career development.</p>
@@ -110,14 +157,7 @@ export async function sendWelcomeEmail(to, name, role, subdomain) {
         <strong style="color:#C41E3A;font-size:15px">${subdomain}.eleventh-rnd.com</strong>
       </p>
     ` : ''}
-    <div style="margin:28px 0">
-      <a href="${dashUrl}"
-         style="display:inline-block;background:#8b0000;color:#f0ece4;text-decoration:none;
-                padding:14px 28px;font-size:11px;font-weight:700;letter-spacing:0.2em;
-                text-transform:uppercase">
-        Access Dashboard &rarr;
-      </a>
-    </div>
+    ${ctaButton(dashUrl, 'Access Dashboard')}
     <p style="font-size:12px;color:#4a4846">
       Professionalism creates opportunity. Readiness is the differentiator.
     </p>

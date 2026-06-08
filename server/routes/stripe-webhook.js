@@ -245,6 +245,19 @@ async function handleCheckoutCompleted(session) {
     await adminSupabase.from('memberships').insert({ user_id: userId, ...membershipData })
   }
 
+  // Emit notification + email via outbox (fire-and-forget, non-fatal)
+  await adminSupabase.from('outbox_events').insert({
+    event_type:     'billing.package_purchased',
+    aggregate_type: 'payments',
+    aggregate_id:   payment?.id ?? packageId,
+    payload: {
+      user_id:          userId,
+      package_name:     pkg.name,
+      billing_interval: pkg.billing_interval,
+      amount_cents:     amountTotal,
+    },
+  }).catch(e => log.warn({ err: e }, 'billing.package_purchased outbox insert failed'))
+
   log.info({ payment_id: payment?.id, package_id: packageId, user_id: userId }, 'Package checkout completed — payment + membership recorded')
 }
 

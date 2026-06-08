@@ -99,12 +99,13 @@ app.use('/api/billing',    billingRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({
-  ok: true,
-  ts: Date.now(),
-  env: process.env.NODE_ENV || 'development',
+  ok:       true,
+  ts:       Date.now(),
+  env:      process.env.NODE_ENV || 'development',
   supabase: !!process.env.SUPABASE_URL,
-  email: !!process.env.EMAIL_HOST,
-  pool: pool ? { total: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount } : null,
+  email:    !!process.env.EMAIL_HOST,
+  sendgrid: !!process.env.SENDGRID_API_KEY,
+  pool:     pool ? { total: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount } : null,
 }))
 
 // ── 404 ─────────────────────────────────────────────────────────────────────
