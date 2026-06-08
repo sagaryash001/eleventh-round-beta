@@ -128,12 +128,18 @@ export const ManagerOnboardSchema = z.object({
 
 export const ModuleCreateSchema = z.object({
   name:           z.string().trim().min(1, 'Name is required.').max(200),
-  description:    z.string().trim().max(2000).optional().nullable(),
+  description:    z.string().trim().max(5000).optional().nullable(),
   category:       z.string().trim().max(60).optional().nullable(),
   order_num:      z.number().int().min(1).default(100),
   is_published:   z.boolean().default(false),
   estimated_mins: z.number().int().min(0).optional().nullable(),
-  content_url:    z.string().trim().max(500).optional().nullable(),
+  content_url:    z.string().trim().max(1000).optional().nullable(),
+  module_type:    z.enum(['lesson','video','pdf','link','checklist','mixed']).default('lesson'),
+  content_body:   z.string().trim().max(50000).optional().nullable(),
+  metadata:       z.record(z.unknown()).default({}),
+  is_required:    z.boolean().default(false),
+  audience:       z.enum(['all_fighters','fighters_only']).default('all_fighters'),
+  status:         z.enum(['draft','published','archived']).default('draft'),
 })
 
 export const PackageCreateSchema = z.object({

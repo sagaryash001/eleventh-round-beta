@@ -37,10 +37,16 @@ export interface AdminModule {
   name:           string
   description:    string | null
   category:       string | null
+  module_type:    string
   order_num:      number
   is_published:   boolean
+  status:         string
   estimated_mins: number | null
   content_url:    string | null
+  content_body:   string | null
+  metadata:       any
+  is_required:    boolean
+  audience:       string
   avg_completion: number
   enrolled_count: number
   created_at:     string
@@ -98,12 +104,13 @@ export const getAdminModules = () =>
 export interface ModuleCreateInput {
   name: string; description?: string | null; category?: string | null
   order_num?: number; is_published?: boolean; estimated_mins?: number | null
-  content_url?: string | null
+  content_url?: string | null; module_type?: string; content_body?: string | null
+  metadata?: Record<string, unknown>; is_required?: boolean; audience?: string; status?: string
 }
 export const createModule = (data: ModuleCreateInput) =>
   apiPost<{ ok: boolean; module: AdminModule }>('/api/admin/modules', data)
 
-export const updateModule = (id: string, data: Partial<AdminModule>) =>
+export const updateModule = (id: string, data: Partial<ModuleCreateInput & AdminModule>) =>
   apiPatch<{ ok: boolean; module: AdminModule }>(`/api/admin/modules/${id}`, data)
 
 // ── Packages ──────────────────────────────────────────────────────────────────

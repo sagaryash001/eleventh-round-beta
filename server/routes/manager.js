@@ -616,4 +616,61 @@ router.get('/reports', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/manager/modules/progress ────────────────────────────────────────
+// Returns published modules + each active roster fighter's progress.
+router.get('/modules/progress', ...guard, async (req, res) => {
+  try {
+    const mid = req.user.id
+
+    // Active roster fighter IDs
+    const { data: links } = await adminSupabase
+      .from('manager_fighters')
+      .select('fighter_id')
+      .eq('manager_id', mid)
+      .eq('status', 'active')
+      .not('fighter_id', 'is', null)
+    const fids = (links ?? []).map(l => l.fighter_id)
+
+    if (!fids.length) {
+      return res.json({ ok: true, modules: [], fighters: [], summary: { total_modules: 0, avg_completion: 0 } })
+    }
+
+    const [{ data: mods }, { data: progressRows }, { data: profiles }] = await Promise.all([
+      adminSupabase.from('education_modules').select('id, name, category, module_type, is_required, order_num').eq('status', 'published').order('order_num'),
+      adminSupabase.from('module_progress').select('user_id, module_id, completion_pct, status, completed_at').in('user_id', fids),
+      adminSupabase.from('profiles').select('id, name').in('id', fids),
+    ])
+
+    const nameMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.name]))
+
+    // Per-fighter summary
+    const fighters = fids.map(fid => {
+      const fp = (progressRows ?? []).filter(p => p.user_id === fid)
+      const completed  = fp.filter(p => p.status === 'completed' || p.completion_pct === 100).length
+      const totalMods  = (mods ?? []).length
+      const avgPct     = totalMods
+        ? Math.round(fp.reduce((s, p) => s + p.completion_pct, 0) / totalMods)
+        : 0
+      return { fighter_id: fid, name: nameMap[fid] ?? 'Fighter', completed, total: totalMods, avg_pct: avgPct }
+    })
+
+    // Per-module completion rates
+    const modules = (mods ?? []).map(m => {
+      const rows    = (progressRows ?? []).filter(p => p.module_id === m.id)
+      const done    = rows.filter(p => p.status === 'completed' || p.completion_pct === 100).length
+      const rate    = fids.length ? Math.round((done / fids.length) * 100) : 0
+      return { ...m, roster_completion_rate: rate, completed_count: done, roster_size: fids.length }
+    })
+
+    const overallAvg = fighters.length
+      ? Math.round(fighters.reduce((s, f) => s + f.avg_pct, 0) / fighters.length)
+      : 0
+
+    res.json({ ok: true, modules, fighters, summary: { total_modules: (mods ?? []).length, avg_completion: overallAvg } })
+  } catch (err) {
+    log.error({ err }, '/manager/modules/progress threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router

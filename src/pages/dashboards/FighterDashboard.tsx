@@ -8,6 +8,11 @@ import { useApi } from '../../hooks/useApi'
 import { getFighterManager, requestManager, cancelManagerRequest, type ManagerConnection } from '../../lib/api/manager'
 import { apiPatch } from '../../lib/api/client'
 import { getContracts, type Contract } from '../../lib/api/contracts'
+import {
+  getFighterModules, getFighterModule, updateModuleProgress, completeModule,
+  parseMetadata, parseChecklistState,
+  type FighterModule, type ModuleProgress, type ModuleResource, type ChecklistItem,
+} from '../../lib/api/education'
 
 const NAV = [
   { id: 'overview',     label: 'Overview',     icon: '◈' },
@@ -200,54 +205,264 @@ function Obligations() {
   )
 }
 
+// ── Module detail panel ───────────────────────────────────────────────────────
+function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => void }) {
+  const [data,      setData]      = useState<{ module: any; progress: ModuleProgress | null; resources: ModuleResource[] } | null>(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState<string | null>(null)
+  const [completing, setCompleting] = useState(false)
+  const [checked,   setChecked]   = useState<Record<string, boolean>>({})
+  const [msg,       setMsg]       = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    getFighterModule(moduleId)
+      .then(d => {
+        setData(d)
+        setChecked(parseChecklistState(d.progress?.checklist_state))
+        setLoading(false)
+      })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [moduleId])
+
+  const mod      = data?.module
+  const progress = data?.progress
+  const resources = data?.resources ?? []
+  const meta     = parseMetadata(mod?.metadata)
+  const items: ChecklistItem[] = Array.isArray(meta.checklist_items) ? meta.checklist_items : []
+
+  const handleCheck = async (itemId: string, val: boolean) => {
+    const next = { ...checked, [itemId]: val }
+    setChecked(next)
+    const requiredItems = items.filter(i => i.required)
+    const doneRequired  = requiredItems.filter(i => next[i.id]).length
+    const pct = requiredItems.length
+      ? Math.round((doneRequired / requiredItems.length) * 100)
+      : Object.values(next).filter(Boolean).length === items.length ? 100 : 50
+    const status = pct === 100 ? 'completed' : 'in_progress'
+    await updateModuleProgress(moduleId, { checklist_state: next, completion_pct: pct, status }).catch(() => {})
+    if (pct === 100) setMsg('All items checked — module complete!')
+  }
+
+  const handleComplete = async () => {
+    setCompleting(true); setMsg(null)
+    try {
+      await completeModule(moduleId)
+      setMsg('Module marked complete!')
+      setData(d => d ? { ...d, progress: { ...(d.progress ?? { module_id: moduleId, completion_pct: 100, started_at: null, last_viewed_at: null, checklist_state: {} }), status: 'completed', completion_pct: 100, completed_at: new Date().toISOString() } } : d)
+    } catch (e: any) { setMsg('Could not mark complete: ' + e.message) }
+    finally { setCompleting(false) }
+  }
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} />
+  if (!mod)    return <EmptyState icon="📚" title="Module not found" body="" />
+
+  const isCompleted = progress?.status === 'completed' || progress?.completion_pct === 100
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <button onClick={onBack} className="font-condensed text-[11px] uppercase tracking-[0.15em] text-gray-3 hover:text-gray-1 flex items-center gap-2">
+        ← Back to Modules
+      </button>
+
+      <div className="dash-card space-y-3" style={{ borderLeft: '2px solid #8b0000' }}>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="font-display text-off-white uppercase" style={{ fontSize: 22, lineHeight: 1.1 }}>{mod.name}</h2>
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              {mod.category && <span className="font-condensed text-[10px] text-gray-3 uppercase tracking-widest capitalize">{mod.category}</span>}
+              <span className="font-condensed text-[10px] text-gray-3 uppercase tracking-widest capitalize">{(mod.module_type||'lesson').replace('_',' ')}</span>
+              {mod.estimated_mins && <span className="font-condensed text-[10px] text-gray-3">{mod.estimated_mins} min</span>}
+              {mod.is_required && <span className="font-condensed text-[9px] uppercase tracking-widest px-2 py-0.5" style={{ background:'rgba(139,0,0,0.2)', color:'#C41E3A' }}>Required</span>}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <ReadinessRing pct={progress?.completion_pct ?? 0} size={56} label="%" />
+          </div>
+        </div>
+        {mod.description && <p className="font-body text-gray-2 text-[13px] leading-relaxed">{mod.description}</p>}
+      </div>
+
+      {/* Text lesson body */}
+      {mod.content_body && (
+        <div className="dash-card">
+          <div className="dash-label mb-3">Lesson Content</div>
+          <div className="font-body text-gray-1 text-[13px] leading-relaxed whitespace-pre-wrap">{mod.content_body}</div>
+        </div>
+      )}
+
+      {/* Video embed / link */}
+      {mod.content_url && (mod.module_type === 'video' || mod.module_type === 'link' || mod.module_type === 'pdf' || mod.module_type === 'mixed') && (
+        <div className="dash-card">
+          <div className="dash-label mb-3">{mod.module_type === 'video' ? 'Video' : mod.module_type === 'pdf' ? 'PDF Resource' : 'Resource'}</div>
+          {mod.module_type === 'video' && (mod.content_url.includes('youtube') || mod.content_url.includes('youtu.be') || mod.content_url.includes('vimeo') || mod.content_url.includes('loom')) ? (
+            <div style={{ position:'relative', paddingBottom:'56.25%', height:0 }}>
+              <iframe
+                src={
+                  mod.content_url.includes('youtu.be')
+                    ? mod.content_url.replace('youtu.be/', 'youtube.com/embed/')
+                    : mod.content_url.includes('watch?v=')
+                      ? mod.content_url.replace('watch?v=', 'embed/')
+                      : mod.content_url
+                }
+                title={mod.name}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', border:'none', background:'#000' }}
+              />
+            </div>
+          ) : (
+            <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
+              className="btn-primary inline-block text-[11px] no-underline">
+              {mod.module_type === 'pdf' ? 'Open PDF ↗' : 'Open Resource ↗'}
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Checklist */}
+      {items.length > 0 && (
+        <div className="dash-card space-y-3">
+          <div className="dash-label">Checklist</div>
+          {items.map(item => (
+            <label key={item.id} className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={!!checked[item.id]} onChange={e => handleCheck(item.id, e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-red-700 cursor-pointer shrink-0" />
+              <span className={`font-body text-[13px] leading-snug transition-colors ${checked[item.id] ? 'line-through text-gray-3' : 'text-gray-1 group-hover:text-off-white'}`}>
+                {item.text}
+                {item.required && <span className="font-condensed text-[9px] text-blood-glow ml-2 uppercase tracking-widest">required</span>}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Resources */}
+      {resources.length > 0 && (
+        <div className="dash-card space-y-2">
+          <div className="dash-label mb-2">Resources</div>
+          {resources.map(r => (
+            <a key={r.id} href={r.url || '#'} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 font-condensed text-[12px] text-gray-2 hover:text-off-white no-underline py-1">
+              <span style={{ color:'#8b0000' }}>{r.resource_type === 'pdf' ? '📄' : r.resource_type === 'video' ? '▶' : '🔗'}</span>
+              {r.title}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {msg && (
+        <p className="font-condensed text-[12px]" style={{ color: msg.includes('complete') ? '#00c060' : '#C41E3A' }}>{msg}</p>
+      )}
+
+      {!isCompleted && items.length === 0 && (
+        <button onClick={handleComplete} disabled={completing} className="btn-primary disabled:opacity-50">
+          {completing ? 'Marking…' : 'Mark as Complete'}
+        </button>
+      )}
+      {isCompleted && (
+        <div className="font-condensed text-[12px] uppercase tracking-[0.2em]" style={{ color:'#00c060' }}>
+          ✓ Completed
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Education tab ─────────────────────────────────────────────────────────────
 function Education() {
-  const { data, loading, error } = useApi<any>('/api/fighter/education')
+  const [modules,  setModules]  = useState<FighterModule[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState<string | null>(null)
+  const [openId,   setOpenId]   = useState<string | null>(null)
+  const [overall,  setOverall]  = useState(0)
+
+  const load = useCallback(() => {
+    setLoading(true)
+    getFighterModules()
+      .then(d => { setModules(d.modules); setOverall(d.overall_pct); setLoading(false) })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [])
+  useEffect(() => { load() }, [load])
+
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
 
-  const mods    = data?.modules     ?? []
-  const overall = data?.overall_pct ?? 0
-  const started = data?.started_count ?? 0
-  const total   = data?.total_count   ?? 0
+  if (openId) return <ModuleDetail moduleId={openId} onBack={() => { setOpenId(null); load() }} />
 
-  if (!mods.length) return (
+  if (!modules.length) return (
     <div className="space-y-4">
       <SectionHeading>Education Modules</SectionHeading>
       <EmptyState icon="📚" title="No Modules Assigned Yet"
-        body="Once Kevin publishes education modules, they will appear here. Check back soon." />
+        body="Published education modules will appear here. Check back soon." />
     </div>
   )
 
-  const chartData = mods.slice(0, 6).map((m: any) => ({ label: m.name.split(' ')[0], value: m.pct }))
+  const completed  = modules.filter(m => m.progress.status === 'completed')
+  const inProgress = modules.filter(m => m.progress.status === 'in_progress')
+  const notStarted = modules.filter(m => m.progress.status === 'not_started')
 
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Education Modules</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 220px' }}>
-        <div className="dash-card">
-          <div className="dash-label mb-4">Module Completion</div>
-          <BarChart height={120} data={chartData} />
-        </div>
-        <div className="dash-card flex flex-col items-center justify-center">
-          <div className="dash-label mb-2">Overall Progress</div>
-          <ReadinessRing pct={overall} size={90} label="Done" />
-          <div className="dash-sub mt-2">{started} of {total} started</div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {mods.map((m: any) => (
-          <div key={m.name} className="dash-card">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-condensed text-[12px] font-semibold text-gray-1">{m.name}</span>
-              <span className="font-display text-sm text-off-white">{m.pct}%</span>
-            </div>
-            <div className="dash-bar-track" style={{ marginTop:0 }}>
-              <div className="dash-bar-fill" style={{ width:`${m.pct}%`,
-                background: m.pct===0?'#222226':m.pct>70?'#00c060':'linear-gradient(90deg,#8b0000,#c00000)' }} />
+  const ModuleCard = ({ m }: { m: FighterModule }) => {
+    const pct = m.progress.completion_pct ?? 0
+    const st  = m.progress.status ?? 'not_started'
+    return (
+      <button onClick={() => setOpenId(m.id)}
+        className="dash-card text-left w-full hover:border-blood transition-colors"
+        style={{ borderLeft: `2px solid ${st==='completed'?'#00c060':st==='in_progress'?'#c9a82c':'#222226'}` }}>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="font-condensed font-bold text-[13px] text-off-white truncate">{m.name}</div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              {m.category && <span className="font-condensed text-[10px] text-gray-3 capitalize">{m.category}</span>}
+              <span className="font-condensed text-[10px] text-gray-3 capitalize">{(m.module_type||'lesson').replace('_',' ')}</span>
+              {m.estimated_mins && <span className="font-condensed text-[10px] text-gray-3">{m.estimated_mins}m</span>}
+              {m.is_required && <span className="font-condensed text-[9px] uppercase tracking-widest" style={{ color:'#C41E3A' }}>Required</span>}
             </div>
           </div>
-        ))}
+          <span className="font-condensed text-[11px] font-bold shrink-0"
+            style={{ color: st==='completed'?'#00c060':st==='in_progress'?'#c9a82c':'#4a4846' }}>
+            {st==='completed' ? '✓ Done' : st==='in_progress' ? `${pct}%` : 'Start →'}
+          </span>
+        </div>
+        {pct > 0 && (
+          <div className="dash-bar-track mt-1" style={{ height:3 }}>
+            <div className="dash-bar-fill" style={{ width:`${pct}%`, height:'100%',
+              background: pct===100?'#00c060':'linear-gradient(90deg,#8b0000,#c00000)' }} />
+          </div>
+        )}
+      </button>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <SectionHeading>Education Modules</SectionHeading>
+        <div className="flex items-center gap-3">
+          <ReadinessRing pct={overall} size={52} label="%" />
+          <span className="font-condensed text-[11px] text-gray-3">{completed.length}/{modules.length} done</span>
+        </div>
       </div>
+
+      {inProgress.length > 0 && (
+        <div>
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-2">In Progress</div>
+          <div className="grid grid-cols-1 gap-2">{inProgress.map(m => <ModuleCard key={m.id} m={m} />)}</div>
+        </div>
+      )}
+      {notStarted.length > 0 && (
+        <div>
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-2">Not Started</div>
+          <div className="grid grid-cols-1 gap-2">{notStarted.map(m => <ModuleCard key={m.id} m={m} />)}</div>
+        </div>
+      )}
+      {completed.length > 0 && (
+        <div>
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-2">Completed</div>
+          <div className="grid grid-cols-1 gap-2">{completed.map(m => <ModuleCard key={m.id} m={m} />)}</div>
+        </div>
+      )}
     </div>
   )
 }

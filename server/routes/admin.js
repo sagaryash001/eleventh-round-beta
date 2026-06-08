@@ -398,10 +398,27 @@ router.get('/modules', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/admin/modules/:id ────────────────────────────────────────────────
+router.get('/modules/:id', ...guard, async (req, res) => {
+  try {
+    const [{ data: mod, error }, { data: resources }] = await Promise.all([
+      adminSupabase.from('education_modules').select('*').eq('id', req.params.id).maybeSingle(),
+      adminSupabase.from('education_module_resources').select('*').eq('module_id', req.params.id).order('order_num'),
+    ])
+    if (error) throw error
+    if (!mod) return res.status(404).json({ error: 'Module not found.' })
+    res.json({ ok: true, module: mod, resources: resources ?? [] })
+  } catch (err) {
+    log.error({ err }, 'GET /admin/modules/:id threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/admin/modules ───────────────────────────────────────────────────
 router.post('/modules', ...guard, validate(ModuleCreateSchema), async (req, res) => {
   try {
     const p = req.valid
+    const isPublished = p.status === 'published' || p.is_published
     const { data, error } = await adminSupabase
       .from('education_modules')
       .insert({
@@ -409,15 +426,23 @@ router.post('/modules', ...guard, validate(ModuleCreateSchema), async (req, res)
         description:    p.description    ?? null,
         category:       p.category       ?? null,
         order_num:      p.order_num,
-        is_published:   p.is_published,
+        is_published:   isPublished,
         estimated_mins: p.estimated_mins ?? null,
         content_url:    p.content_url    ?? null,
+        module_type:    p.module_type,
+        content_body:   p.content_body   ?? null,
+        metadata:       JSON.stringify(p.metadata ?? {}),
+        is_required:    p.is_required,
+        audience:       p.audience,
+        status:         p.status,
+        published_at:   isPublished ? new Date().toISOString() : null,
+        created_by:     req.user.id,
       })
       .select()
       .maybeSingle()
     if (error) throw error
 
-    log.info({ id: data.id, name: p.name }, 'module created')
+    log.info({ id: data.id, name: p.name, type: p.module_type }, 'module created')
     res.status(201).json({ ok: true, module: data })
   } catch (err) {
     log.error({ err }, 'POST /admin/modules threw')
@@ -428,11 +453,31 @@ router.post('/modules', ...guard, validate(ModuleCreateSchema), async (req, res)
 // ── PATCH /api/admin/modules/:id ──────────────────────────────────────────────
 router.patch('/modules/:id', ...guard, async (req, res) => {
   try {
-    const allowed = ['name', 'description', 'category', 'order_num', 'is_published', 'estimated_mins', 'content_url', 'thumbnail_path']
+    const allowed = [
+      'name', 'description', 'category', 'order_num', 'is_published',
+      'estimated_mins', 'content_url', 'thumbnail_path',
+      'module_type', 'content_body', 'metadata', 'is_required', 'audience', 'status',
+    ]
     const updates = pick(req.body, allowed)
     if (!Object.keys(updates).length) {
       return res.status(400).json({ error: 'No updatable fields provided.' })
     }
+
+    // Keep is_published in sync with status
+    if (updates.status === 'published') {
+      updates.is_published = true
+      if (!req.body.published_at) updates.published_at = new Date().toISOString()
+    } else if (updates.status === 'draft' || updates.status === 'archived') {
+      updates.is_published = false
+    }
+    if (typeof updates.is_published === 'boolean' && updates.status === undefined) {
+      updates.status = updates.is_published ? 'published' : 'draft'
+      if (updates.is_published) updates.published_at = new Date().toISOString()
+    }
+    if (Array.isArray(updates.metadata) || (updates.metadata && typeof updates.metadata === 'object')) {
+      updates.metadata = JSON.stringify(updates.metadata)
+    }
+
     updates.updated_at = new Date().toISOString()
 
     const { data, error } = await adminSupabase
@@ -447,6 +492,90 @@ router.patch('/modules/:id', ...guard, async (req, res) => {
     res.json({ ok: true, module: data })
   } catch (err) {
     log.error({ err }, 'PATCH /admin/modules/:id threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/admin/modules/:id/status ──────────────────────────────────────
+router.patch('/modules/:id/status', ...guard, async (req, res) => {
+  try {
+    const { status } = req.body
+    if (!['draft','published','archived'].includes(status)) {
+      return res.status(400).json({ error: 'status must be draft | published | archived.' })
+    }
+    const updates = {
+      status,
+      is_published:  status === 'published',
+      updated_at:    new Date().toISOString(),
+    }
+    if (status === 'published') updates.published_at = new Date().toISOString()
+
+    const { data, error } = await adminSupabase
+      .from('education_modules').update(updates).eq('id', req.params.id).select().maybeSingle()
+    if (error) throw error
+    if (!data) return res.status(404).json({ error: 'Module not found.' })
+
+    log.info({ id: req.params.id, status }, 'module status updated')
+    res.json({ ok: true, module: data })
+  } catch (err) {
+    log.error({ err }, 'PATCH /admin/modules/:id/status threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/admin/modules/:id/analytics ─────────────────────────────────────
+router.get('/modules/:id/analytics', ...guard, async (req, res) => {
+  try {
+    const { data: rows, error } = await adminSupabase
+      .from('module_progress')
+      .select('user_id, completion_pct, status, started_at, completed_at')
+      .eq('module_id', req.params.id)
+    if (error) throw error
+
+    const total     = (rows ?? []).length
+    const completed = (rows ?? []).filter(r => r.status === 'completed' || r.completion_pct === 100).length
+    const inProg    = (rows ?? []).filter(r => r.status === 'in_progress' || (r.completion_pct > 0 && r.completion_pct < 100)).length
+    const avgPct    = total ? Math.round((rows ?? []).reduce((s, r) => s + r.completion_pct, 0) / total) : 0
+
+    res.json({ ok: true, enrolled: total, completed, in_progress: inProg, avg_completion: avgPct })
+  } catch (err) {
+    log.error({ err }, 'GET /admin/modules/:id/analytics threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/admin/modules/:id/resources ────────────────────────────────────
+router.post('/modules/:id/resources', ...guard, async (req, res) => {
+  try {
+    const { title, resource_type = 'link', url, storage_path, order_num = 100 } = req.body
+    if (!title) return res.status(400).json({ error: 'title required.' })
+    if (!['pdf','link','video','file'].includes(resource_type)) {
+      return res.status(400).json({ error: 'resource_type must be pdf|link|video|file.' })
+    }
+    const { data, error } = await adminSupabase
+      .from('education_module_resources')
+      .insert({ module_id: req.params.id, title, resource_type, url: url ?? null, storage_path: storage_path ?? null, order_num })
+      .select().maybeSingle()
+    if (error) throw error
+    res.status(201).json({ ok: true, resource: data })
+  } catch (err) {
+    log.error({ err }, 'POST /admin/modules/:id/resources threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── DELETE /api/admin/modules/:id/resources/:resourceId ──────────────────────
+router.delete('/modules/:id/resources/:resourceId', ...guard, async (req, res) => {
+  try {
+    const { error } = await adminSupabase
+      .from('education_module_resources')
+      .delete()
+      .eq('id', req.params.resourceId)
+      .eq('module_id', req.params.id)
+    if (error) throw error
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'DELETE /admin/modules/:id/resources/:resourceId threw')
     res.status(500).json({ error: err.message })
   }
 })

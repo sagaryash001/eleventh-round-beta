@@ -173,6 +173,135 @@ router.get('/education', ...guard, async (req, res) => {
   }
 })
 
+// ── GET /api/fighter/modules — list published modules with fighter progress ────
+router.get('/modules', ...guard, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const [{ data: mods, error: mErr }, { data: progressRows }] = await Promise.all([
+      adminSupabase
+        .from('education_modules')
+        .select('id, name, description, category, module_type, estimated_mins, is_required, order_num, content_url, status, published_at, metadata')
+        .eq('status', 'published')
+        .order('order_num'),
+      adminSupabase
+        .from('module_progress')
+        .select('module_id, completion_pct, status, started_at, completed_at, last_viewed_at')
+        .eq('user_id', uid),
+    ])
+    if (mErr) throw mErr
+
+    const progressMap = Object.fromEntries((progressRows ?? []).map(p => [p.module_id, p]))
+    const modules = (mods ?? []).map(m => ({
+      ...m,
+      progress: progressMap[m.id] ?? { module_id: m.id, completion_pct: 0, status: 'not_started', started_at: null, completed_at: null },
+    }))
+
+    const completed   = modules.filter(m => m.progress.status === 'completed').length
+    const inProgress  = modules.filter(m => m.progress.status === 'in_progress').length
+    const notStarted  = modules.filter(m => m.progress.status === 'not_started').length
+    const overallPct  = modules.length
+      ? Math.round(modules.reduce((s, m) => s + (m.progress.completion_pct ?? 0), 0) / modules.length)
+      : 0
+
+    res.json({ ok: true, modules, completed, in_progress: inProgress, not_started: notStarted, overall_pct: overallPct })
+  } catch (err) {
+    log.error({ err }, 'GET /fighter/modules threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/fighter/modules/:id — module detail + progress ──────────────────
+router.get('/modules/:id', ...guard, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const [{ data: mod, error: mErr }, progressResult, { data: resources }] = await Promise.all([
+      adminSupabase.from('education_modules').select('*').eq('id', req.params.id).eq('status', 'published').maybeSingle(),
+      adminSupabase.from('module_progress').select('*').eq('module_id', req.params.id).eq('user_id', uid).maybeSingle(),
+      adminSupabase.from('education_module_resources').select('*').eq('module_id', req.params.id).order('order_num'),
+    ])
+    if (mErr) throw mErr
+    if (!mod) return res.status(404).json({ error: 'Module not found.' })
+
+    const now = new Date().toISOString()
+    // Upsert progress row: creates on first view, updates last_viewed_at on repeat.
+    // Using upsert (not insert) prevents 23505 from simultaneous requests.
+    const { data: progress } = await adminSupabase
+      .from('module_progress')
+      .upsert(
+        { user_id: uid, module_id: req.params.id, status: 'in_progress', completion_pct: 50, started_at: now, last_viewed_at: now },
+        { onConflict: 'user_id,module_id', ignoreDuplicates: false },
+      )
+      .select().maybeSingle()
+
+    res.json({ ok: true, module: mod, progress, resources: resources ?? [] })
+  } catch (err) {
+    log.error({ err }, 'GET /fighter/modules/:id threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/fighter/modules/:id/progress ───────────────────────────────────
+// Updates progress status, pct, checklist_state
+router.patch('/modules/:id/progress', ...guard, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const { status, completion_pct, checklist_state, notes } = req.body
+
+    const { data: mod } = await adminSupabase.from('education_modules').select('id, module_type, metadata').eq('id', req.params.id).eq('status', 'published').maybeSingle()
+    if (!mod) return res.status(404).json({ error: 'Module not found.' })
+
+    const now    = new Date().toISOString()
+    const updates = { updated_at: now, last_viewed_at: now }
+
+    if (status && ['not_started','in_progress','completed'].includes(status)) {
+      updates.status = status
+      if (status === 'in_progress' && !updates.started_at) updates.started_at = now
+      if (status === 'completed') { updates.completion_pct = 100; updates.completed_at = now }
+    }
+    if (typeof completion_pct === 'number') {
+      updates.completion_pct = Math.max(0, Math.min(100, completion_pct))
+    }
+    if (checklist_state && typeof checklist_state === 'object') {
+      updates.checklist_state = JSON.stringify(checklist_state)
+    }
+    if (notes !== undefined) updates.notes = notes
+
+    const { data, error } = await adminSupabase
+      .from('module_progress')
+      .upsert({ user_id: uid, module_id: req.params.id, ...updates }, { onConflict: 'user_id,module_id' })
+      .select().maybeSingle()
+    if (error) throw error
+
+    res.json({ ok: true, progress: data })
+  } catch (err) {
+    log.error({ err }, 'PATCH /fighter/modules/:id/progress threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/fighter/modules/:id/complete ────────────────────────────────────
+router.post('/modules/:id/complete', ...guard, async (req, res) => {
+  try {
+    const uid = req.user.id
+    const now = new Date().toISOString()
+    const { data, error } = await adminSupabase
+      .from('module_progress')
+      .upsert({ user_id: uid, module_id: req.params.id, status: 'completed', completion_pct: 100, completed_at: now, last_viewed_at: now }, { onConflict: 'user_id,module_id' })
+      .select().maybeSingle()
+    if (error) throw error
+
+    // Nudge pipeline_progress if stage 5 is about education
+    adminSupabase.from('pipeline_progress')
+      .update({ completion_pct: 100 }).eq('user_id', uid).eq('stage_number', 5)
+      .then(() => {}).catch(() => {})
+
+    res.json({ ok: true, progress: data })
+  } catch (err) {
+    log.error({ err }, 'POST /fighter/modules/:id/complete threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/fighter/sponsorforge ─────────────────────────────────────────────
 router.get('/sponsorforge', ...guard, async (req, res) => {
   try {

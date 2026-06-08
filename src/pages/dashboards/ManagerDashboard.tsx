@@ -11,6 +11,7 @@ import {
   getManagerContracts, type RosterEntry,
 } from '../../lib/api/manager'
 import { getBillingPackages, getBillingStatus, startCheckout, type BillingPackage, type BillingMembership } from '../../lib/api/billing'
+import { getManagerModuleProgress } from '../../lib/api/education'
 
 // ── Tiny local primitives ─────────────────────────────────────────────────────
 function MI({ label, value, onChange, type='text', placeholder, required=false }: {
@@ -46,6 +47,7 @@ const NAV = [
   { id: 'sponsorforge', label: 'SponsorForge',  icon: '⚡' },
   { id: 'playbooks',    label: 'Playbooks',     icon: '📖' },
   { id: 'budget',       label: 'Budget & Camp', icon: '💰' },
+  { id: 'education',    label: 'Education',     icon: '📚' },
   { id: 'reports',      label: 'Reports',       icon: '📊' },
   { id: 'billing',      label: 'Billing',       icon: '💳' },
 ]
@@ -976,11 +978,113 @@ function ManagerBillingTab() {
   )
 }
 
+// ── Manager Education Progress ────────────────────────────────────────────────
+function ManagerEducation() {
+  const [data,    setData]    = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState<string | null>(null)
+
+  useEffect(() => {
+    getManagerModuleProgress()
+      .then(d => { setData(d); setLoading(false) })
+      .catch(e => { setError(e.message); setLoading(false) })
+  }, [])
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} />
+
+  const modules  = data?.modules  ?? []
+  const fighters = data?.fighters ?? []
+  const summary  = data?.summary  ?? { total_modules: 0, avg_completion: 0 }
+
+  if (!fighters.length) return (
+    <div className="space-y-4">
+      <SectionHeading>Roster Education Progress</SectionHeading>
+      <EmptyState icon="📚" title="No Active Roster" body="Add fighters to your roster to track module progress." />
+    </div>
+  )
+  if (!modules.length) return (
+    <div className="space-y-4">
+      <SectionHeading>Roster Education Progress</SectionHeading>
+      <EmptyState icon="📚" title="No Modules Published" body="Education modules will appear here once published by admin." />
+    </div>
+  )
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <SectionHeading>Roster Education Progress</SectionHeading>
+        <div className="font-condensed text-[11px] text-gray-3">Avg {summary.avg_completion}% · {summary.total_modules} modules</div>
+      </div>
+
+      {/* Per-fighter summary */}
+      <div>
+        <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-2">Fighter Progress</div>
+        <div className="space-y-2">
+          {fighters.map((f: any) => (
+            <div key={f.fighter_id} className="dash-card" style={{ borderLeft: '2px solid #222226' }}>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="font-condensed font-bold text-[13px] text-off-white">{f.name}</div>
+                  <div className="font-condensed text-[11px] text-gray-3">{f.completed} / {f.total} completed</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-display text-off-white" style={{ fontSize: 20 }}>{f.avg_pct}%</div>
+                </div>
+              </div>
+              <div className="dash-bar-track mt-2" style={{ height: 3 }}>
+                <div className="dash-bar-fill" style={{ width: `${f.avg_pct}%`, height: '100%',
+                  background: f.avg_pct === 100 ? '#00c060' : 'linear-gradient(90deg,#8b0000,#c00000)' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-module completion rates */}
+      <div>
+        <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-2">Module Completion Rates</div>
+        <div className="dash-card p-0 overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-charcoal-3">
+                {['Module', 'Type', 'Req', 'Roster %'].map(h => (
+                  <th key={h} className="font-condensed text-[9px] font-bold uppercase tracking-[0.2em] text-gray-3 px-4 py-2">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {modules.map((m: any) => (
+                <tr key={m.id} className="border-b border-charcoal-3 last:border-0">
+                  <td className="font-condensed text-[12px] text-off-white px-4 py-2">{m.name}</td>
+                  <td className="font-condensed text-[10px] text-gray-2 px-4 py-2 capitalize">{(m.module_type||'lesson').replace('_',' ')}</td>
+                  <td className="font-condensed text-[10px] px-4 py-2" style={{ color: m.is_required ? '#C41E3A' : '#4a4846' }}>
+                    {m.is_required ? '✓' : '—'}
+                  </td>
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="dash-bar-track flex-1" style={{ height: 3, minWidth: 60 }}>
+                        <div className="dash-bar-fill" style={{ width: `${m.roster_completion_rate}%`, height: '100%',
+                          background: m.roster_completion_rate === 100 ? '#00c060' : '#8b0000' }} />
+                      </div>
+                      <span className="font-condensed text-[11px] text-gray-2 shrink-0">{m.roster_completion_rate}%</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const VIEWS: Record<string,React.FC> = {
   overview: Overview, roster: Roster, applications: Applications,
   contracts: ManagerContracts, obligations: Obligations,
   sponsorforge: SponsorForge, playbooks: Playbooks, budget: Budget, reports: Reports,
-  billing: ManagerBillingTab,
+  billing: ManagerBillingTab, education: ManagerEducation,
 }
 
 export default function ManagerDashboard() {
