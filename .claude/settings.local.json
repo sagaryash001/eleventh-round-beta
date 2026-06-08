@@ -76,7 +76,12 @@
       "Bash(grep -v \"//\\\\|eq\\('status'\\\\|neq\\('status'\\\\|req.valid\\\\|conn.status\\\\|updates.status\\\\|log\\\\|error\\\\|guard\\\\|requireM\\\\|requireA\\\\|fighter_id\\\\|manager_id\\\\|pending\\\\|active\\\\|declined\\\\|removed\")",
       "Bash(Select-String -Path \"C:\\\\Users\\\\athar\\\\eleventh-round-beta\\\\src\\\\pages\\\\dashboards\\\\AdminDashboard.tsx\" -Pattern \"getAdminConversationList|adminLockConversation|messaging|AdminMessaging|CONV_STATUS_COLOR\")",
       "Bash(Select-Object LineNumber, Line)",
-      "Bash(dir server *)"
+      "Bash(dir server *)",
+      "Bash(xargs grep -l \"SUPABASE_SERVICE\\\\|service_role\")",
+      "Bash(cat vite.config.ts)",
+      "Bash(cat vite.config.js)",
+      "Bash(sed -n '260,285p' server/routes/fighter.js)",
+      "Bash(sed -n '520,545p' server/routes/fighter.js)"
     ]
   }
 }
