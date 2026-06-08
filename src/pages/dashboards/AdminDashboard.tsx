@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import DashShell from './DashShell'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   StatCard, ListCard, ReadinessRing, BarChart,
   SectionHeading, DashSkeleton, EmptyState, ApiError, ChecklistItem,
@@ -95,7 +95,7 @@ function Spinner() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// OVERVIEW
+// OVERVIEW — Command Center layout
 // ═════════════════════════════════════════════════════════════════════════════
 function Overview() {
   const [metrics, setMetrics] = useState<any>(null)
@@ -110,65 +110,185 @@ function Overview() {
   }, [])
 
   const { data: overviewData } = useApi<any>('/api/admin/overview')
+  const { data: healthData }   = useApi<any>('/api/health')
 
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
 
-  const m = metrics ?? {}
-  const alerts = overviewData?.alerts ?? []
+  const m              = metrics ?? {}
+  const alerts         = overviewData?.alerts ?? []
   const pendingVetting = overviewData?.pending_vetting ?? 0
 
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Platform Overview</SectionHeading>
+  const actionItems: { text: string; urgency: 'red' | 'yellow' }[] = []
+  if ((m.overdue_obligations  ?? 0) > 0)
+    actionItems.push({ text: `${m.overdue_obligations} overdue obligation${m.overdue_obligations > 1 ? 's' : ''}`, urgency: 'red' })
+  if (pendingVetting > 0)
+    actionItems.push({ text: `${pendingVetting} sponsor${pendingVetting > 1 ? 's' : ''} pending vetting`, urgency: 'yellow' })
+  if ((m.proofs_pending_review ?? 0) > 0)
+    actionItems.push({ text: `${m.proofs_pending_review} proof${m.proofs_pending_review > 1 ? 's' : ''} pending sponsor review`, urgency: 'yellow' })
+  if ((m.disputed_contracts   ?? 0) > 0)
+    actionItems.push({ text: `${m.disputed_contracts} contract${m.disputed_contracts > 1 ? 's' : ''} in dispute`, urgency: 'red' })
 
-      {/* Key counts */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-        <StatCard label="Total Users"    value={String(m.total_users ?? 0)}  sub="All roles"   barPct={Math.min(m.total_users ?? 0, 100)} />
-        <StatCard label="Fighters"       value={String(m.fighters ?? 0)}     sub="Registered"  barPct={(m.total_users ?? 0) > 0 ? Math.round((m.fighters ?? 0) / m.total_users * 100) : 0} />
-        <StatCard label="Managers"       value={String(m.managers ?? 0)}     sub="Active"      barPct={(m.total_users ?? 0) > 0 ? Math.round((m.managers ?? 0) / m.total_users * 100) : 0} />
-        <StatCard label="Sponsors"       value={String(m.sponsors ?? 0)}     sub={pendingVetting > 0 ? `${pendingVetting} pending vetting` : 'Registered'}
-          barPct={(m.total_users ?? 0) > 0 ? Math.round((m.sponsors ?? 0) / m.total_users * 100) : 0}
-          barColor={pendingVetting > 0 ? '#c9a82c' : '#c00000'} />
+  const revDisplay = (m.total_revenue_usd ?? 0) > 0
+    ? `$${((m.total_revenue_usd) / 100).toFixed(0)}`
+    : '$—'
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Vital strip ── */}
+      <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(6,1fr)' }}>
+        {[
+          { label: 'Total Users',  value: m.total_users          ?? 0, accent: '#8b0000' },
+          { label: 'Fighters',     value: m.fighters             ?? 0, accent: '#8b0000' },
+          { label: 'Managers',     value: m.managers             ?? 0, accent: '#8b0000' },
+          { label: 'Sponsors',     value: m.sponsors             ?? 0, accent: pendingVetting > 0 ? '#c9a82c' : '#8b0000' },
+          { label: 'Live Opps',    value: m.active_opportunities ?? 0, accent: '#00c060' },
+          { label: 'Contracts',    value: m.active_contracts     ?? 0, accent: '#00c060' },
+        ].map(({ label, value, accent }) => (
+          <div key={label} className="bg-charcoal-2 border border-charcoal-3 px-3 py-3 text-center"
+            style={{ borderTop: `2px solid ${accent}` }}>
+            <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.3em] text-gray-3 mb-1">{label}</div>
+            <div className="font-display text-off-white" style={{ fontSize: 28, lineHeight: 1 }}>{value}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Marketplace stats */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-        <StatCard label="Active Opportunities" value={String(m.active_opportunities ?? 0)} sub="Published" barPct={50} />
-        <StatCard label="Applications"         value={String(m.total_applications ?? 0)}   sub="All time"  barPct={50} />
-        <StatCard label="Active Contracts"     value={String(m.active_contracts ?? 0)}     sub="Live"      barPct={50} />
-        <div className="dash-card text-center">
-          <div className="dash-label">Revenue</div>
-          <div className="font-display text-off-white" style={{ fontSize: 28 }}>
-            {(m.total_revenue_usd ?? 0) > 0 ? `$${(m.total_revenue_usd / 100).toFixed(0)}` : '$0'}
+      {/* ── Two-col operational panels ── */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+
+        {/* Action Required */}
+        <div className="dash-card" style={{ borderLeft: '3px solid #c00000' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="font-condensed text-[9px] font-bold tracking-[0.35em] uppercase"
+              style={{ color: '#c00000' }}>Action Required</span>
+            {actionItems.length > 0 && (
+              <span className="font-condensed text-[9px] font-bold px-1.5 py-0.5"
+                style={{ background: '#c0000022', color: '#c00000', border: '1px solid #c0000044' }}>
+                {actionItems.length}
+              </span>
+            )}
+          </div>
+          {actionItems.length === 0 ? (
+            <div className="flex items-center gap-2 py-2">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#00c060', boxShadow: '0 0 5px #00c06055' }} />
+              <span className="font-condensed text-[12px] text-gray-2">All clear — no pending actions</span>
+            </div>
+          ) : (
+            <ul className="space-y-0">
+              {actionItems.map((item, i) => (
+                <li key={i} className="flex items-center gap-2.5 py-2 border-b border-charcoal-3 last:border-0">
+                  <span className="w-1.5 h-1.5 rounded-sm flex-shrink-0"
+                    style={{ background: item.urgency === 'red' ? '#c00000' : '#c9a82c' }} />
+                  <span className="font-condensed text-[12px] text-gray-1 flex-1">{item.text}</span>
+                  <span className={`badge ${item.urgency === 'red' ? 'badge-red' : 'badge-yellow'}`}>
+                    {item.urgency === 'red' ? 'Urgent' : 'Review'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Platform Health */}
+        <div className="dash-card" style={{ borderLeft: '3px solid #222226' }}>
+          <div className="font-condensed text-[9px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-3">Platform Health</div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Supabase', ok: !!healthData?.supabase,                       na: false },
+              { label: 'Email',    ok: !!(healthData?.sendgrid || healthData?.email), na: false },
+              { label: 'API',      ok: true,                                          na: false },
+              { label: 'Stripe',   ok: false,                                         na: true  },
+            ].map(s => (
+              <div key={s.label}
+                className="flex items-center gap-2.5 bg-charcoal-2 px-3 py-2 border border-charcoal-3">
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+                  background: s.na ? '#3a3a3e' : s.ok ? '#00c060' : '#c00000',
+                  boxShadow:  s.na ? 'none' : s.ok ? '0 0 5px #00c06055' : '0 0 5px #c0000055',
+                }} />
+                <span className="font-condensed text-[11px] text-gray-2 flex-1">{s.label}</span>
+                <span className="font-condensed text-[9px] font-bold uppercase tracking-wider"
+                  style={{ color: s.na ? '#3a3a3e' : s.ok ? '#00c060' : '#c00000' }}>
+                  {s.na ? 'N/A' : s.ok ? 'OK' : 'ERR'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Metric row ── */}
+      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+
+        <div className="dash-card">
+          <div className="dash-label">Lifetime Revenue</div>
+          <div className="font-display mt-1" style={{ fontSize: 34, lineHeight: 1,
+            color: (m.total_revenue_usd ?? 0) > 0 ? '#f0ece4' : '#4a4846' }}>
+            {revDisplay}
           </div>
           <div className="dash-sub">From succeeded payments</div>
         </div>
+
+        <div className="dash-card">
+          <div className="dash-label">Obligations</div>
+          <div className="flex items-end gap-3 mt-1">
+            <div>
+              <div className="font-display text-off-white" style={{ fontSize: 34, lineHeight: 1 }}>
+                {m.total_obligations ?? 0}
+              </div>
+              <div className="dash-sub">Total · {m.completed_obligations ?? 0} completed</div>
+            </div>
+            {(m.overdue_obligations ?? 0) > 0 && (
+              <div className="mb-0.5 ml-2">
+                <div className="font-display" style={{ fontSize: 26, lineHeight: 1, color: '#c00000' }}>
+                  {m.overdue_obligations}
+                </div>
+                <div className="font-condensed text-[9px] uppercase tracking-widest text-blood-glow">Overdue</div>
+              </div>
+            )}
+          </div>
+          <div className="dash-bar-track mt-2">
+            <div className="dash-bar-fill" style={{
+              width: `${(m.total_obligations ?? 0) > 0
+                ? Math.round((m.completed_obligations ?? 0) / m.total_obligations * 100) : 0}%`,
+              background: '#00c060',
+            }} />
+          </div>
+        </div>
+
+        <div className="dash-card">
+          <div className="dash-label">Marketplace</div>
+          <div className="font-display text-off-white mt-1" style={{ fontSize: 34, lineHeight: 1 }}>
+            {m.total_applications ?? 0}
+          </div>
+          <div className="dash-sub">Applications · {m.active_opportunities ?? 0} live opportunities</div>
+          <div className="dash-bar-track mt-2">
+            <div className="dash-bar-fill" style={{ width: `${Math.min((m.active_opportunities ?? 0) * 10, 100)}%` }} />
+          </div>
+        </div>
       </div>
 
-      {/* Obligations */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-        <StatCard label="Total Obligations" value={String(m.total_obligations ?? 0)}    sub="All active"  barPct={100} />
-        <StatCard label="Overdue"           value={<span className={(m.overdue_obligations??0)>0?'text-blood-glow':''}>{m.overdue_obligations ?? 0}</span>}
-          sub="Need attention" barPct={(m.overdue_obligations??0)>0?30:0} barColor="#c00000" />
-        <StatCard label="Completed"         value={String(m.completed_obligations ?? 0)} sub="All time"   barPct={100} barColor="#00c060" />
-      </div>
-
-      {pendingVetting > 0 && (
-        <div className="px-4 py-3 border border-charcoal-3" style={{ borderLeft: '3px solid #c9a82c', background: 'rgba(201,168,44,0.06)' }}>
-          <p className="font-condensed font-bold text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: '#c9a82c' }}>
-            Action Required
-          </p>
-          <p className="font-body text-gray-2" style={{ fontSize: 13 }}>
-            {pendingVetting} sponsor{pendingVetting > 1 ? 's' : ''} pending vetting — go to the <strong className="text-off-white">Sponsor Vetting</strong> tab to review.
-          </p>
+      {/* ── Alerts feed ── */}
+      {alerts.length > 0 && (
+        <div className="dash-card p-0 overflow-hidden">
+          <div className="px-4 py-2 border-b border-charcoal-3 flex items-center gap-2">
+            <span className="font-condensed text-[9px] font-bold tracking-[0.35em] uppercase text-gray-3">System Alerts</span>
+            <span className="font-condensed text-[9px] px-1.5 py-0.5"
+              style={{ background: '#c0000022', color: '#c00000', border: '1px solid #c0000033' }}>
+              {alerts.length}
+            </span>
+          </div>
+          <ul className="dc-list px-4 py-2">
+            {alerts.map((a: any, i: number) => (
+              <li key={i} className="dash-list-item">
+                <span className="dash-item-name">{a.name ?? a}</span>
+                <span className={`badge badge-${a.type ?? 'red'}`}>{a.badge ?? 'Alert'}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-
-      {alerts.length > 0
-        ? <ListCard label="System Alerts" items={alerts} />
-        : <EmptyState icon="✓" title="No Active Alerts" body="The platform has no unresolved alerts." />
-      }
     </div>
   )
 }
@@ -1701,25 +1821,87 @@ function AdminPayments() {
 
 // ═════════════════════════════════════════════════════════════════════════════
 const VIEWS: Record<string, React.FC> = {
-  overview:    Overview,
-  setup:       Setup,
-  users:       Users,
-  vetting:     SponsorVetting,
-  packages:    Packages,
-  content:     Content,
-  marketplace: Marketplace,
-  contracts:   AdminContracts,
-  messaging:   AdminMessaging,
-  reports:     Reports,
-  mentors:     Mentors,
-  sponsorforge:SponsorForgeAdmin,
-  payments:    AdminPayments,
+  overview:     Overview,
+  setup:        Setup,
+  users:        Users,
+  vetting:      SponsorVetting,
+  packages:     Packages,
+  content:      Content,
+  marketplace:  Marketplace,
+  contracts:    AdminContracts,
+  messaging:    AdminMessaging,
+  reports:      Reports,
+  mentors:      Mentors,
+  sponsorforge: SponsorForgeAdmin,
+  payments:     AdminPayments,
 }
 
 export default function AdminDashboard() {
+  const [active, setActive] = useState(NAV[0].id)
+  const { user, logout }    = useAuth()
+  const navigate            = useNavigate()
+  const V = VIEWS[active] ?? Overview
+
   return (
-    <DashShell navItems={NAV} title="Admin Dashboard" subtitle="Platform Administration">
-      {tab => { const V = VIEWS[tab] ?? Overview; return <V /> }}
-    </DashShell>
+    <div className="min-h-screen bg-black flex flex-col" style={{ fontFamily:"'Barlow',sans-serif" }}>
+
+      {/* ── Command Bar ── */}
+      <header className="bg-near-black border-b border-charcoal-3 flex items-stretch flex-shrink-0">
+        <div className="flex items-center px-5 py-3 border-r border-charcoal-3 flex-shrink-0">
+          <Link to="/" className="no-underline inline-block">
+            <img src="/logo-white.png" alt="Eleventh Round" style={{ height: 22, width: 'auto' }} />
+          </Link>
+        </div>
+        <div className="flex items-center px-5 py-3 border-r border-charcoal-3 flex-shrink-0">
+          <div>
+            <div className="font-condensed text-[8px] font-bold tracking-[0.4em] uppercase leading-none mb-0.5"
+              style={{ color: '#C41E3A' }}>Platform Admin</div>
+            <div className="font-display text-off-white uppercase leading-none" style={{ fontSize: 14 }}>
+              Command Center
+            </div>
+          </div>
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center gap-5 px-5 py-3">
+          {user && (
+            <div className="text-right hidden sm:block">
+              <div className="font-condensed text-[11px] font-bold text-off-white leading-tight">{user.name}</div>
+              <div className="font-condensed text-[9px] text-gray-3 leading-tight">{user.email}</div>
+            </div>
+          )}
+          <div className="relative cursor-pointer">
+            <span className="text-gray-3 hover:text-off-white transition-colors" style={{ fontSize: 17 }}>🔔</span>
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: '#C41E3A' }} />
+          </div>
+          <Link to="/" className="font-condensed font-bold uppercase text-gray-3 hover:text-off-white transition-colors no-underline"
+            style={{ fontSize: 10, letterSpacing:'0.2em' }}>← Home</Link>
+          <button onClick={() => { logout(); navigate('/login') }}
+            className="font-condensed font-bold uppercase text-gray-3 hover:text-blood-glow transition-colors bg-transparent border-0 cursor-pointer"
+            style={{ fontSize: 10, letterSpacing:'0.25em' }}>Sign Out</button>
+        </div>
+      </header>
+
+      {/* ── Tab strip ── */}
+      <div className="bg-near-black border-b border-charcoal-3 px-4 flex overflow-x-auto flex-shrink-0"
+        style={{ scrollbarWidth: 'none' }}>
+        {NAV.map(item => (
+          <button key={item.id} onClick={() => setActive(item.id)}
+            className="font-condensed text-[10px] font-bold tracking-[0.12em] uppercase px-3.5 py-3.5 cursor-pointer border-0 bg-transparent whitespace-nowrap transition-all duration-150 flex items-center gap-1.5"
+            style={{
+              color:        active === item.id ? '#f0ece4' : '#4a4846',
+              borderBottom: active === item.id ? '2px solid #C41E3A' : '2px solid transparent',
+              marginBottom: -1,
+            }}>
+            <span style={{ fontSize: 12 }}>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── Content ── */}
+      <main className="flex-1 overflow-y-auto p-6 bg-black">
+        <V />
+      </main>
+    </div>
   )
 }
