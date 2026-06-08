@@ -690,16 +690,27 @@ export default function ContractDetailPage() {
               </div>
             </div>
 
-            {canAccept && (
-              <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="text-xs mb-3" style={{ color: '#7a7672' }}>
-                  By clicking Accept, you agree to the terms of this contract.
+            {/* Role-aware action / status message */}
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {canAccept ? (
+                <>
+                  <p className="text-xs mb-3" style={{ color: '#7a7672' }}>
+                    {isSponsor ? 'Your signature is required to move this contract forward.' : 'Your signature is required to activate this contract.'}
+                  </p>
+                  <Btn onClick={handleAccept} disabled={acting}>
+                    {acting ? 'Signing…' : isSponsor ? 'Accept & Sign as Sponsor' : 'Accept & Sign as Fighter'}
+                  </Btn>
+                </>
+              ) : (isSponsor || isFighter) && contract.status !== 'active' && contract.status !== 'completed' && contract.status !== 'terminated' ? (
+                <p className="text-xs" style={{ color: '#7a7672' }}>
+                  {contract.status === 'pending_fighter' && isSponsor
+                    ? '✓ You have signed. Waiting for the fighter to accept.'
+                    : contract.status === 'draft' && isFighter
+                    ? 'Waiting for the sponsor to sign first.'
+                    : null}
                 </p>
-                <Btn onClick={handleAccept} disabled={acting}>
-                  {acting ? 'Signing…' : 'Accept & Sign'}
-                </Btn>
-              </div>
-            )}
+              ) : null}
+            </div>
           </Card>
         </Section>
 

@@ -62,31 +62,29 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     const uid = req.user.id
 
-    const [membershipResult, paymentsResult] = await Promise.all([
-      adminSupabase
-        .from('memberships')
-        .select('id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, created_at, packages(id, name, audience, price_cents, billing_interval, features)')
-        .eq('user_id', uid)
-        .in('status', ['active', 'past_due'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      adminSupabase
-        .from('payments')
-        .select('id, amount, currency, status, created_at, packages(id, name)')
-        .eq('user_id', uid)
-        .not('package_id', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(10)
-        .catch(() => ({ data: [] })),
-    ])
+    const membershipResult = await adminSupabase
+      .from('memberships')
+      .select('id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, created_at, packages(id, name, audience, price_cents, billing_interval, features)')
+      .eq('user_id', uid)
+      .in('status', ['active', 'past_due'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     if (membershipResult.error) throw membershipResult.error
+
+    const paymentsResult = await adminSupabase
+      .from('payments')
+      .select('id, amount, currency, status, created_at, packages(id, name)')
+      .eq('user_id', uid)
+      .not('package_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(10)
 
     res.json({
       ok:         true,
       membership: membershipResult.data ?? null,
-      payments:   paymentsResult.data ?? [],
+      payments:   paymentsResult.data  ?? [],
     })
   } catch (err) {
     log.error({ err }, 'GET /billing/me threw')
