@@ -37,7 +37,7 @@ router.get('/overview', ...guard, async (req, res) => {
     ] = await Promise.all([
       sb.from('profiles').select('id, role, account_type, status'),
       sb.from('alerts').select('id, message, type').eq('resolved', false)
-          .order('created_at', { ascending: false }).catch(() => ({ data: [] })),
+          .order('created_at', { ascending: false }),
       sb.from('sponsor_profiles')
         .select('*', { count: 'exact', head: true })
         .eq('is_verified', false)
@@ -45,8 +45,7 @@ router.get('/overview', ...guard, async (req, res) => {
       sb.from('sponsorship_opportunities')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'published')
-        .is('deleted_at', null)
-        .catch(() => ({ count: 0 })),
+        .is('deleted_at', null),
     ])
 
     const list      = users ?? []
@@ -104,24 +103,21 @@ router.get('/dashboard', ...guard, async (req, res) => {
     ] = await Promise.all([
       sb.from('profiles').select('id, role, status'),
       sb.from('sponsorship_opportunities').select('*', { count: 'exact', head: true })
-        .eq('status', 'published').is('deleted_at', null).catch(() => ({ count: 0 })),
-      sb.from('applications').select('*', { count: 'exact', head: true })
-        .catch(() => ({ count: 0 })),
+        .eq('status', 'published').is('deleted_at', null),
+      sb.from('applications').select('*', { count: 'exact', head: true }),
       sb.from('contracts').select('*', { count: 'exact', head: true })
-        .eq('status', 'active').is('deleted_at', null).catch(() => ({ count: 0 })),
+        .eq('status', 'active').is('deleted_at', null),
       sb.from('contracts').select('*', { count: 'exact', head: true })
-        .is('deleted_at', null).catch(() => ({ count: 0 })),
+        .is('deleted_at', null),
       sb.from('contracts').select('*', { count: 'exact', head: true })
-        .eq('status', 'in_dispute').is('deleted_at', null).catch(() => ({ count: 0 })),
-      sb.from('obligations').select('status').catch(() => ({ data: [] })),
-      sb.from('sponsorship_payments').select('amount_usd').eq('status', 'succeeded')
-        .catch(() => ({ data: [] })),
+        .eq('status', 'in_dispute').is('deleted_at', null),
+      sb.from('obligations').select('status'),
+      sb.from('sponsorship_payments').select('amount_usd').eq('status', 'succeeded'),
       sb.from('obligation_proofs').select('*', { count: 'exact', head: true })
-        .eq('review_status', 'pending').catch(() => ({ count: 0 })),
-      sb.from('payments').select('amount, status').not('package_id', 'is', null)
-        .catch(() => ({ data: [] })),
+        .eq('review_status', 'pending'),
+      sb.from('payments').select('amount, status').not('package_id', 'is', null),
       sb.from('memberships').select('*', { count: 'exact', head: true }).eq('status', 'active')
-        .not('package_id', 'is', null).catch(() => ({ count: 0 })),
+        .not('package_id', 'is', null),
     ])
 
     const obs           = obsRows ?? []
@@ -178,7 +174,7 @@ router.get('/contracts', ...guard, async (req, res) => {
       .range(offset, offset + limit - 1)
     if (status) q = q.eq('status', status)
 
-    const { data: contracts, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    const { data: contracts, error, count } = await q
     if (error) throw error
 
     const fids = [...new Set((contracts ?? []).map(c => c.fighter_id))]
@@ -494,7 +490,7 @@ router.get('/packages', ...guard, async (req, res) => {
   try {
     const [{ data: pkgs, error }, { data: memberships }] = await Promise.all([
       adminSupabase.from('packages').select('*').order('sort_order'),
-      adminSupabase.from('memberships').select('tier, status').catch(() => ({ data: [] })),
+      adminSupabase.from('memberships').select('tier, status'),
     ])
     if (error) throw error
 
@@ -616,7 +612,6 @@ router.get('/analytics', ...guard, async (req, res) => {
       .select('amount_usd, created_at')
       .eq('status', 'succeeded')
       .gte('created_at', sixMonthsAgo)
-      .catch(() => ({ data: [] }))
 
     const monthly = []
     for (let i = 5; i >= 0; i--) {
@@ -637,10 +632,11 @@ router.get('/analytics', ...guard, async (req, res) => {
 
 router.get('/mentors', ...guard, async (req, res) => {
   try {
-    const [{ data: cons }, { data: bookings }] = await Promise.all([
-      adminSupabase.from('consultants').select('*').order('created_at').catch(() => ({ data: [] })),
-      adminSupabase.from('bookings').select('status').eq('status', 'completed').catch(() => ({ data: [] })),
+    const [{ data: cons, error: consErr }, { data: bookings }] = await Promise.all([
+      adminSupabase.from('consultants').select('*').order('created_at'),
+      adminSupabase.from('bookings').select('status').eq('status', 'completed'),
     ])
+    if (consErr) log.warn({ err: consErr }, '/admin/mentors: consultants table not available')
 
     res.json({
       active_consultants:  (cons ?? []).filter(c => c.availability !== 'unavailable').length,
@@ -665,8 +661,8 @@ router.get('/sponsorforge', ...guard, async (req, res) => {
     const [{ data: sf }, { count: sponsorCount }, { count: matchCount }, { count: activeOppCount }] = await Promise.all([
       adminSupabase.from('sponsorforge_profiles').select('user_id, is_locked'),
       adminSupabase.from('sponsor_profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
-      adminSupabase.from('matches').select('*', { count: 'exact', head: true }).eq('stale', false).neq('status', 'dismissed').catch(() => ({ count: 0 })),
-      adminSupabase.from('sponsorship_opportunities').select('*', { count: 'exact', head: true }).eq('status', 'published').is('deleted_at', null).catch(() => ({ count: 0 })),
+      adminSupabase.from('matches').select('*', { count: 'exact', head: true }).eq('stale', false).neq('status', 'dismissed'),
+      adminSupabase.from('sponsorship_opportunities').select('*', { count: 'exact', head: true }).eq('status', 'published').is('deleted_at', null),
     ])
 
     const eligible = (sf ?? []).filter(s => !s.is_locked).length
@@ -788,16 +784,16 @@ router.get('/marketplace', ...guard, async (req, res) => {
       { data: appFunnel },
       { data: recent },
     ] = await Promise.all([
-      sb.from('contracts').select('*', { count:'exact', head:true }).is('deleted_at', null).catch(() => ({ count:0 })),
-      sb.from('contracts').select('*', { count:'exact', head:true }).eq('status','active').is('deleted_at', null).catch(() => ({ count:0 })),
-      sb.from('sponsorship_opportunities').select('*', { count:'exact', head:true }).catch(() => ({ count:0 })),
-      sb.from('applications').select('*', { count:'exact', head:true }).catch(() => ({ count:0 })),
-      sb.from('sponsor_profiles').select('*', { count:'exact', head:true }).is('deleted_at', null).catch(() => ({ count:0 })),
-      sb.from('sponsor_profiles').select('*', { count:'exact', head:true }).eq('is_verified', true).catch(() => ({ count:0 })),
-      sb.from('sponsorship_payments').select('amount_usd').eq('status','succeeded').catch(() => ({ data:[] })),
-      sb.from('applications').select('status').catch(() => ({ data:[] })),
+      sb.from('contracts').select('*', { count:'exact', head:true }).is('deleted_at', null),
+      sb.from('contracts').select('*', { count:'exact', head:true }).eq('status','active').is('deleted_at', null),
+      sb.from('sponsorship_opportunities').select('*', { count:'exact', head:true }),
+      sb.from('applications').select('*', { count:'exact', head:true }),
+      sb.from('sponsor_profiles').select('*', { count:'exact', head:true }).is('deleted_at', null),
+      sb.from('sponsor_profiles').select('*', { count:'exact', head:true }).eq('is_verified', true),
+      sb.from('sponsorship_payments').select('amount_usd').eq('status','succeeded'),
+      sb.from('applications').select('status'),
       sb.from('contracts').select('id, status, value_usd, created_at').is('deleted_at', null)
-        .order('created_at', { ascending:false }).limit(5).catch(() => ({ data:[] })),
+        .order('created_at', { ascending:false }).limit(5),
     ])
 
     const gmv      = (gmvRows ?? []).reduce((s, p) => s + (p.amount_usd ?? 0), 0)
@@ -839,7 +835,7 @@ router.get('/disputes', ...guard, async (req, res) => {
       .range(offset, offset + limit - 1)
     if (status) q = q.eq('status', status)
 
-    const { data, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    const { data, error, count } = await q
     if (error) throw error
     res.json({ ok: true, disputes: data ?? [], total: count ?? 0 })
   } catch (err) {
@@ -867,7 +863,7 @@ router.get('/payments', ...guard, async (req, res) => {
       .range(offset, offset + limit - 1)
     if (status) q = q.eq('status', status)
 
-    const { data: rows, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    const { data: rows, error, count } = await q
     if (error) throw error
 
     const uids = [...new Set((rows ?? []).map(r => r.user_id).filter(Boolean))]
@@ -883,7 +879,6 @@ router.get('/payments', ...guard, async (req, res) => {
       .from('payments')
       .select('amount, status')
       .not('package_id', 'is', null)
-      .catch(() => ({ data: [] }))
 
     const totalRevenueCents    = (allSucceeded ?? []).filter(p => p.status === 'succeeded').reduce((s, p) => s + (p.amount ?? 0), 0)
     const successfulPayments   = (allSucceeded ?? []).filter(p => p.status === 'succeeded').length
@@ -921,7 +916,7 @@ router.get('/memberships', ...guard, async (req, res) => {
       .range(offset, offset + limit - 1)
     if (status) q = q.eq('status', status)
 
-    const { data: rows, error, count } = await q.catch(() => ({ data: [], count: 0 }))
+    const { data: rows, error, count } = await q
     if (error) throw error
 
     const uids = [...new Set((rows ?? []).map(r => r.user_id).filter(Boolean))]
@@ -954,7 +949,7 @@ router.get('/conversations', ...guard, async (req, res) => {
       .range(offset, offset + limit - 1)
     if (status) q = q.eq('status', status)
 
-    const { data: convs, error, count } = await q.catch(() => ({ data: [], count: 0, error: null }))
+    const { data: convs, error, count } = await q
     if (error) throw error
 
     res.json({ ok: true, conversations: convs ?? [], total: count ?? 0 })
