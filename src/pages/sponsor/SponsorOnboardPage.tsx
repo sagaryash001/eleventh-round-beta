@@ -10,7 +10,7 @@ const WEIGHT_CLASSES = [
   'Middleweight', 'Light Heavyweight', 'Heavyweight',
   "Women's Strawweight", "Women's Flyweight", "Women's Bantamweight",
 ]
-const PROMOTIONS   = ['UFC', 'ONE Championship', 'PFL', 'Bellator', 'Regional / Other']
+const COMBAT_SPORTS = ['Striking', 'Grappling', 'MMA']
 const GOALS        = [
   { value: 'awareness',  label: 'Brand Awareness' },
   { value: 'conversion', label: 'Conversions / Sales' },
@@ -224,7 +224,7 @@ export default function SponsorOnboardPage() {
                     <Field label="Budget Max (USD/yr)" type="number" value={form.budget_max_usd} onChange={set('budget_max_usd')} placeholder="50000" />
                   </div>
                   <Chips label="Campaign Goals" options={GOALS} selected={form.campaign_goals} onToggle={toggle('campaign_goals')} />
-                  <Chips label="Preferred Promotions" options={PROMOTIONS.map(p => ({ value: p, label: p }))} selected={form.preferred_promotions} onToggle={toggle('preferred_promotions')} />
+                  <Chips label="Preferred Combat Sports" options={COMBAT_SPORTS.map(p => ({ value: p.toLowerCase(), label: p }))} selected={form.preferred_promotions} onToggle={toggle('preferred_promotions')} />
                   <Chips label="Preferred Weight Classes" options={WEIGHT_CLASSES.map(w => ({ value: w, label: w }))} selected={form.preferred_weight_classes} onToggle={toggle('preferred_weight_classes')} />
                 </div>
               </>

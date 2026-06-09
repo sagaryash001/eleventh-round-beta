@@ -59,10 +59,10 @@ export default function Footer() {
         <div className="flex items-center gap-8 mb-10">
           {/* Instagram */}
           <a
-            href="https://www.instagram.com/theeleventhround"
+            href="https://www.instagram.com/eleventhrnd"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Instagram"
+            aria-label="Instagram (@eleventhrnd)"
             className="group flex flex-col items-center gap-1.5 no-underline"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"

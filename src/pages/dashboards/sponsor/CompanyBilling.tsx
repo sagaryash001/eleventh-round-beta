@@ -12,7 +12,7 @@ const WEIGHT_CLASSES = [
   'Middleweight', 'Light Heavyweight', 'Heavyweight',
   "Women's Strawweight", "Women's Flyweight", "Women's Bantamweight",
 ]
-const PROMOTIONS = ['UFC', 'ONE Championship', 'PFL', 'Bellator', 'Regional / Other']
+const COMBAT_SPORTS = ['Striking', 'Grappling', 'MMA']
 const GOALS = [
   { value: 'awareness',  label: 'Brand Awareness' },
   { value: 'conversion', label: 'Conversions / Sales' },
@@ -216,8 +216,8 @@ function PreferencesTab({ sp, onUpdate }: { sp: SponsorProfile; onUpdate: (u: Pa
           <Chips options={GOALS} selected={local.campaign_goals ?? []} onToggle={v => toggle('campaign_goals', v)} />
         </div>
         <div>
-          <FieldLabel>Preferred Promotions</FieldLabel>
-          <Chips options={PROMOTIONS.map(p => ({ value: p, label: p }))}
+          <FieldLabel>Preferred Combat Sports</FieldLabel>
+          <Chips options={COMBAT_SPORTS.map(p => ({ value: p.toLowerCase(), label: p }))}
             selected={local.preferred_promotions ?? []} onToggle={v => toggle('preferred_promotions', v)} />
         </div>
         <div>

@@ -54,7 +54,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id:    1,
-    name:  'Brian Maeali',
+    name:  'Brian Maieli',
     role:  'Sports Medicine & Injury Consultant',
     bio:
       'Certified Orthopedic Surgery Physician Assistant and sports medicine specialist with over ' +
@@ -62,7 +62,7 @@ export const MANAGERS: Manager[] = [
       'performance longevity. Founder of ILP Sports Consultants and host of The Injured List ' +
       'Podcast. Holds a Master\'s in Kinesiology from Temple University and PA certification from ' +
       'Weill Cornell Medical College.',
-    photo: '/team/brian-maeali.jpg',
+    photo: '/team/brian-maieli.jpg',
   },
   {
     id:    2,
@@ -87,11 +87,11 @@ export const MANAGERS: Manager[] = [
       'of Operations & Matchmaker at Star Boxing, currently in fighter operations at Overtime. ' +
       'Provides guidance on legal structure, combat sports operations, sponsorship agreements, ' +
       'and fighter professionalism systems.',
-    photo: '/team/antonio-palmieri.jpg',
+    photo: '/team/antonio-palmieri.jpeg',
   },
   {
     id:    4,
-    name:  'Next Play Communications',
+    name:  'NextPlay Communications',
     role:  'Communication & Leadership Development',
     bio:
       'Communication and leadership development company founded by Quest Sandel and Charlie Gu, ' +
@@ -100,6 +100,6 @@ export const MANAGERS: Manager[] = [
       'politicians, and athletes, Next Play helps competitors develop confidence, composure, ' +
       'media presence, and storytelling ability. At The Eleventh Round, they lead athlete branding, ' +
       'media training, and long-term professional development initiatives.',
-    photo: '/team/nextplay-communications.png',
+    photo: '/team/nextplay-communications.jpeg',
   },
 ]
