@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '../../../hooks/useApi'
 import { getBillingStatus } from '../../../lib/api/billing'
 import { getContracts } from '../../../lib/api/contracts'
-import { DashSkeleton, ApiError, EmptyState } from '../DashWidgets'
-import { FunnelBar, StatusPie } from '../admin/AdminCharts'
+import { getMyOpportunities } from '../../../lib/api/opportunities'
+import { DashSkeleton, ApiError } from '../DashWidgets'
+import { FunnelBar } from '../admin/AdminCharts'
+import { ReadinessRing, MiniBar } from '../shared/CommandLayout'
 import type { SponsorProfile } from '../../../lib/api/sponsors'
 
 export default function Overview({ sp }: { sp: SponsorProfile }) {
   const { data: mkt, loading: mktLoad, error: mktErr } = useApi<any>('/api/sponsor/marketplace')
-  const [billing, setBilling]   = useState<any>(null)
+  const [billing,   setBilling]   = useState<any>(null)
   const [contracts, setContracts] = useState<any[]>([])
+  const [opps,      setOpps]      = useState<any[]>([])
 
   useEffect(() => {
     getBillingStatus()
@@ -18,6 +21,9 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
       .catch(() => {})
     getContracts()
       .then(r => setContracts(r.contracts ?? []))
+      .catch(() => {})
+    getMyOpportunities()
+      .then(r => setOpps(r.data ?? []))
       .catch(() => {})
   }, [])
 
@@ -29,160 +35,222 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
   const totalApps    = mkt?.total_applications      ?? 0
   const acceptedApps = mkt?.accepted_applications   ?? 0
   const activeC      = mkt?.active_contracts        ?? 0
-  const totalC       = mkt?.total_contracts         ?? 0
   const totalSpent   = mkt?.total_spent_usd         ?? 0
   const byStatus     = mkt?.applications_by_status  ?? {}
 
-  const awaitingSignature = contracts.filter(c => c.status === 'draft').length
-  const newApps           = byStatus.applied ?? 0
-  const shortlisted       = byStatus.shortlisted ?? 0
-  const spentDisplay      = totalSpent >= 1000 ? `$${(totalSpent / 1000).toFixed(1)}K` : totalSpent > 0 ? `$${totalSpent}` : '$—'
+  const newApps         = byStatus.applied      ?? 0
+  const shortlisted     = byStatus.shortlisted  ?? 0
+  const awaitingSign    = contracts.filter(c => c.status === 'draft').length
+  const totalAppsCount  = opps.reduce((s: number, o: any) => s + (o.application_count ?? 0), 0)
+  const totalViewsCount = opps.reduce((s: number, o: any) => s + (o.view_count ?? 0), 0)
 
-  const actionItems: { text: string; urgency: 'red' | 'yellow'; href: string }[] = []
-  if (!sp.is_verified)
-    actionItems.push({ text: 'Sponsor profile pending admin vetting — campaigns cannot be published yet', urgency: 'yellow', href: '#billing' })
-  if (!billing?.membership)
-    actionItems.push({ text: 'No active plan — choose a package to unlock platform features', urgency: 'yellow', href: '#billing' })
-  if (newApps > 0)
-    actionItems.push({ text: `${newApps} new application${newApps > 1 ? 's' : ''} waiting for review`, urgency: 'red', href: '/sponsor/opportunities' })
-  if (awaitingSignature > 0)
-    actionItems.push({ text: `${awaitingSignature} contract${awaitingSignature > 1 ? 's' : ''} awaiting your signature`, urgency: 'red', href: '/contracts' })
+  // ── Panel 2: Deal Readiness score ────────────────────────────────────────
+  const profileFields = [sp.company_name, sp.website_url, sp.industry, sp.description, sp.hq_country]
+  const profilePct    = Math.round(profileFields.filter(Boolean).length / profileFields.length * 100)
+  const verifiedPct   = sp.is_verified ? 100 : 0
+  const campaignPct   = pubOpps > 0 ? 100 : 0
+  const pipelinePct   = totalApps > 0 ? Math.min(100, shortlisted > 0 ? 70 + Math.round(shortlisted / totalApps * 30) : 30) : 0
+  const billingPct    = billing?.membership ? 100 : 0
+  const dealScore     = Math.round([verifiedPct, profilePct, campaignPct, billingPct].reduce((a, b) => a + b, 0) / 4)
+
+  // ── Panel 3: Actions Due ─────────────────────────────────────────────────
+  const notVerified   = !sp.is_verified ? 1 : 0
+  const noBilling     = !billing?.membership ? 1 : 0
+  const totalActions  = newApps + awaitingSign + notVerified + noBilling
+  const actionBarPct  = Math.min(totalActions * 18, 100)
+
+  // ── Activity feed: built from real contract + campaign data ──────────────
+  type FeedRow = { name: string; badge: string; type: 'green' | 'red' | 'yellow' }
+  const feedRows: FeedRow[] = []
+
+  contracts.slice(0, 3).forEach(c => {
+    const val = `$${(c.value_usd ?? 0).toLocaleString()}`
+    if (c.status === 'draft')          feedRows.push({ name: `${val} contract — awaiting your signature`, badge: 'Sign Now',  type: 'red' })
+    else if (c.status === 'pending_fighter') feedRows.push({ name: `${val} contract — awaiting fighter`,  badge: 'Pending',   type: 'yellow' })
+    else if (c.status === 'active')    feedRows.push({ name: `${val} contract — active`,                  badge: 'Active',    type: 'green' })
+    else if (c.status === 'completed') feedRows.push({ name: `${val} contract — completed`,               badge: 'Completed', type: 'green' })
+  })
+  if (newApps > 0 && feedRows.length < 5)
+    feedRows.push({ name: `${newApps} new application${newApps > 1 ? 's' : ''} pending review`, badge: 'Action Required', type: 'red' })
+  if (shortlisted > 0 && feedRows.length < 5)
+    feedRows.push({ name: `${shortlisted} fighter${shortlisted > 1 ? 's' : ''} shortlisted`, badge: 'In Progress', type: 'yellow' })
+  if (pubOpps > 0 && feedRows.length < 5)
+    feedRows.push({ name: `${pubOpps} campaign${pubOpps > 1 ? 's' : ''} live`, badge: 'Live', type: 'green' })
+
+  const spentDisplay = totalSpent >= 1000 ? `$${(totalSpent / 1000).toFixed(1)}K` : totalSpent > 0 ? `$${totalSpent}` : '$—'
 
   const funnelData = Object.entries(byStatus).map(([s, c]) => ({
     label: s.replace(/_/g, ' '), value: c as number,
   }))
 
-  const campaignStatusData = [
-    { name: 'Published', value: pubOpps,                              color: '#00c060' },
-    { name: 'Draft',     value: Math.max(0, totalOpps - pubOpps),     color: '#c9a82c' },
-    { name: 'Contracts', value: activeC,                              color: '#C41E3A' },
-  ]
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-3.5">
 
-      {/* Vital strip */}
-      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(6,1fr)' }}>
-        {[
-          { label: 'Live Campaigns', value: pubOpps,      accent: '#00c060' },
-          { label: 'Applications',   value: totalApps,    accent: newApps > 0 ? '#c00000' : '#8b0000' },
-          { label: 'Shortlisted',    value: shortlisted,  accent: '#8b0000' },
-          { label: 'Accepted',       value: acceptedApps, accent: '#8b0000' },
-          { label: 'Contracts',      value: activeC,      accent: '#00c060' },
-          { label: 'Spend',          value: spentDisplay, accent: '#8b0000' },
-        ].map(({ label, value, accent }) => (
-          <div key={label} className="bg-charcoal-2 border border-charcoal-3 px-3 py-3 text-center"
-            style={{ borderTop: `2px solid ${accent}` }}>
-            <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.3em] text-gray-3 mb-1">{label}</div>
-            <div className="font-display text-off-white" style={{ fontSize: 24, lineHeight: 1 }}>{value}</div>
-          </div>
-        ))}
-      </div>
+      {/* ── Row 1 + Row 2 in one grid ── */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
 
-      {/* Main operational row */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-
-        {/* Action Required */}
-        <div className="dash-card" style={{ borderLeft: '3px solid #c00000' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="font-condensed text-[9px] font-bold tracking-[0.35em] uppercase" style={{ color: '#c00000' }}>
-              Action Required
-            </span>
-            {actionItems.length > 0 && (
-              <span className="font-condensed text-[9px] font-bold px-1.5 py-0.5"
-                style={{ background: '#c0000022', color: '#c00000', border: '1px solid #c0000044' }}>
-                {actionItems.length}
-              </span>
-            )}
-          </div>
-          {actionItems.length === 0 ? (
-            <div className="flex items-center gap-2 py-2">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#00c060', boxShadow: '0 0 5px #00c06055' }} />
-              <span className="font-condensed text-[12px] text-gray-2">All clear — no pending actions</span>
-            </div>
+        {/* ── Panel 1: Live Campaigns ── */}
+        <div className="dash-card">
+          <div className="dash-label">Live Campaigns</div>
+          {pubOpps === 0 ? (
+            <>
+              <div className="dash-stat" style={{ color: '#4a4846' }}>0</div>
+              <div className="dash-sub">No active campaigns</div>
+              <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '0%' }} /></div>
+              <Link to="/sponsor/opportunities/new"
+                className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] mt-2 inline-block no-underline"
+                style={{ color: '#C41E3A' }}>
+                + Create Campaign
+              </Link>
+            </>
           ) : (
-            <ul>
-              {actionItems.map((item, i) => (
-                <li key={i} className="flex items-center gap-2.5 py-2 border-b border-charcoal-3 last:border-0">
-                  <span className="w-1.5 h-1.5 rounded-sm flex-shrink-0"
-                    style={{ background: item.urgency === 'red' ? '#c00000' : '#c9a82c' }} />
-                  <span className="font-condensed text-[11px] text-gray-1 flex-1">{item.text}</span>
-                  <span className={`badge ${item.urgency === 'red' ? 'badge-red' : 'badge-yellow'} flex-shrink-0`}>
-                    {item.urgency === 'red' ? 'Urgent' : 'Review'}
-                  </span>
+            <>
+              <div className="dash-stat">{pubOpps}</div>
+              <div className="dash-sub">Campaigns running</div>
+              <div className="dash-bar-track">
+                <div className="dash-bar-fill" style={{ width: `${Math.min(pubOpps * 20, 100)}%` }} />
+              </div>
+              <div className="dash-sub">
+                {totalAppsCount > 0 && `${totalAppsCount} applicants`}
+                {totalAppsCount > 0 && totalViewsCount > 0 && ' · '}
+                {totalViewsCount > 0 && `${totalViewsCount} views`}
+                {totalAppsCount === 0 && totalViewsCount === 0 && 'Awaiting applicants'}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── Panel 2: Deal Readiness ── */}
+        <div className="dash-card">
+          <div className="dash-label">Deal Readiness</div>
+          <div className="flex gap-5 items-center mt-1 flex-wrap">
+            <ReadinessRing pct={dealScore} />
+            <div className="grid grid-cols-2 gap-2 flex-1 min-w-0" style={{ minWidth: 140 }}>
+              <MiniBar label="Profile"   pct={profilePct} />
+              <MiniBar label="Campaigns" pct={campaignPct} />
+              <MiniBar label="Pipeline"  pct={pipelinePct} />
+              <MiniBar label="Billing"   pct={billingPct} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Panel 3: Actions Due ── */}
+        <div className="dash-card">
+          <div className="dash-label">Actions Due</div>
+          {totalActions === 0 ? (
+            <>
+              <div className="dash-stat" style={{ color: '#00c060' }}>0</div>
+              <div className="dash-sub" style={{ color: '#00c060' }}>All clear</div>
+            </>
+          ) : (
+            <>
+              <div className="dash-stat" style={{ color: '#C41E3A' }}>{totalActions}</div>
+              <div className="dash-sub">Need attention</div>
+              <div className="dash-bar-track">
+                <div className="dash-bar-fill" style={{ width: `${actionBarPct}%`, background: '#C41E3A' }} />
+              </div>
+              <div className="dash-sub">
+                {[
+                  newApps      > 0 && `${newApps} to review`,
+                  awaitingSign > 0 && `${awaitingSign} to sign`,
+                  notVerified  > 0 && 'vetting pending',
+                  noBilling    > 0 && 'no active plan',
+                ].filter(Boolean).join(' · ')}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── Row 2: Full-width Recent Activity ── */}
+        <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
+          <div className="dash-label">Recent Activity</div>
+          {feedRows.length === 0 ? (
+            <p className="dash-sub py-3">
+              No sponsor activity yet. Launch a campaign to begin.
+            </p>
+          ) : (
+            <ul className="dc-list">
+              {feedRows.map((row, i) => (
+                <li key={i} className="dash-list-item">
+                  <span className="dash-item-name">{row.name}</span>
+                  <span className={`badge badge-${row.type}`}>{row.badge}</span>
                 </li>
               ))}
             </ul>
           )}
         </div>
+      </div>
 
-        {/* Performance snapshot */}
-        <div className="space-y-3">
-          <div className="dash-card">
-            <div className="dash-label">Campaign Performance</div>
-            <div className="flex gap-5 mt-1">
-              <div>
-                <div className="font-display text-off-white" style={{ fontSize: 26, lineHeight: 1 }}>{pubOpps}</div>
-                <div className="dash-sub">Live campaigns</div>
-              </div>
-              <div>
-                <div className="font-display text-off-white" style={{ fontSize: 26, lineHeight: 1 }}>{totalApps}</div>
-                <div className="dash-sub">Total applicants</div>
-              </div>
-              <div>
-                <div className="font-display text-off-white" style={{ fontSize: 26, lineHeight: 1 }}>{totalC}</div>
-                <div className="dash-sub">Contracts</div>
-              </div>
+      {/* ── Row 3: Campaign Performance + Talent Pipeline ── */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+        <div className="dash-card">
+          <div className="dash-label mb-3">Application Pipeline</div>
+          <FunnelBar data={funnelData} />
+        </div>
+        <div className="dash-card">
+          <div className="dash-label mb-2">Talent Summary</div>
+          {[
+            { l: 'Applications',  v: totalApps },
+            { l: 'Shortlisted',   v: shortlisted },
+            { l: 'Accepted',      v: acceptedApps },
+            { l: 'Active Deals',  v: activeC },
+          ].map(({ l, v }) => (
+            <div key={l} className="flex items-center justify-between py-1.5 border-b border-charcoal-3 last:border-0">
+              <span className="font-condensed text-[11px] text-gray-2">{l}</span>
+              <span className="font-condensed text-[13px] font-bold text-off-white">{v}</span>
             </div>
-          </div>
-          <div className="dash-card">
-            <div className="dash-label">Billing Status</div>
-            {billing?.membership ? (
-              <div className="flex items-center gap-3 mt-1">
-                <span className="w-2 h-2 rounded-full" style={{ background: '#00c060', boxShadow: '0 0 5px #00c06055' }} />
-                <div>
-                  <div className="font-condensed text-[13px] font-bold text-off-white">{billing.membership.packages?.name ?? 'Active Plan'}</div>
-                  <div className="dash-sub capitalize">{billing.membership.status}</div>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-1">
-                <span className="font-condensed text-[12px] text-gray-3">No active plan — go to </span>
-                <span className="font-condensed text-[12px] text-off-white">Company &amp; Billing</span>
-                <span className="font-condensed text-[12px] text-gray-3"> to choose a package.</span>
-              </div>
-            )}
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Charts */}
-      {(totalApps > 0 || totalOpps > 0) ? (
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
-          <div className="dash-card">
-            <div className="dash-label mb-3">Applications Pipeline</div>
-            <FunnelBar data={funnelData} />
-          </div>
-          <div className="dash-card">
-            <div className="dash-label mb-3">Campaign Overview</div>
-            <StatusPie data={campaignStatusData} />
-          </div>
-        </div>
-      ) : (
-        <div className="dash-card" style={{ borderStyle: 'dashed' }}>
-          <div className="flex flex-col items-center py-4 gap-2">
-            <div className="font-condensed text-[9px] uppercase tracking-[0.3em] text-gray-3">No Activity Yet</div>
-            <p className="font-condensed text-[12px] text-gray-3" style={{ maxWidth: 360, textAlign: 'center', lineHeight: 1.6 }}>
-              {sp.is_verified
-                ? 'Publish a campaign and start receiving applications to see analytics here.'
-                : 'Complete admin vetting to publish campaigns. Prepare your campaigns in the meantime.'}
-            </p>
-            <Link to="/sponsor/opportunities/new" className="btn-primary text-[11px] py-2 px-5 no-underline mt-2">
-              Create Campaign
+      {/* ── Row 4: Contract Operations + Billing ── */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="dash-card">
+          <div className="dash-label mb-2">Contract Operations</div>
+          {[
+            { l: 'Awaiting Your Signature', v: awaitingSign, c: awaitingSign > 0 ? '#c9a82c' : '#4a4846' },
+            { l: 'Active Contracts',        v: activeC,      c: '#00c060' },
+            { l: 'Total Contracts',         v: contracts.length, c: '#f0ece4' },
+          ].map(({ l, v, c }) => (
+            <div key={l} className="flex items-center justify-between py-1.5 border-b border-charcoal-3 last:border-0">
+              <span className="font-condensed text-[11px] text-gray-2">{l}</span>
+              <span className="font-condensed text-[13px] font-bold" style={{ color: c }}>{v}</span>
+            </div>
+          ))}
+          {awaitingSign > 0 && (
+            <Link to="/contracts"
+              className="font-condensed font-bold uppercase text-[10px] tracking-[0.2em] mt-2 inline-block no-underline"
+              style={{ color: '#C41E3A' }}>
+              Review Contracts →
             </Link>
+          )}
+        </div>
+
+        <div className="dash-card">
+          <div className="dash-label mb-2">Billing & Spend</div>
+          {billing?.membership ? (
+            <div className="flex items-center gap-2 py-1.5 border-b border-charcoal-3">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#00c060', boxShadow: '0 0 5px #00c06055' }} />
+              <span className="font-condensed text-[12px] font-bold text-off-white flex-1">
+                {billing.membership.packages?.name ?? 'Active Plan'}
+              </span>
+              <span className="badge badge-green">Active</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 py-1.5 border-b border-charcoal-3">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#c9a82c' }} />
+              <span className="font-condensed text-[12px] text-gray-2 flex-1">No active plan</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between py-1.5">
+            <span className="font-condensed text-[11px] text-gray-2">Total Spend</span>
+            <span className="font-condensed text-[13px] font-bold"
+              style={{ color: totalSpent > 0 ? '#f0ece4' : '#4a4846' }}>
+              {spentDisplay}
+            </span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
