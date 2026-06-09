@@ -13,7 +13,7 @@ const TABS = [
   { id: 'modules',   label: 'Modules'      },
   { id: 'progress',  label: 'Progress'     },
   { id: 'resources', label: 'Resources'    },
-  { id: 'mentors',   label: 'Mentors / V2' },
+  { id: 'mentors',   label: 'Mentors'      },
 ]
 
 // ── Module editor constants ───────────────────────────────────────────────────
@@ -489,48 +489,30 @@ function ProgressTab() {
 // ── Resources tab ─────────────────────────────────────────────────────────────
 function ResourcesTab() {
   return (
-    <EmptyState icon="○" title="Resources — Coming Soon"
-      body="Education resources linked to modules will appear here. This section is planned for V2." />
+    <EmptyState icon="○" title="No Resources Yet"
+      body="Education resources linked to modules will appear here once added from the module editor." />
   )
 }
 
 // ── Mentors tab ───────────────────────────────────────────────────────────────
 function MentorsTab() {
-  const { data, loading, error } = useApi<any>('/api/admin/mentors')
+  const { data, loading, error } = useApi<any>('/api/admin/consultants')
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
 
-  const consultants = data?.consultants ?? []
+  const consultants  = data?.consultants ?? []
+  const activeCount  = consultants.filter((c: any) => c.status === 'active').length
 
   return (
     <div className="space-y-5">
-      {/* V2 callout */}
-      <div className="dash-card" style={{ borderLeft: '3px solid #4a4846' }}>
-        <div className="font-condensed text-[9px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-1.5">Mentors — V2 Feature</div>
-        <p className="font-condensed text-[12px] text-gray-2" style={{ maxWidth: 560, lineHeight: 1.6 }}>
-          Full mentor operations (booking, session tracking, calendar integration) are planned for V2.
-          Consultants can currently be managed directly in Supabase via the <code className="text-off-white bg-charcoal-3 px-1 py-0.5 text-[11px]">consultants</code> table.
-        </p>
-      </div>
-
       {!consultants.length ? (
         <EmptyState icon="○" title="No Consultants Yet"
-          body="Add consultants directly in Supabase (consultants table). Full mentor management arrives in V2." />
+          body="No consultants added yet. Go to Content → Consultants to add them." />
       ) : (
         <>
-          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-            <div className="dash-card text-center">
-              <div className="dash-label">Active Consultants</div>
-              <div className="font-display text-off-white mt-1" style={{ fontSize: 30 }}>{data?.active_consultants ?? 0}</div>
-            </div>
-            <div className="dash-card text-center">
-              <div className="dash-label">Sessions This Month</div>
-              <div className="font-display text-off-white mt-1" style={{ fontSize: 30 }}>{data?.sessions_this_month ?? 0}</div>
-            </div>
-            <div className="dash-card text-center">
-              <div className="dash-label">Booking Rate</div>
-              <div className="font-display text-off-white mt-1" style={{ fontSize: 30 }}>{data?.booking_rate ?? 0}%</div>
-            </div>
+          <div className="dash-card" style={{ maxWidth: 180 }}>
+            <div className="dash-label">Active</div>
+            <div className="font-display text-off-white mt-1" style={{ fontSize: 30 }}>{activeCount}</div>
           </div>
           <div className="space-y-2">
             {consultants.map((c: any, i: number) => (
@@ -539,7 +521,10 @@ function MentorsTab() {
                   <div className="font-condensed text-[13px] font-bold text-off-white">{c.name}</div>
                   {c.specialty && <div className="font-condensed text-[10px] text-gray-3">{c.specialty}</div>}
                 </div>
-                <span className={`badge badge-${c.type ?? 'yellow'}`}>{c.badge ?? 'Active'}</span>
+                <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-2 py-1 border"
+                  style={{ borderColor: c.status === 'active' ? '#00c060' : '#4a4846', color: c.status === 'active' ? '#00c060' : '#4a4846' }}>
+                  {c.status}
+                </span>
               </div>
             ))}
           </div>

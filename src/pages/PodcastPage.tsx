@@ -1,22 +1,34 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { Link } from 'react-router-dom'
+import { apiGet } from '../lib/api/client'
 
-const EPISODES = [
-  { ep: 'E012', title: 'Building a Career After the Belt',       guest: 'Marcus Torres',       role: 'Former WBA Champion',           duration: '58m', topic: 'Career Transition' },
-  { ep: 'E011', title: 'What Sponsors Actually Want',            guest: 'Kira Fontaine',        role: 'Sports Brand Director',         duration: '44m', topic: 'Sponsorship' },
-  { ep: 'E010', title: 'Managing a Roster Without Burning Out',  guest: 'Ray Callahan',         role: 'Independent Manager',           duration: '51m', topic: 'Management' },
-  { ep: 'E009', title: 'Financial Literacy No One Taught You',   guest: 'Devon Price CPA',      role: 'Combat Sports Accountant',      duration: '62m', topic: 'Finance' },
-  { ep: 'E008', title: 'Brand Before the Fight Camp Starts',     guest: 'Anya Solis',           role: 'Featherweight Contender',       duration: '39m', topic: 'Branding' },
-  { ep: 'E007', title: 'The Contract You Should Have Read',      guest: 'James Okafor Esq.',    role: 'Combat Sports Attorney',        duration: '55m', topic: 'Contracts' },
-]
-
-const TOPICS = ['All', 'Career Transition', 'Sponsorship', 'Management', 'Finance', 'Branding', 'Contracts']
+type Episode = {
+  id: string
+  title: string
+  description: string | null
+  episode_number: number | null
+  season: number | null
+  spotify_url: string | null
+  apple_url: string | null
+  youtube_url: string | null
+  embed_url: string | null
+  thumbnail_path: string | null
+  duration: string | null
+  published_at: string | null
+  sort_order: number
+}
 
 export default function PodcastPage() {
-  const [filter, setFilter] = React.useState('All')
-  const filtered = filter === 'All' ? EPISODES : EPISODES.filter(e => e.topic === filter)
+  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [loading,  setLoading]  = useState(true)
+
+  useEffect(() => {
+    apiGet<{ ok: boolean; episodes: Episode[] }>('/api/public/podcast')
+      .then(d => setEpisodes(d.episodes ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div className="min-h-screen bg-black">
@@ -43,7 +55,6 @@ export default function PodcastPage() {
 
           <div className="flex gap-4 mt-10 flex-wrap">
             <a href="#episodes" className="btn-primary">Browse Episodes</a>
-            <a href="#" className="btn-ghost">Subscribe</a>
           </div>
         </div>
       </section>
@@ -67,57 +78,83 @@ export default function PodcastPage() {
       {/* Episodes */}
       <section id="episodes" className="py-16 px-10">
         <div className="max-w-[1200px] mx-auto">
-          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-            <h2 className="font-display text-off-white uppercase" style={{ fontSize: 'clamp(32px,4vw,56px)', lineHeight: 0.9 }}>
-              Episodes
-            </h2>
-            {/* Topic filter */}
-            <div className="flex gap-2 flex-wrap">
-              {TOPICS.map(t => (
-                <button
-                  key={t}
-                  onClick={() => setFilter(t)}
-                  className="font-condensed text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2 border transition-all cursor-pointer"
-                  style={{
-                    background: filter === t ? '#8b0000' : 'transparent',
-                    borderColor: filter === t ? '#8b0000' : '#222226',
-                    color: filter === t ? '#f0ece4' : '#4a4846',
-                  }}
-                >
-                  {t}
-                </button>
+          <h2 className="font-display text-off-white uppercase mb-8" style={{ fontSize: 'clamp(32px,4vw,56px)', lineHeight: 0.9 }}>
+            Episodes
+          </h2>
+
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-charcoal border border-charcoal-3 px-7 py-5 animate-pulse h-[70px]" />
               ))}
             </div>
-          </div>
+          ) : episodes.length === 0 ? (
+            <div className="py-16 text-center border border-charcoal-3">
+              <div className="font-condensed text-gray-3 text-[13px] tracking-wide">No episodes published yet.</div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {episodes.map(ep => {
+                const epLabel = ep.season && ep.episode_number
+                  ? `S${ep.season}E${ep.episode_number}`
+                  : ep.episode_number ? `E${ep.episode_number}` : null
+                const primaryLink = ep.embed_url || ep.spotify_url || ep.youtube_url || ep.apple_url || null
 
-          <div className="space-y-2">
-            {filtered.map((ep, i) => (
-              <div
-                key={ep.ep}
-                className="bg-charcoal border border-charcoal-3 px-7 py-5 flex items-center gap-6 hover:border-blood/40 transition-all group cursor-pointer"
-                style={{ borderLeft: '2px solid transparent', transition: 'all 0.25s' }}
-                onMouseEnter={e => (e.currentTarget.style.borderLeftColor = '#8b0000')}
-                onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
-              >
-                <div className="font-condensed text-[10px] font-bold tracking-[0.3em] text-blood-glow min-w-[40px]">{ep.ep}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-condensed text-[15px] font-bold tracking-wide text-off-white mb-1 group-hover:text-blood-glow transition-colors truncate">
-                    {ep.title}
+                return (
+                  <div
+                    key={ep.id}
+                    className="bg-charcoal border border-charcoal-3 px-7 py-5 flex items-center gap-6 hover:border-blood/40 transition-all group"
+                    style={{ borderLeft: '2px solid transparent', transition: 'all 0.25s' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderLeftColor = '#8b0000')}
+                    onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
+                  >
+                    {epLabel && (
+                      <div className="font-condensed text-[10px] font-bold tracking-[0.3em] text-blood-glow min-w-[52px]">{epLabel}</div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-condensed text-[15px] font-bold tracking-wide text-off-white mb-1 group-hover:text-blood-glow transition-colors truncate">
+                        {ep.title}
+                      </div>
+                      {ep.description && (
+                        <div className="font-condensed text-[12px] text-gray-3 truncate">{ep.description}</div>
+                      )}
+                    </div>
+                    {ep.duration && (
+                      <div className="font-condensed text-[11px] text-gray-3 min-w-[36px] text-right">{ep.duration}</div>
+                    )}
+                    {/* Platform links */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {ep.spotify_url && (
+                        <a href={ep.spotify_url} target="_blank" rel="noopener noreferrer"
+                          className="font-condensed text-[9px] font-bold uppercase tracking-wide px-2 py-1 border border-charcoal-3 text-gray-3 hover:text-off-white hover:border-green-900 transition-colors">
+                          Spotify
+                        </a>
+                      )}
+                      {ep.apple_url && (
+                        <a href={ep.apple_url} target="_blank" rel="noopener noreferrer"
+                          className="font-condensed text-[9px] font-bold uppercase tracking-wide px-2 py-1 border border-charcoal-3 text-gray-3 hover:text-off-white hover:border-purple-900 transition-colors">
+                          Apple
+                        </a>
+                      )}
+                      {ep.youtube_url && (
+                        <a href={ep.youtube_url} target="_blank" rel="noopener noreferrer"
+                          className="font-condensed text-[9px] font-bold uppercase tracking-wide px-2 py-1 border border-charcoal-3 text-gray-3 hover:text-off-white hover:border-red-900 transition-colors">
+                          YouTube
+                        </a>
+                      )}
+                    </div>
+                    {primaryLink && (
+                      <a href={primaryLink} target="_blank" rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-full border border-charcoal-3 flex items-center justify-center hover:border-blood/50 transition-colors flex-shrink-0"
+                        onClick={e => e.stopPropagation()}>
+                        <span className="text-gray-3 text-[10px] group-hover:text-off-white transition-colors">▶</span>
+                      </a>
+                    )}
                   </div>
-                  <div className="font-condensed text-[12px] text-gray-3">
-                    {ep.guest} <span className="text-gray-3 opacity-50 mx-1">·</span> {ep.role}
-                  </div>
-                </div>
-                <div className="font-condensed text-[10px] font-bold tracking-[0.2em] uppercase text-gray-3 border border-charcoal-3 px-3 py-1 whitespace-nowrap">
-                  {ep.topic}
-                </div>
-                <div className="font-condensed text-[11px] text-gray-3 min-w-[36px] text-right">{ep.duration}</div>
-                <div className="w-8 h-8 rounded-full border border-charcoal-3 flex items-center justify-center group-hover:border-blood/50 transition-colors">
-                  <span className="text-gray-3 text-[10px] group-hover:text-off-white transition-colors">▶</span>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 

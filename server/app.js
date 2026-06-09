@@ -28,6 +28,7 @@ import onboardingRoutes        from './routes/onboarding.js'
 import uploadRoutes            from './routes/uploads.js'
 import publicRoutes            from './routes/public.js'
 import billingRoutes           from './routes/billing.js'
+import contentRoutes           from './routes/content.js'
 
 const app = express()
 
@@ -96,6 +97,7 @@ app.use('/api/onboarding',  onboardingRoutes)
 app.use('/api/uploads',    uploadRoutes)
 app.use('/api/public',     publicRoutes)
 app.use('/api/billing',    billingRoutes)
+app.use('/api/admin',      contentRoutes)
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({

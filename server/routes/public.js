@@ -163,4 +163,88 @@ router.get('/team/:slug', async (req, res) => {
   }
 })
 
+// ── GET /api/public/podcast ───────────────────────────────────────────────────
+router.get('/podcast', async (req, res) => {
+  try {
+    const sb = adminSupabase
+    if (!sb) return res.status(503).json({ error: 'Database not configured.' })
+
+    const { data, error } = await sb
+      .from('podcast_episodes')
+      .select('id,title,description,episode_number,season,spotify_url,apple_url,youtube_url,embed_url,thumbnail_path,duration,published_at,sort_order')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .order('sort_order')
+
+    if (error) throw error
+    res.json({ ok: true, episodes: data ?? [] })
+  } catch (err) {
+    log.error({ err }, 'GET /public/podcast threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/public/apparel ───────────────────────────────────────────────────
+router.get('/apparel', async (req, res) => {
+  try {
+    const sb = adminSupabase
+    if (!sb) return res.status(503).json({ error: 'Database not configured.' })
+
+    const { data, error } = await sb
+      .from('apparel_products')
+      .select('id,name,description,price_display,category,image_path,external_url,featured,sort_order')
+      .eq('status', 'published')
+      .order('featured', { ascending: false })
+      .order('sort_order')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    res.json({ ok: true, products: data ?? [] })
+  } catch (err) {
+    log.error({ err }, 'GET /public/apparel threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/public/apparel/:id/click ───────────────────────────────────────
+// Click tracking is best-effort — never crash.
+router.post('/apparel/:id/click', async (req, res) => {
+  try {
+    const sb = adminSupabase
+    if (sb) {
+      await sb.from('apparel_clicks').insert({ product_id: req.params.id }).catch(() => {})
+    }
+  } catch {
+    // intentionally silent — click tracking must not affect UX
+  }
+  res.json({ ok: true })
+})
+
+// ── GET /api/public/consultants ───────────────────────────────────────────────
+router.get('/consultants', async (req, res) => {
+  try {
+    const sb = adminSupabase
+    if (!sb) return res.status(503).json({ error: 'Database not configured.' })
+
+    let q = sb
+      .from('consultants')
+      .select('id,name,title,specialty,bio,booking_url,image_path,location,tags,audience,hourly_rate_usd,linkedin_url,sort_order')
+      .eq('status', 'active')
+      .order('sort_order')
+      .order('created_at')
+
+    const { audience } = req.query
+    if (audience && ['all', 'fighter', 'manager', 'sponsor'].includes(audience)) {
+      q = q.or(`audience.eq.all,audience.eq.${audience}`)
+    }
+
+    const { data, error } = await q
+    if (error) throw error
+    res.json({ ok: true, consultants: data ?? [] })
+  } catch (err) {
+    log.error({ err }, 'GET /public/consultants threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router

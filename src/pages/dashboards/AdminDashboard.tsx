@@ -5,6 +5,7 @@ import CommandCenter  from './admin/CommandCenter'
 import UsersVetting   from './admin/UsersVetting'
 import MarketplaceOps from './admin/MarketplaceOps'
 import Education      from './admin/Education'
+import Content        from './admin/Content'
 import BillingSystem  from './admin/BillingSystem'
 
 const ZONES = [
@@ -12,6 +13,7 @@ const ZONES = [
   { id: 'users',       label: 'Users & Vetting'  },
   { id: 'marketplace', label: 'Marketplace Ops'  },
   { id: 'education',   label: 'Education'        },
+  { id: 'content',     label: 'Content'          },
   { id: 'billing',     label: 'Billing & System' },
 ]
 
@@ -87,6 +89,7 @@ export default function AdminDashboard() {
         {zone === 'users'       && <UsersVetting />}
         {zone === 'marketplace' && <MarketplaceOps />}
         {zone === 'education'   && <Education />}
+        {zone === 'content'     && <Content />}
         {zone === 'billing'     && <BillingSystem />}
       </main>
     </div>

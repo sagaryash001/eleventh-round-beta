@@ -327,7 +327,7 @@ function CCHealth() {
     { label: 'Supabase',      ok: !!health?.supabase,                        na: false, detail: health?.supabase ? 'Auth + DB connected' : 'Set SUPABASE_URL + SERVICE_ROLE_KEY' },
     { label: 'SendGrid',      ok: !!health?.sendgrid,                        na: false, detail: health?.sendgrid ? 'Transactional email active' : 'Set SENDGRID_API_KEY + FROM_EMAIL' },
     { label: 'SMTP Fallback', ok: !!health?.email,                           na: false, detail: health?.email ? 'SMTP transport active' : 'Optional — set EMAIL_HOST/USER/PASS' },
-    { label: 'Stripe',        ok: false,                                      na: true,  detail: 'Stripe Connect integration — planned V2' },
+    { label: 'Stripe',        ok: false,                                      na: true,  detail: 'Payout integration not connected' },
     { label: 'Storage',       ok: !!health?.supabase,                        na: false, detail: 'Supabase storage (PDFs, assets)' },
   ]
 

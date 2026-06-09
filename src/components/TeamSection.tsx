@@ -404,13 +404,6 @@ export default function TeamSection() {
                 fighter-facing programs.
               </p>
             </div>
-            <div
-              className="font-condensed font-bold uppercase text-gray-3 italic flex items-center gap-2"
-              style={{ fontSize: 9, letterSpacing: '0.35em', flexShrink: 0 }}
-            >
-              <div style={{ width: 20, height: 1, background: '#4a4846' }} />
-              Team profiles coming soon
-            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

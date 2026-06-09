@@ -380,7 +380,7 @@ function MembershipsTab() {
 function SetupTab() {
   const { user }                      = useAuth()
   const { data: usersData }           = useApi<any>('/api/admin/users')
-  const { data: mentorsData }         = useApi<any>('/api/admin/mentors')
+  const { data: mentorsData }         = useApi<any>('/api/admin/consultants')
   const { data: contentData }         = useApi<any>('/api/admin/content')
   const { data: pkgData }             = useApi<any>('/api/admin/packages')
   const { data: healthData, loading } = useApi<any>('/api/health')
@@ -390,7 +390,8 @@ function SetupTab() {
   const [testMsg,   setTestMsg]   = useState('')
 
   const hasUsers        = (usersData?.total       ?? 0) > 0
-  const hasMentors      = (mentorsData?.active_consultants ?? 0) > 0
+  const activeConsultants = (mentorsData?.consultants ?? []).filter((c: any) => c.status === 'active').length
+  const hasMentors        = activeConsultants > 0
   const hasModules      = (contentData?.published_modules ?? contentData?.total_modules ?? 0) > 0
   const hasPackages     = (pkgData?.packages?.length ?? 0) > 0
   const emailOk         = !!healthData?.email
@@ -408,7 +409,7 @@ function SetupTab() {
     { done: hasUsers,       label: 'First users registered',      detail: hasUsers ? `${usersData?.total ?? '?'} users in the system` : 'Share /register to invite users' },
     { done: hasModules,     label: 'Education modules published', detail: hasModules ? `${contentData?.published_modules ?? contentData?.total_modules} published` : 'Go to Education → Modules' },
     { done: hasPackages,    label: 'Packages created',            detail: hasPackages ? `${pkgData?.packages?.length} packages in catalogue` : 'Verify in Billing & System → Packages' },
-    { done: hasMentors,     label: 'Consultants / mentors added', detail: hasMentors ? `${mentorsData?.active_consultants} active` : 'Add via Supabase or Education → Mentors' },
+    { done: hasMentors,     label: 'Consultants / mentors added', detail: hasMentors ? `${activeConsultants} active` : 'Add via Content → Consultants' },
     { done: noPendingVet,   label: 'Sponsor vetting queue clear', detail: noPendingVet ? 'No sponsors awaiting review' : `${pendingVetting} waiting — Users & Vetting → Sponsor Vetting` },
     { done: false,          label: 'Stripe connected (future)',   detail: 'Stripe integration — after packages are confirmed' },
   ]
@@ -507,8 +508,8 @@ function IntegrationsTab() {
     },
     {
       name: 'Stripe', ok: false, na: true,
-      detail: 'Stripe Connect integration planned for V2',
-      env: 'STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET (future)',
+      detail: 'Payout integration not connected',
+      env: 'STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET',
     },
     {
       name: 'API Server', ok: true, na: false,
