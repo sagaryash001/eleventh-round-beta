@@ -7,6 +7,65 @@ import { childLogger } from '../lib/logger.js'
 const router = Router()
 const log = childLogger('fighter')
 
+function computeProfileCompletion(fp, userName, socials) {
+  // A. Core Fighter Profile (60 pts)
+  const coreScore = (
+    (userName ? 10 : 0) +
+    ((fp?.weight_class || fp?.division) ? 12 : 0) +
+    (fp?.base_city ? 10 : 0) +
+    (fp?.bio && fp.bio.trim().length >= 10 ? 10 : 0) +
+    (fp ? 10 : 0) +
+    (fp?.visibility && fp.visibility !== 'private' ? 4 : 0) +
+    (fp?.is_open_to_sponsorship ? 4 : 0)
+  ) // max 60
+
+  // B. Fight Details (15 pts)
+  const fightScore = (
+    (fp?.gym_name ? 5 : 0) +
+    (fp?.coach_name ? 4 : 0) +
+    (fp?.current_promotion ? 3 : 0) +
+    (fp?.nationality ? 3 : 0)
+  ) // max 15
+
+  // C. Sponsorship Readiness (15 pts)
+  const interests = fp?.sponsorship_interests ?? []
+  const sponsorScore = (
+    (Array.isArray(interests) && interests.length > 0 ? 8 : 0) +
+    (fp?.headshot_path ? 7 : 0)
+  ) // max 15
+
+  // D. Social / Media Proof (10 pts — ANY ONE proof = full 10)
+  const hasSocial    = (socials ?? []).some(s => s.handle)
+  const hasMediaKit  = !!fp?.media_kit_url
+  const hasHighlight = Array.isArray(fp?.highlight_video_urls) && fp.highlight_video_urls.length > 0
+  const socialScore  = (hasSocial || hasMediaKit || hasHighlight) ? 10 : 0 // max 10
+
+  const overall = Math.min(coreScore + fightScore + sponsorScore + socialScore, 100)
+
+  const missing = []
+  if (!fp?.weight_class && !fp?.division) missing.push('weight_class')
+  if (!fp?.base_city) missing.push('base_city')
+  if (!fp?.bio || fp.bio.trim().length < 10) missing.push('bio')
+
+  const recommended = []
+  if (!fp?.gym_name)                                        recommended.push('Add gym/team name')
+  if (!fp?.coach_name)                                      recommended.push('Add coach name')
+  if (!Array.isArray(interests) || !interests.length)       recommended.push('Add sponsorship interests')
+  if (!fp?.headshot_path)                                   recommended.push('Upload a headshot photo')
+  if (!socialScore)                                         recommended.push('Add a social handle, media kit, or highlight video')
+
+  return {
+    overall,
+    core_pct:                 Math.round(coreScore  / 60 * 100),
+    fight_details_pct:        Math.round(fightScore / 15 * 100),
+    sponsorship_pct:          Math.round(sponsorScore / 15 * 100),
+    social_proof_pct:         socialScore > 0 ? 100 : 0,
+    missing_required:         missing,
+    recommended_improvements: recommended,
+    sponsor_ready:            overall >= 75 && !!fp?.is_open_to_sponsorship && (hasSocial || hasMediaKit || hasHighlight),
+  }
+}
+
 function requireFighter(req, res, next) {
   if (req.user?.role !== 'fighter') return res.status(403).json({ error: 'Fighter access required.' })
   next()
@@ -305,14 +364,15 @@ router.post('/modules/:id/complete', ...guard, async (req, res) => {
 // ── GET /api/fighter/sponsorforge ─────────────────────────────────────────────
 router.get('/sponsorforge', ...guard, async (req, res) => {
   try {
-    const { data, error } = await adminSupabase
-      .from('sponsorforge_profiles')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .maybeSingle()
+    const uid = req.user.id
+    const [{ data, error }, { data: rs }] = await Promise.all([
+      adminSupabase.from('sponsorforge_profiles').select('*').eq('user_id', uid).maybeSingle(),
+      adminSupabase.from('readiness_scores').select('conduct').eq('user_id', uid).maybeSingle(),
+    ])
     if (error) throw error
 
-    const sf = data ?? { eligibility_score: 0, is_locked: true, sponsor_profile_complete: false, brand_readiness: 0, pipeline_stage: 0, obligation_record_pct: 0 }
+    const sf           = data ?? { eligibility_score: 0, is_locked: true, sponsor_profile_complete: false, brand_readiness: 0, pipeline_stage: 0, obligation_record_pct: 0 }
+    const conductScore = rs?.conduct ?? 0
 
     const requirements = [
       { name: 'Sponsor Profile',       badge: sf.sponsor_profile_complete ? 'Complete' : 'Incomplete', type: sf.sponsor_profile_complete ? 'green' : 'red' },
@@ -322,11 +382,11 @@ router.get('/sponsorforge', ...guard, async (req, res) => {
     ]
 
     const eligibility_progress = [
-      { label: 'Brand',        value: sf.brand_readiness },
-      { label: 'Pipeline',     value: sf.pipeline_stage },
-      { label: 'Conduct',      value: 88 },
-      { label: 'Obligations',  value: sf.obligation_record_pct },
-      { label: 'Profile',      value: sf.sponsor_profile_complete ? 100 : 20 },
+      { label: 'Brand',       value: sf.brand_readiness },
+      { label: 'Pipeline',    value: sf.pipeline_stage },
+      { label: 'Conduct',     value: conductScore },
+      { label: 'Obligations', value: sf.obligation_record_pct },
+      { label: 'Profile',     value: sf.sponsor_profile_complete ? 100 : 20 },
     ]
 
     res.json({ eligibility_score: sf.eligibility_score, is_locked: sf.is_locked, requirements, eligibility_progress })
@@ -391,38 +451,38 @@ router.get('/profile', ...guard, async (req, res) => {
     const wins   = fp?.record_wins   ?? 0
     const losses = fp?.record_losses ?? 0
     const draws  = fp?.record_draws  ?? 0
-    const completeness = [fp?.division, fp?.base_city, fp?.weight_class, fp?.current_promotion, (socials ?? []).length, req.user.name]
-      .filter(Boolean).length * 16
+    const comp   = computeProfileCompletion(fp, req.user.name, socials)
 
     res.json({
-      name:                  req.user.name,
-      email:                 req.user.email,
-      nickname:              fp?.nickname ?? null,
-      division:              fp?.division  ?? null,
-      record:                `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`,
-      record_wins:           wins,
-      record_losses:         losses,
-      record_draws:          draws,
-      base:                  fp?.base_city ?? null,
-      manager:               managerName,
-      // marketplace core fields
-      weight_class:          fp?.weight_class ?? null,
-      current_promotion:     fp?.current_promotion ?? null,
-      pro_status:            fp?.pro_status ?? null,
-      nationality:           fp?.nationality ?? null,
-      visibility:            fp?.visibility ?? 'sponsors_only',
+      name:                   req.user.name,
+      email:                  req.user.email,
+      nickname:               fp?.nickname ?? null,
+      division:               fp?.division  ?? null,
+      record:                 `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`,
+      record_wins:            wins,
+      record_losses:          losses,
+      record_draws:           draws,
+      base:                   fp?.base_city ?? null,
+      base_city:              fp?.base_city ?? null,
+      manager:                managerName,
+      weight_class:           fp?.weight_class ?? null,
+      current_promotion:      fp?.current_promotion ?? null,
+      pro_status:             fp?.pro_status ?? null,
+      nationality:            fp?.nationality ?? null,
+      visibility:             fp?.visibility ?? 'sponsors_only',
       is_open_to_sponsorship: fp?.is_open_to_sponsorship ?? true,
-      public_slug:           fp?.public_slug ?? null,
-      socials:               socials ?? [],
-      profile_completeness:  Math.min(completeness, 100),
-      // media + public profile fields
-      headshot_path:         fp?.headshot_path ?? null,
-      banner_path:           fp?.banner_path ?? null,
-      media_kit_url:         fp?.media_kit_url ?? null,
-      highlight_video_urls:  fp?.highlight_video_urls ?? [],
-      bio:                   fp?.bio ?? null,
-      gym_name:              fp?.gym_name ?? null,
-      coach_name:            fp?.coach_name ?? null,
+      public_slug:            fp?.public_slug ?? null,
+      socials:                socials ?? [],
+      sponsorship_interests:  fp?.sponsorship_interests ?? [],
+      profile_completeness:   comp.overall,
+      completion:             comp,
+      headshot_path:          fp?.headshot_path ?? null,
+      banner_path:            fp?.banner_path ?? null,
+      media_kit_url:          fp?.media_kit_url ?? null,
+      highlight_video_urls:   fp?.highlight_video_urls ?? [],
+      bio:                    fp?.bio ?? null,
+      gym_name:               fp?.gym_name ?? null,
+      coach_name:             fp?.coach_name ?? null,
     })
   } catch (err) {
     log.error({ err }, '/fighter/profile threw')
@@ -439,7 +499,7 @@ const FIGHTER_WRITABLE = [
   'visibility', 'is_open_to_sponsorship',
   // uploads + public profile (Phase Storage)
   'headshot_path', 'banner_path', 'media_kit_url', 'highlight_video_urls', 'bio',
-  'nickname', 'gym_name', 'coach_name',
+  'nickname', 'gym_name', 'coach_name', 'sponsorship_interests',
 ]
 
 function pick(body, keys) {
@@ -816,6 +876,59 @@ router.get('/marketplace', requireAuth, async (req, res) => {
     })
   } catch (err) {
     log.error({ err }, 'GET /fighter/marketplace threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/fighter/activity ─────────────────────────────────────────────────
+router.get('/activity', ...guard, async (req, res) => {
+  try {
+    const uid   = req.user.id
+    const sb    = adminSupabase
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+    const [{ data: apps }, { data: contracts }, { data: mods }, { data: connections }] = await Promise.all([
+      sb.from('applications').select('id, status, updated_at, opportunities(title)').eq('fighter_id', uid).gte('updated_at', since).order('updated_at', { ascending: false }).limit(5),
+      sb.from('contracts').select('id, status, value_usd, updated_at').eq('fighter_id', uid).gte('updated_at', since).order('updated_at', { ascending: false }).limit(3),
+      sb.from('module_progress').select('module_id, status, updated_at, education_modules(name)').eq('user_id', uid).gte('updated_at', since).order('updated_at', { ascending: false }).limit(4),
+      sb.from('manager_fighters').select('id, status, updated_at').eq('fighter_id', uid).gte('updated_at', since).order('updated_at', { ascending: false }).limit(2),
+    ])
+
+    const events = []
+
+    const APP_LABELS = { applied: 'Application submitted', under_review: 'Application under review', shortlisted: 'Application shortlisted', accepted: 'Application accepted', rejected: 'Application not accepted', withdrawn: 'Application withdrawn' }
+    const APP_TYPES  = { accepted: 'green', rejected: 'red', shortlisted: 'yellow' }
+    ;(apps ?? []).forEach(a => {
+      events.push({ date: a.updated_at, name: APP_LABELS[a.status] ?? `Application ${a.status}`, badge: a.opportunities?.title ?? 'Opportunity', type: APP_TYPES[a.status] ?? 'yellow' })
+    })
+
+    ;(contracts ?? []).forEach(c => {
+      const val = `$${(c.value_usd ?? 0).toLocaleString()}`
+      const CONTRACT_LABELS = { pending_fighter: `${val} contract awaiting your signature`, active: `${val} contract active`, completed: `${val} contract completed`, draft: `${val} contract created` }
+      const CONTRACT_TYPES  = { pending_fighter: 'red', active: 'green', completed: 'green', draft: 'yellow' }
+      events.push({ date: c.updated_at, name: CONTRACT_LABELS[c.status] ?? `${val} contract`, badge: 'Contract', type: CONTRACT_TYPES[c.status] ?? 'yellow' })
+    })
+
+    ;(mods ?? []).forEach(m => {
+      const modName = m.education_modules?.name ?? 'Module'
+      if (m.status === 'completed') {
+        events.push({ date: m.updated_at, name: `Completed: ${modName}`, badge: 'Education', type: 'green' })
+      } else if (m.status === 'in_progress') {
+        events.push({ date: m.updated_at, name: `Started: ${modName}`, badge: 'Education', type: 'yellow' })
+      }
+    })
+
+    ;(connections ?? []).forEach(conn => {
+      if (conn.status === 'active') {
+        events.push({ date: conn.updated_at, name: 'Manager connection activated', badge: 'Manager', type: 'green' })
+      }
+    })
+
+    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    res.json({ events: events.slice(0, 10) })
+  } catch (err) {
+    log.error({ err }, 'GET /fighter/activity threw')
     res.status(500).json({ error: err.message })
   }
 })

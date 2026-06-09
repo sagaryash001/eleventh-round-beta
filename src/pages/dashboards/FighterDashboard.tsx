@@ -1,244 +1,215 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
-import DashShell from './DashShell'
-import { StatCard, ListCard, ReadinessRing, BarChart, SparkLine, RadarChart,
-         ActivityHeatmap, Timeline, SectionHeading, FullWidthCard,
-         DashSkeleton, EmptyState, ApiError } from './DashWidgets'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
+import { getContracts, type Contract } from '../../lib/api/contracts'
 import { getFighterManager, requestManager, cancelManagerRequest, type ManagerConnection } from '../../lib/api/manager'
 import { apiPatch } from '../../lib/api/client'
-import { getContracts, type Contract } from '../../lib/api/contracts'
 import {
   getFighterModules, getFighterModule, updateModuleProgress, completeModule,
   parseMetadata, parseChecklistState,
   type FighterModule, type ModuleProgress, type ModuleResource, type ChecklistItem,
 } from '../../lib/api/education'
+import { ReadinessRing as CommandRing, MiniBar } from './shared/CommandLayout'
+import {
+  ReadinessRing, StatCard, ListCard, DashSkeleton, EmptyState, ApiError,
+  SectionHeading, BarChart,
+} from './DashWidgets'
 
-const NAV = [
-  { id: 'overview',     label: 'Overview',     icon: '◈' },
-  { id: 'sponsorships', label: 'Sponsorships', icon: '🤝' },
-  { id: 'pipeline',     label: 'Pipeline',     icon: '▲' },
-  { id: 'obligations',  label: 'Obligations',  icon: '📋' },
-  { id: 'education',    label: 'Education',    icon: '📚' },
-  { id: 'sponsorforge', label: 'SponsorForge', icon: '⚡' },
-  { id: 'mentorship',   label: 'Mentorship',   icon: '🎯' },
-  { id: 'transition',   label: 'Transition',   icon: '→' },
-  { id: 'profile',      label: 'Profile',      icon: '👤' },
+// ── Zone definitions ──────────────────────────────────────────────────────────
+const ZONES = [
+  { id: 'command',      label: 'Command Center'         },
+  { id: 'profile',      label: 'Profile'                },
+  { id: 'sponsorships', label: 'Sponsorships'           },
+  { id: 'education',    label: 'Education'              },
+  { id: 'contracts',    label: 'Contracts & Obligations'},
 ]
 
-function Overview() {
-  const { data, loading, error } = useApi<any>('/api/fighter/overview')
-
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
-
-  const readiness   = data?.readiness       ?? 0
-  const stage       = data?.pipeline_stage  ?? 0
-  const stagePct    = data?.pipeline_pct    ?? 0
-  const sfScore     = data?.sponsor_score   ?? 0
-  const openObs     = data?.open_obligations ?? 0
-  const radar       = data?.radar ?? { brand:0, finance:0, conduct:0, sponsor:0, media:0, pipeline:0 }
-  const trend       = data?.readiness_trend ?? []
-  const actionItems = data?.action_items    ?? []
-
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Your Dashboard</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '200px 1fr 1fr 1fr' }}>
-        <div className="dash-card flex flex-col items-center justify-center text-center row-span-2">
-          <div className="dash-label w-full text-left mb-3">Readiness</div>
-          <ReadinessRing pct={readiness} size={110} />
-          <div className="dash-sub mt-3 text-center">
-            {readiness === 0 ? 'Complete your profile to score' : '3 areas need attention'}
-          </div>
-        </div>
-        <StatCard label="Pipeline Stage" value={stage > 0 ? String(stage) : '—'}
-          sub={stage > 0 ? `of 5 complete` : 'Start your pipeline'} barPct={stagePct} trend={stagePct > 0 ? 5 : undefined} />
-        <StatCard label="Sponsor Score" value={sfScore > 0 ? String(sfScore) : '—'}
-          sub={sfScore > 0 ? '100 = SponsorForge ready' : 'Complete onboarding to score'} barPct={sfScore} />
-        <StatCard label="Open Obligations" value={<span className={openObs > 0 ? 'text-blood-glow' : ''}>{openObs}</span>}
-          sub={openObs > 0 ? 'Review your obligations' : 'No active obligations'} barPct={openObs > 0 ? 20 : 0} barColor="#c00000" />
-
-        <div className="dash-card flex flex-col items-center">
-          <div className="dash-label w-full">Readiness Profile</div>
-          <RadarChart axes={[
-            { label: 'Brand',    value: radar.brand    },
-            { label: 'Finance',  value: radar.finance  },
-            { label: 'Conduct',  value: radar.conduct  },
-            { label: 'Sponsor',  value: radar.sponsor  },
-            { label: 'Media',    value: radar.media    },
-            { label: 'Pipeline', value: radar.pipeline },
-          ]} />
-        </div>
-        <div className="dash-card">
-          <div className="dash-label">Activity (12 Weeks)</div>
-          <ActivityHeatmap weeks={12} />
-        </div>
-        <div className="dash-card">
-          <div className="dash-label">Readiness Trend</div>
-          {trend.length >= 2
-            ? <><SparkLine values={trend} /><div className="dash-sub mt-2">+{(trend[trend.length-1] ?? 0) - (trend[0] ?? 0)}pts over time</div></>
-            : <EmptyState title="No trend yet" body="Your readiness score trend will appear after your profile is evaluated." />
-          }
-        </div>
-      </div>
-
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        {actionItems.length > 0
-          ? <ListCard label="Action Items" items={actionItems} />
-          : <EmptyState icon="✓" title="All Clear" body="No immediate action items. Keep completing your pipeline to unlock new tasks." />
-        }
-        <div className="dash-card">
-          <div className="dash-label">Quick Links</div>
-          <div className="space-y-2 mt-3">
-            {[
-              { to: '/fighter/profile',      label: 'Edit Profile' },
-              { to: '/opportunities',         label: 'Browse Opportunities' },
-              { to: '/fighter/applications',  label: 'My Applications' },
-              { to: '/contracts',             label: 'My Contracts' },
-            ].map(l => (
-              <Link key={l.to} to={l.to}
-                className="block font-condensed font-bold uppercase text-[11px] tracking-[0.2em] text-gray-2
-                           no-underline hover:text-off-white transition-colors py-2 border-b border-charcoal-3 last:border-0">
-                {l.label} →
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+// ── Contract status maps ──────────────────────────────────────────────────────
+const FC_COLOR: Record<string, string> = {
+  draft: '#4a4846', pending_fighter: '#b45309', active: '#166534',
+  in_dispute: '#7f1d1d', completed: '#1e3a5f', terminated: '#374151',
+}
+const FC_LABEL: Record<string, string> = {
+  draft: 'Draft', pending_fighter: 'Awaiting Your Signature', active: 'Active',
+  in_dispute: 'In Dispute', completed: 'Completed', terminated: 'Terminated',
 }
 
-function Pipeline() {
-  const { data, loading, error } = useApi<any>('/api/fighter/pipeline')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
+// ── Application status maps ───────────────────────────────────────────────────
+const APP_SC: Record<string, string> = {
+  applied: '#7a7672', under_review: '#C41E3A', shortlisted: '#f5a623',
+  accepted: '#00c060', rejected: '#4a4846', withdrawn: '#4a4846',
+}
+const APP_SL: Record<string, string> = {
+  applied: 'Submitted', under_review: 'In Review', shortlisted: 'Shortlisted',
+  accepted: 'Accepted', rejected: 'Rejected', withdrawn: 'Withdrawn',
+}
 
-  const stages  = data?.stages     ?? []
-  const overall = data?.overall_pct ?? 0
+// ── Manager card ──────────────────────────────────────────────────────────────
+function ManagerCard() {
+  const [connections, setConnections] = useState<ManagerConnection[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [form,     setForm]     = useState({ manager_email: '', team_name: '', message: '' })
+  const [saving,   setSaving]   = useState(false)
+  const [actingId, setActingId] = useState<string | null>(null)
+  const [msg,      setMsg]      = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
-  if (!stages.length) return (
-    <div className="space-y-4">
-      <SectionHeading>Pipeline</SectionHeading>
-      <EmptyState icon="▲" title="Pipeline Not Started"
-        body="Your pipeline is being set up. Complete your fighter profile to generate your first steps."
-        action={<Link to="/fighter/profile" className="btn-ghost text-[11px] py-2 px-4 no-underline">Edit Profile →</Link>} />
-    </div>
-  )
+  const load = useCallback(() => {
+    setLoading(true)
+    getFighterManager()
+      .then(d => { setConnections(d.connections ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const active  = connections.find(c => c.status === 'active')
+  const pending = connections.filter(c => c.status === 'pending')
+
+  const submitRequest = async () => {
+    if (!form.manager_email.trim() && !form.team_name.trim()) {
+      setMsg({ type: 'err', text: 'Enter a manager email or team name.' }); return
+    }
+    setSaving(true); setMsg(null)
+    try {
+      await requestManager({ manager_email: form.manager_email.trim() || null, team_name: form.team_name.trim() || null, message: form.message.trim() || null })
+      setMsg({ type: 'ok', text: 'Request sent. Waiting for manager to accept.' })
+      setForm({ manager_email: '', team_name: '', message: '' })
+      setShowForm(false); load()
+    } catch (e: any) { setMsg({ type: 'err', text: e.message ?? 'Request failed.' }) }
+    finally { setSaving(false) }
+  }
+
+  const cancel = async (id: string) => {
+    setActingId(id); setMsg(null)
+    try {
+      await cancelManagerRequest(id)
+      setMsg({ type: 'ok', text: 'Request cancelled.' }); load()
+    } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+    finally { setActingId(null) }
+  }
+
+  if (loading) return <div className="dash-card"><div className="dash-sub">Loading manager status…</div></div>
 
   return (
-    <div className="space-y-4">
-      <SectionHeading>Eleventh Round Ready Pipeline</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 220px' }}>
-        <div className="space-y-3">
-          {stages.map((s: any) => (
-            <div key={s.n} className="dash-card flex items-center gap-5"
-              style={{ borderLeft: s.pct===100?'2px solid #00c060':s.pct>0?'2px solid #c00000':'2px solid #222226' }}>
-              <span className="font-condensed text-[12px] font-bold tracking-[0.25em] text-gray-3 min-w-[24px]">{s.n}</span>
-              <div className="flex-1">
-                <div className="font-condensed text-[13px] font-bold text-off-white mb-1.5">{s.label}</div>
-                <div className="h-[3px] bg-charcoal-3 rounded overflow-hidden">
-                  <div className="h-full rounded transition-all duration-1000"
-                    style={{ width:`${s.pct}%`, background:s.pct===100?'#00c060':'linear-gradient(90deg,#8b0000,#c00000)' }} />
-                </div>
-              </div>
-              <span className="font-display text-lg" style={{ color:s.pct===100?'#00c060':s.pct>0?'#c00000':'#2a2a2e' }}>
-                {s.pct}%
-              </span>
+    <div className="dash-card space-y-3">
+      <div className="dash-label">Manager / Team</div>
+      {active && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 py-2 border-b border-charcoal-3">
+            <div className="flex-1">
+              <div className="font-condensed font-bold text-off-white" style={{ fontSize: 13 }}>{active.manager?.name ?? 'Manager'}</div>
+              {active.manager?.team_name && <div className="font-condensed text-[11px] text-gray-3">{active.manager.team_name}</div>}
+              <div className="font-condensed text-[11px] text-gray-3">{active.manager?.email}</div>
             </div>
-          ))}
+            <span className="badge badge-green">Active</span>
+          </div>
+          <button onClick={() => cancel(active.id)} disabled={actingId === active.id}
+            className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+            {actingId === active.id ? '…' : 'Leave / Request Change'}
+          </button>
         </div>
-        <div className="dash-card flex flex-col items-center justify-center text-center">
-          <div className="dash-label mb-3">Overall Progress</div>
-          <ReadinessRing pct={overall} size={100} label="Pipeline" />
-          <div className="dash-sub mt-3">Stage {stages.filter((s:any) => s.pct > 0).length} Active</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Obligations() {
-  const { data, loading, error } = useApi<any>('/api/fighter/obligations')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
-
-  const sponsorObs  = data?.sponsor ?? []
-  const mediaObs    = data?.media   ?? []
-  const fulfillment = data?.fulfillment_pct ?? 100
-  const completed   = data?.completed_count ?? 0
-  const timeline    = data?.timeline ?? []
-
-  if (!sponsorObs.length && !mediaObs.length) return (
-    <div className="space-y-4">
-      <SectionHeading>Obligations</SectionHeading>
-      <EmptyState icon="📋" title="No Obligations Yet"
-        body="Sponsorship deliverables will appear here after a deal is active. Keep building your profile to attract sponsors." />
-    </div>
-  )
-
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Obligations</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr 160px' }}>
-        {sponsorObs.length
-          ? <ListCard label="Sponsor Obligations" items={sponsorObs} />
-          : <EmptyState title="No Sponsor Obligations" body="Active sponsor deal deliverables appear here." />
-        }
-        {mediaObs.length
-          ? <ListCard label="Media Obligations" items={mediaObs} />
-          : <EmptyState title="No Media Obligations" body="Event and promotion media duties appear here." />
-        }
-        <div className="dash-card text-center">
-          <div className="dash-label">Fulfillment</div>
-          <ReadinessRing pct={fulfillment} size={80} color="#00c060" label="%" />
-          <div className="dash-sub mt-2">{completed} completed</div>
-        </div>
-      </div>
-      {timeline.length > 0 && (
-        <FullWidthCard label="Obligation Timeline">
-          <Timeline events={timeline} />
-        </FullWidthCard>
       )}
+      {pending.map(c => {
+        const isManagerInvite = c.source === 'manager_invite' || c.source === 'manual_create'
+        const accept = async () => {
+          setActingId(c.id); setMsg(null)
+          try {
+            await apiPatch(`/api/fighter/manager/request/${c.id}`, { status: 'active' })
+            setMsg({ type: 'ok', text: 'Invitation accepted.' }); load()
+          } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+          finally { setActingId(null) }
+        }
+        return (
+          <div key={c.id} className="flex items-center gap-3 py-2 border-b border-charcoal-3">
+            <div className="flex-1">
+              <div className="font-condensed text-[12px] text-off-white">
+                {isManagerInvite ? 'Invited by' : 'Request sent to'}{' '}
+                <span className="font-bold">{c.manager?.name ?? c.team_name ?? '—'}</span>
+              </div>
+              {c.request_message && <div className="font-condensed text-[11px] text-gray-3 italic">"{c.request_message}"</div>}
+            </div>
+            <span className="badge badge-yellow">Pending</span>
+            {isManagerInvite && (
+              <button onClick={accept} disabled={actingId === c.id}
+                className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2 py-1 border cursor-pointer transition-all disabled:opacity-40"
+                style={{ borderColor: '#2a5c2a', color: '#00c060' }}>
+                {actingId === c.id ? '…' : 'Accept'}
+              </button>
+            )}
+            <button onClick={() => cancel(c.id)} disabled={actingId === c.id}
+              className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2 py-1 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+              {actingId === c.id ? '…' : isManagerInvite ? 'Decline' : 'Cancel'}
+            </button>
+          </div>
+        )
+      })}
+      {!active && !pending.length && !showForm && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[12px] text-gray-3">No manager connected.</div>
+          <button onClick={() => setShowForm(true)} className="btn-ghost text-[10px] py-2 px-4">Link a Manager →</button>
+        </div>
+      )}
+      {showForm && (
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Manager Email</label>
+            <input value={form.manager_email} onChange={e => setForm(p => ({ ...p, manager_email: e.target.value }))}
+              placeholder="manager@email.com" type="email"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none" />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">or Team Name</label>
+            <input value={form.team_name} onChange={e => setForm(p => ({ ...p, team_name: e.target.value }))}
+              placeholder="Team / gym name"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none" />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Message (optional)</label>
+            <textarea value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} rows={2}
+              placeholder="Introduce yourself…"
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none resize-none" />
+          </div>
+          {msg && <p className={`font-condensed text-[11px] ${msg.type === 'ok' ? 'text-green-400' : 'text-blood-glow'}`}>{msg.text}</p>}
+          <div className="flex gap-2">
+            <button onClick={submitRequest} disabled={saving} className="btn-primary text-[11px] py-2 disabled:opacity-50">{saving ? 'Sending…' : 'Send Request'}</button>
+            <button onClick={() => { setShowForm(false); setMsg(null) }} className="btn-ghost text-[11px] py-2">Cancel</button>
+          </div>
+        </div>
+      )}
+      {msg && !showForm && <p className={`font-condensed text-[11px] ${msg.type === 'ok' ? 'text-green-400' : 'text-blood-glow'}`}>{msg.text}</p>}
     </div>
   )
 }
 
-// ── Module detail panel ───────────────────────────────────────────────────────
+// ── Module detail ─────────────────────────────────────────────────────────────
 function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => void }) {
-  const [data,      setData]      = useState<{ module: any; progress: ModuleProgress | null; resources: ModuleResource[] } | null>(null)
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState<string | null>(null)
+  const [data,      setData]       = useState<{ module: any; progress: ModuleProgress | null; resources: ModuleResource[] } | null>(null)
+  const [loading,   setLoading]    = useState(true)
+  const [error,     setError]      = useState<string | null>(null)
   const [completing, setCompleting] = useState(false)
-  const [checked,   setChecked]   = useState<Record<string, boolean>>({})
-  const [msg,       setMsg]       = useState<string | null>(null)
+  const [checked,   setChecked]    = useState<Record<string, boolean>>({})
+  const [msg,       setMsg]        = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
     getFighterModule(moduleId)
-      .then(d => {
-        setData(d)
-        setChecked(parseChecklistState(d.progress?.checklist_state))
-        setLoading(false)
-      })
+      .then(d => { setData(d); setChecked(parseChecklistState(d.progress?.checklist_state)); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [moduleId])
 
-  const mod      = data?.module
-  const progress = data?.progress
+  const mod       = data?.module
+  const progress  = data?.progress
   const resources = data?.resources ?? []
-  const meta     = parseMetadata(mod?.metadata)
+  const meta      = parseMetadata(mod?.metadata)
   const items: ChecklistItem[] = Array.isArray(meta.checklist_items) ? meta.checklist_items : []
 
   const handleCheck = async (itemId: string, val: boolean) => {
     const next = { ...checked, [itemId]: val }
     setChecked(next)
-    const requiredItems = items.filter(i => i.required)
-    const doneRequired  = requiredItems.filter(i => next[i.id]).length
-    const pct = requiredItems.length
-      ? Math.round((doneRequired / requiredItems.length) * 100)
-      : Object.values(next).filter(Boolean).length === items.length ? 100 : 50
+    const req = items.filter(i => i.required)
+    const done = req.filter(i => next[i.id]).length
+    const pct = req.length ? Math.round((done / req.length) * 100) : Object.values(next).filter(Boolean).length === items.length ? 100 : 50
     const status = pct === 100 ? 'completed' : 'in_progress'
     await updateModuleProgress(moduleId, { checklist_state: next, completion_pct: pct, status }).catch(() => {})
     if (pct === 100) setMsg('All items checked — module complete!')
@@ -256,72 +227,51 @@ function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => vo
 
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
-  if (!mod)    return <EmptyState icon="📚" title="Module not found" body="" />
+  if (!mod)    return <EmptyState icon="●" title="Module not found" body="" />
 
   const isCompleted = progress?.status === 'completed' || progress?.completion_pct === 100
 
   return (
     <div className="space-y-4 max-w-2xl">
-      <button onClick={onBack} className="font-condensed text-[11px] uppercase tracking-[0.15em] text-gray-3 hover:text-gray-1 flex items-center gap-2">
-        ← Back to Modules
-      </button>
-
+      <button onClick={onBack} className="font-condensed text-[11px] uppercase tracking-[0.15em] text-gray-3 hover:text-gray-1 flex items-center gap-2">← Back to Modules</button>
       <div className="dash-card space-y-3" style={{ borderLeft: '2px solid #8b0000' }}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h2 className="font-display text-off-white uppercase" style={{ fontSize: 22, lineHeight: 1.1 }}>{mod.name}</h2>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               {mod.category && <span className="font-condensed text-[10px] text-gray-3 uppercase tracking-widest capitalize">{mod.category}</span>}
-              <span className="font-condensed text-[10px] text-gray-3 uppercase tracking-widest capitalize">{(mod.module_type||'lesson').replace('_',' ')}</span>
+              <span className="font-condensed text-[10px] text-gray-3 uppercase tracking-widest capitalize">{(mod.module_type || 'lesson').replace('_', ' ')}</span>
               {mod.estimated_mins && <span className="font-condensed text-[10px] text-gray-3">{mod.estimated_mins} min</span>}
-              {mod.is_required && <span className="font-condensed text-[9px] uppercase tracking-widest px-2 py-0.5" style={{ background:'rgba(139,0,0,0.2)', color:'#C41E3A' }}>Required</span>}
+              {mod.is_required && <span className="font-condensed text-[9px] uppercase tracking-widest px-2 py-0.5" style={{ background: 'rgba(139,0,0,0.2)', color: '#C41E3A' }}>Required</span>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <ReadinessRing pct={progress?.completion_pct ?? 0} size={56} label="%" />
-          </div>
+          <ReadinessRing pct={progress?.completion_pct ?? 0} size={56} label="%" />
         </div>
         {mod.description && <p className="font-body text-gray-2 text-[13px] leading-relaxed">{mod.description}</p>}
       </div>
-
-      {/* Text lesson body */}
       {mod.content_body && (
         <div className="dash-card">
           <div className="dash-label mb-3">Lesson Content</div>
           <div className="font-body text-gray-1 text-[13px] leading-relaxed whitespace-pre-wrap">{mod.content_body}</div>
         </div>
       )}
-
-      {/* Video embed / link */}
-      {mod.content_url && (mod.module_type === 'video' || mod.module_type === 'link' || mod.module_type === 'pdf' || mod.module_type === 'mixed') && (
+      {mod.content_url && (['video', 'link', 'pdf', 'mixed'].includes(mod.module_type)) && (
         <div className="dash-card">
           <div className="dash-label mb-3">{mod.module_type === 'video' ? 'Video' : mod.module_type === 'pdf' ? 'PDF Resource' : 'Resource'}</div>
           {mod.module_type === 'video' && (mod.content_url.includes('youtube') || mod.content_url.includes('youtu.be') || mod.content_url.includes('vimeo') || mod.content_url.includes('loom')) ? (
-            <div style={{ position:'relative', paddingBottom:'56.25%', height:0 }}>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
               <iframe
-                src={
-                  mod.content_url.includes('youtu.be')
-                    ? mod.content_url.replace('youtu.be/', 'youtube.com/embed/')
-                    : mod.content_url.includes('watch?v=')
-                      ? mod.content_url.replace('watch?v=', 'embed/')
-                      : mod.content_url
-                }
-                title={mod.name}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', border:'none', background:'#000' }}
-              />
+                src={mod.content_url.includes('youtu.be') ? mod.content_url.replace('youtu.be/', 'youtube.com/embed/') : mod.content_url.includes('watch?v=') ? mod.content_url.replace('watch?v=', 'embed/') : mod.content_url}
+                title={mod.name} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', background: '#000' }} />
             </div>
           ) : (
-            <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
-              className="btn-primary inline-block text-[11px] no-underline">
-              {mod.module_type === 'pdf' ? 'Open PDF ↗' : 'Open Resource ↗'}
+            <a href={mod.content_url} target="_blank" rel="noopener noreferrer" className="btn-primary inline-block text-[11px] no-underline">
+              {mod.module_type === 'pdf' ? 'Open PDF' : 'Open Resource'}
             </a>
           )}
         </div>
       )}
-
-      {/* Checklist */}
       {items.length > 0 && (
         <div className="dash-card space-y-3">
           <div className="dash-label">Checklist</div>
@@ -337,41 +287,478 @@ function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => vo
           ))}
         </div>
       )}
-
-      {/* Resources */}
       {resources.length > 0 && (
         <div className="dash-card space-y-2">
           <div className="dash-label mb-2">Resources</div>
           {resources.map(r => (
             <a key={r.id} href={r.url || '#'} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-3 font-condensed text-[12px] text-gray-2 hover:text-off-white no-underline py-1">
-              <span style={{ color:'#8b0000' }}>{r.resource_type === 'pdf' ? '📄' : r.resource_type === 'video' ? '▶' : '🔗'}</span>
+              <span style={{ color: '#8b0000' }}>{r.resource_type === 'pdf' ? '■' : r.resource_type === 'video' ? '▶' : '→'}</span>
               {r.title}
             </a>
           ))}
         </div>
       )}
-
-      {msg && (
-        <p className="font-condensed text-[12px]" style={{ color: msg.includes('complete') ? '#00c060' : '#C41E3A' }}>{msg}</p>
-      )}
-
+      {msg && <p className="font-condensed text-[12px]" style={{ color: msg.includes('complete') ? '#00c060' : '#C41E3A' }}>{msg}</p>}
       {!isCompleted && items.length === 0 && (
         <button onClick={handleComplete} disabled={completing} className="btn-primary disabled:opacity-50">
           {completing ? 'Marking…' : 'Mark as Complete'}
         </button>
       )}
-      {isCompleted && (
-        <div className="font-condensed text-[12px] uppercase tracking-[0.2em]" style={{ color:'#00c060' }}>
-          ✓ Completed
-        </div>
-      )}
+      {isCompleted && <div className="font-condensed text-[12px] uppercase tracking-[0.2em]" style={{ color: '#00c060' }}>✓ Completed</div>}
     </div>
   )
 }
 
-// ── Education tab ─────────────────────────────────────────────────────────────
-function Education() {
+// ── Command Center zone ───────────────────────────────────────────────────────
+function CommandCenter() {
+  const { data: profileData }  = useApi<any>('/api/fighter/profile')
+  const { data: overviewData } = useApi<any>('/api/fighter/overview')
+  const { data: activityData } = useApi<any>('/api/fighter/activity')
+  const { data: modsData }     = useApi<any>('/api/fighter/modules')
+  const { data: sfData }       = useApi<any>('/api/fighter/sponsorforge')
+  const [contracts, setContracts] = useState<Contract[]>([])
+
+  useEffect(() => {
+    getContracts().then(r => setContracts(r.contracts ?? [])).catch(() => {})
+  }, [])
+
+  // Panel 1: Fighter Readiness
+  const overallPct   = profileData?.profile_completeness ?? 0
+  const corePct      = profileData?.completion?.core_pct ?? 0
+  const missingReq   = profileData?.completion?.missing_required ?? []
+  const sponsorReady = profileData?.completion?.sponsor_ready ?? false
+
+  // Panel 2: Sponsor Readiness (ReadinessRing + 4 MiniBar)
+  const fightDetailsPct = profileData?.completion?.fight_details_pct ?? 0
+  const sponsorPct      = profileData?.completion?.sponsorship_pct ?? 0
+  const socialPct       = profileData?.completion?.social_proof_pct ?? 0
+  const eduPct          = modsData?.overall_pct ?? 0
+
+  // Panel 3: Actions Due
+  const missingProfile = missingReq.length
+  const awaitSign      = contracts.filter(c => c.status === 'pending_fighter').length
+  const openObs        = overviewData?.open_obligations ?? 0
+  const requiredEdu    = (modsData?.modules ?? []).filter((m: any) => m.is_required && m.progress?.status !== 'completed').length
+  const totalActions   = missingProfile + awaitSign + openObs + requiredEdu
+  const actionBarPct   = Math.min(totalActions * 15, 100)
+
+  // Activity feed
+  const feedRows = activityData?.events ?? []
+
+  return (
+    <div className="space-y-3.5">
+
+      {/* ── Row 1 + Row 2 in one grid ── */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
+
+        {/* Panel 1: Fighter Readiness */}
+        <div className="dash-card">
+          <div className="dash-label">Fighter Readiness</div>
+          <div className="dash-stat">{overallPct}</div>
+          <div className="dash-sub">Sponsor-ready profile</div>
+          <div className="dash-bar-track">
+            <div className="dash-bar-fill" style={{ width: `${overallPct}%` }} />
+          </div>
+          <div className="dash-sub">
+            {missingReq.length === 0
+              ? sponsorReady ? 'Sponsor-ready' : 'Core profile complete'
+              : `${missingReq.length} required item${missingReq.length > 1 ? 's' : ''} left`}
+          </div>
+        </div>
+
+        {/* Panel 2: Sponsor Readiness */}
+        <div className="dash-card">
+          <div className="dash-label">Sponsor Readiness</div>
+          <div className="flex gap-5 items-center mt-1 flex-wrap">
+            <CommandRing pct={overallPct} />
+            <div className="grid grid-cols-2 gap-2 flex-1 min-w-0" style={{ minWidth: 140 }}>
+              <MiniBar label="Profile"     pct={corePct}     />
+              <MiniBar label="Media"       pct={socialPct}   />
+              <MiniBar label="Sponsorship" pct={sponsorPct}  />
+              <MiniBar label="Education"   pct={eduPct}      />
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 3: Actions Due */}
+        <div className="dash-card">
+          <div className="dash-label">Actions Due</div>
+          {totalActions === 0 ? (
+            <>
+              <div className="dash-stat" style={{ color: '#00c060' }}>0</div>
+              <div className="dash-sub" style={{ color: '#00c060' }}>All clear</div>
+            </>
+          ) : (
+            <>
+              <div className="dash-stat" style={{ color: '#C41E3A' }}>{totalActions}</div>
+              <div className="dash-sub">Need attention</div>
+              <div className="dash-bar-track">
+                <div className="dash-bar-fill" style={{ width: `${actionBarPct}%`, background: '#C41E3A' }} />
+              </div>
+              <div className="dash-sub">
+                {[
+                  missingProfile > 0 && `${missingProfile} profile`,
+                  awaitSign      > 0 && `${awaitSign} contract${awaitSign > 1 ? 's' : ''}`,
+                  openObs        > 0 && `${openObs} obligation${openObs > 1 ? 's' : ''}`,
+                  requiredEdu    > 0 && `${requiredEdu} education`,
+                ].filter(Boolean).join(' · ')}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Row 2: Full-width Recent Activity */}
+        <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
+          <div className="dash-label">Recent Activity</div>
+          {feedRows.length === 0 ? (
+            <p className="dash-sub py-3">
+              No fighter activity yet. Complete your profile to start.
+            </p>
+          ) : (
+            <ul className="dc-list">
+              {feedRows.map((row: any, i: number) => (
+                <li key={i} className="dash-list-item">
+                  <span className="dash-item-name">{row.name}</span>
+                  <span className={`badge badge-${row.type}`}>{row.badge}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* ── Secondary sections ── */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+
+        {/* Sponsorship Pipeline */}
+        <div className="dash-card">
+          <div className="dash-label mb-2">Sponsorship Pipeline</div>
+          <SponsorshipPipelineCompact />
+        </div>
+
+        {/* Education Progress */}
+        <div className="dash-card">
+          <div className="dash-label mb-2">Education Progress</div>
+          {modsData ? (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-condensed text-[11px] text-gray-2">Overall</span>
+                <span className="font-condensed text-[13px] font-bold text-off-white">{modsData.overall_pct ?? 0}%</span>
+              </div>
+              <div className="dash-bar-track mb-3">
+                <div className="dash-bar-fill" style={{ width: `${modsData.overall_pct ?? 0}%` }} />
+              </div>
+              {[
+                { l: 'Completed',   v: modsData.completed },
+                { l: 'In Progress', v: modsData.in_progress },
+                { l: 'Not Started', v: modsData.not_started },
+              ].map(({ l, v }) => (
+                <div key={l} className="flex justify-between py-1 border-b border-charcoal-3 last:border-0">
+                  <span className="font-condensed text-[11px] text-gray-2">{l}</span>
+                  <span className="font-condensed text-[12px] font-bold text-off-white">{v ?? 0}</span>
+                </div>
+              ))}
+            </>
+          ) : <div className="dash-sub">Loading…</div>}
+        </div>
+      </div>
+
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+
+        {/* Profile Improvement */}
+        <div className="dash-card">
+          <div className="dash-label mb-2">Profile Improvement</div>
+          {profileData ? (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-condensed text-[11px] text-gray-2">Overall Score</span>
+                <span className="font-condensed text-[13px] font-bold text-off-white">{overallPct}%</span>
+              </div>
+              {(profileData.completion?.missing_required ?? []).length > 0 && (
+                <div className="mb-3">
+                  <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: '#C41E3A' }}>Required</div>
+                  {(profileData.completion.missing_required).map((f: string) => (
+                    <div key={f} className="font-condensed text-[11px] text-off-white flex items-center gap-2 py-0.5">
+                      <span style={{ color: '#C41E3A' }}>✕</span> {f.replace(/_/g, ' ')}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(profileData.completion?.recommended_improvements ?? []).slice(0, 3).map((r: string, i: number) => (
+                <div key={i} className="font-condensed text-[11px] text-gray-2 flex items-center gap-2 py-0.5">
+                  <span className="text-gray-3">→</span> {r}
+                </div>
+              ))}
+              <Link to="/fighter/profile" className="btn-ghost w-full text-[10px] py-2 no-underline text-center block mt-3">Edit Profile →</Link>
+            </>
+          ) : <div className="dash-sub">Loading…</div>}
+        </div>
+
+        {/* Contracts Summary */}
+        <div className="dash-card">
+          <div className="dash-label mb-2">Contracts</div>
+          {contracts.length === 0 ? (
+            <div className="dash-sub">No contracts yet.</div>
+          ) : (
+            <>
+              {[
+                { l: 'Awaiting Signature', v: contracts.filter(c => c.status === 'pending_fighter').length, color: '#C41E3A' },
+                { l: 'Active',             v: contracts.filter(c => c.status === 'active').length,          color: '#00c060' },
+                { l: 'Completed',          v: contracts.filter(c => c.status === 'completed').length,       color: '#4a9f6f' },
+              ].map(({ l, v, color }) => (
+                <div key={l} className="flex justify-between py-1.5 border-b border-charcoal-3 last:border-0">
+                  <span className="font-condensed text-[11px] text-gray-2">{l}</span>
+                  <span className="font-condensed text-[13px] font-bold" style={{ color: v > 0 ? color : '#4a4846' }}>{v}</span>
+                </div>
+              ))}
+            </>
+          )}
+          {openObs > 0 && (
+            <div className="mt-3 pt-2 border-t border-charcoal-3">
+              <div className="font-condensed text-[11px] flex justify-between">
+                <span className="text-gray-2">Open Obligations</span>
+                <span className="font-bold" style={{ color: '#C41E3A' }}>{openObs}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SponsorshipPipelineCompact() {
+  const { data } = useApi<any>('/api/applications/mine')
+  const apps = data?.applications ?? []
+  if (!apps.length) return (
+    <div className="space-y-2">
+      <div className="dash-sub">No applications yet.</div>
+      <Link to="/opportunities" className="btn-ghost text-[10px] py-2 px-3 no-underline inline-block">Browse Opportunities →</Link>
+    </div>
+  )
+  const byStatus = apps.reduce((acc: any, a: any) => { acc[a.status] = (acc[a.status] || 0) + 1; return acc }, {})
+  return (
+    <div className="space-y-1">
+      {[
+        { l: 'Submitted',   k: 'applied',       c: '#7a7672' },
+        { l: 'In Review',   k: 'under_review',  c: '#C41E3A' },
+        { l: 'Shortlisted', k: 'shortlisted',   c: '#f5a623' },
+        { l: 'Accepted',    k: 'accepted',       c: '#00c060' },
+      ].map(({ l, k, c }) => byStatus[k] ? (
+        <div key={k} className="flex justify-between py-1 border-b border-charcoal-3 last:border-0">
+          <span className="font-condensed text-[11px] text-gray-2">{l}</span>
+          <span className="font-condensed text-[12px] font-bold" style={{ color: c }}>{byStatus[k]}</span>
+        </div>
+      ) : null)}
+      <Link to="/opportunities" className="font-condensed text-[10px] text-gray-3 hover:text-off-white block pt-2 no-underline">Browse Opportunities →</Link>
+    </div>
+  )
+}
+
+// ── Profile zone ──────────────────────────────────────────────────────────────
+function ProfileZone() {
+  const { data, loading, error } = useApi<any>('/api/fighter/profile')
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} />
+
+  const completion  = data?.completion ?? {}
+  const overallPct  = data?.profile_completeness ?? 0
+
+  return (
+    <div className="space-y-3.5">
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
+
+        {/* Score ring */}
+        <div className="dash-card flex flex-col items-center justify-center text-center">
+          <div className="dash-label w-full text-left mb-3">Profile Score</div>
+          <CommandRing pct={overallPct} size={100} />
+          <div className="dash-sub mt-2">{completion.sponsor_ready ? 'Sponsor-ready' : 'Building profile'}</div>
+          <Link to="/fighter/profile" className="btn-ghost w-full text-[10px] py-2 no-underline text-center block mt-3">Edit Profile →</Link>
+        </div>
+
+        {/* Group breakdown */}
+        <div className="dash-card">
+          <div className="dash-label mb-3">Completion Breakdown</div>
+          {[
+            { l: 'Core Profile',          v: completion.core_pct },
+            { l: 'Fight Details',         v: completion.fight_details_pct },
+            { l: 'Sponsorship Readiness', v: completion.sponsorship_pct },
+            { l: 'Social / Media Proof',  v: completion.social_proof_pct },
+          ].map(({ l, v }) => (
+            <div key={l} className="mb-3">
+              <div className="flex justify-between mb-1">
+                <span className="font-condensed text-[11px] text-gray-2">{l}</span>
+                <span className="font-condensed text-[11px] font-bold text-off-white">{v ?? 0}%</span>
+              </div>
+              <div className="dash-bar-track" style={{ height: 3 }}>
+                <div className="dash-bar-fill" style={{ width: `${v ?? 0}%`, height: '100%' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Improvements */}
+        <div className="dash-card">
+          <div className="dash-label mb-2">Improve Your Profile</div>
+          {(completion.missing_required ?? []).length > 0 && (
+            <div className="mb-3">
+              <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: '#C41E3A' }}>Required</div>
+              {(completion.missing_required ?? []).map((f: string) => (
+                <div key={f} className="font-condensed text-[11px] text-off-white flex items-center gap-2 py-0.5">
+                  <span style={{ color: '#C41E3A' }}>✕</span> {f.replace(/_/g, ' ')}
+                </div>
+              ))}
+            </div>
+          )}
+          {(completion.recommended_improvements ?? []).length > 0 && (
+            <>
+              <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.2em] mb-2 text-gray-3">Recommended</div>
+              {(completion.recommended_improvements ?? []).map((r: string, i: number) => (
+                <div key={i} className="font-condensed text-[11px] text-gray-2 flex items-center gap-2 py-0.5">
+                  <span className="text-gray-3">→</span> {r}
+                </div>
+              ))}
+            </>
+          )}
+          {(completion.missing_required ?? []).length === 0 && (completion.recommended_improvements ?? []).length === 0 && (
+            <div className="font-condensed text-[12px]" style={{ color: '#00c060' }}>✓ Profile looking great</div>
+          )}
+        </div>
+      </div>
+
+      {/* Key info + manager */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="dash-card">
+          <div className="dash-label mb-2">Fighter Info</div>
+          {([
+            ['Name',         data?.name],
+            ['Weight Class', data?.weight_class],
+            ['Record',       data?.record],
+            ['Base City',    data?.base_city],
+            ['Promotion',    data?.current_promotion],
+            ['Gym',          data?.gym_name],
+          ] as [string, string][]).map(([k, v]) => (
+            <div key={k} className="flex justify-between py-1.5 border-b border-charcoal-3 last:border-0 text-[12px]">
+              <span className="font-condensed text-gray-3">{k}</span>
+              <span className="font-condensed font-semibold text-off-white">{v || '—'}</span>
+            </div>
+          ))}
+        </div>
+        <ManagerCard />
+      </div>
+    </div>
+  )
+}
+
+// ── Sponsorships zone ─────────────────────────────────────────────────────────
+function SponsorshipsZone() {
+  const { data: mkt, loading, error } = useApi<any>('/api/fighter/marketplace')
+  const { data: sfData }              = useApi<any>('/api/fighter/sponsorforge')
+  const { data: appsData }            = useApi<any>('/api/applications/mine')
+
+  if (loading) return <DashSkeleton />
+  if (error)   return <ApiError message={error} />
+
+  const totalApps    = mkt?.total_applications    ?? 0
+  const acceptedApps = mkt?.accepted_applications ?? 0
+  const acceptRate   = mkt?.acceptance_rate       ?? 0
+  const activeC      = mkt?.active_contracts      ?? 0
+  const earnings     = mkt?.total_earnings_usd    ?? 0
+  const doneObs      = mkt?.completed_obligations ?? 0
+  const pendingObs   = mkt?.pending_obligations   ?? 0
+  const earningsDisplay = earnings >= 1000 ? `$${(earnings / 1000).toFixed(1)}K` : earnings > 0 ? `$${earnings}` : '$—'
+
+  const sfScore  = sfData?.eligibility_score ?? 0
+  const sfLocked = sfData?.is_locked ?? true
+  const apps     = (appsData?.applications ?? []).slice(0, 5)
+
+  return (
+    <div className="space-y-3.5">
+
+      {/* Stats row */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <StatCard label="Applications" value={String(totalApps)}  sub={`${acceptedApps} accepted`} barPct={100} />
+        <StatCard label="Acceptance Rate" value={`${acceptRate}%`} sub="of applications" barPct={acceptRate} />
+        <StatCard label="Active Contracts" value={String(activeC)} sub={`${activeC} running`} barPct={activeC > 0 ? 60 : 0} />
+        <div className="dash-card text-center">
+          <div className="dash-label">Total Earnings</div>
+          <div className="font-display text-off-white" style={{ fontSize: 28 }}>{earningsDisplay}</div>
+          <div className="dash-sub">From succeeded payments</div>
+        </div>
+      </div>
+
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        {/* SponsorForge status */}
+        <div className="dash-card" style={{ borderLeft: sfLocked ? '2px solid #c00000' : '2px solid #00c060' }}>
+          <div className="dash-label mb-1">SponsorForge</div>
+          <div className="font-condensed text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: sfLocked ? '#c00000' : '#00c060' }}>
+            {sfLocked ? 'Locked — Complete Requirements' : 'Unlocked'}
+          </div>
+          <div className="flex items-center gap-4">
+            <ReadinessRing pct={sfScore} size={64} label="Score" />
+            <div className="text-[12px] font-condensed text-gray-2">
+              {sfScore < 100 ? `${100 - sfScore} pts to unlock` : 'Eligible for matching'}
+            </div>
+          </div>
+          {(sfData?.requirements ?? []).slice(0, 2).map((r: any, i: number) => (
+            <div key={i} className="flex items-center gap-2 mt-2 pt-2 border-t border-charcoal-3 first:border-0">
+              <span className={`badge badge-${r.type}`}>{r.badge}</span>
+              <span className="font-condensed text-[11px] text-gray-2">{r.name}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Obligations */}
+        <div className="dash-card">
+          <div className="dash-label mb-3">Obligations</div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-condensed text-[11px] text-gray-2">Completed</span>
+            <span className="font-condensed font-bold text-off-white">{doneObs}</span>
+          </div>
+          <div className="dash-bar-track mb-3">
+            <div className="dash-bar-fill" style={{ width: `${doneObs + pendingObs > 0 ? Math.round(doneObs / (doneObs + pendingObs) * 100) : 0}%`, background: '#00c060' }} />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-condensed text-[11px] text-gray-2">Pending</span>
+            <span className="font-condensed font-bold text-off-white">{pendingObs}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Applications */}
+      <div className="dash-card">
+        <div className="flex items-center justify-between mb-3">
+          <div className="dash-label">Recent Applications</div>
+          <Link to="/opportunities" className="font-condensed text-[10px] text-blood-glow hover:underline no-underline">Browse Opportunities →</Link>
+        </div>
+        {apps.length === 0 ? (
+          <EmptyState icon="◈" title="No Applications Yet"
+            body="Browse opportunities to apply for your first sponsorship."
+            action={<Link to="/opportunities" className="btn-ghost text-[11px] py-2 px-4 no-underline">Browse Now →</Link>} />
+        ) : (
+          apps.map((a: any) => (
+            <div key={a.id} className="flex items-center gap-3 py-2 border-b border-charcoal-3 last:border-0"
+              style={{ borderLeft: `2px solid ${APP_SC[a.status] ?? '#222226'}`, paddingLeft: 8, marginLeft: -8 }}>
+              <div className="flex-1 min-w-0">
+                <div className="font-condensed font-bold text-[12px] text-off-white truncate">{a.opportunity?.title ?? 'Opportunity'}</div>
+                <div className="font-condensed text-[11px] text-gray-3">{a.sponsor_detail?.company_name ?? '—'}</div>
+              </div>
+              <span className="font-condensed text-[10px] uppercase tracking-[0.1em] flex-shrink-0" style={{ color: APP_SC[a.status] }}>{APP_SL[a.status] ?? a.status}</span>
+            </div>
+          ))
+        )}
+        {apps.length > 0 && (
+          <Link to="/fighter/applications" className="font-condensed text-[11px] text-gray-3 hover:text-off-white block text-center mt-2 no-underline">View all applications →</Link>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Education zone ────────────────────────────────────────────────────────────
+function EducationZone() {
   const [modules,  setModules]  = useState<FighterModule[]>([])
   const [loading,  setLoading]  = useState(true)
   const [error,    setError]    = useState<string | null>(null)
@@ -388,15 +775,10 @@ function Education() {
 
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
-
-  if (openId) return <ModuleDetail moduleId={openId} onBack={() => { setOpenId(null); load() }} />
+  if (openId)  return <ModuleDetail moduleId={openId} onBack={() => { setOpenId(null); load() }} />
 
   if (!modules.length) return (
-    <div className="space-y-4">
-      <SectionHeading>Education Modules</SectionHeading>
-      <EmptyState icon="📚" title="No Modules Assigned Yet"
-        body="Published education modules will appear here. Check back soon." />
-    </div>
+    <EmptyState icon="●" title="No Modules Assigned Yet" body="Published education modules will appear here. Check back soon." />
   )
 
   const completed  = modules.filter(m => m.progress.status === 'completed')
@@ -407,28 +789,26 @@ function Education() {
     const pct = m.progress.completion_pct ?? 0
     const st  = m.progress.status ?? 'not_started'
     return (
-      <button onClick={() => setOpenId(m.id)}
-        className="dash-card text-left w-full hover:border-blood transition-colors"
-        style={{ borderLeft: `2px solid ${st==='completed'?'#00c060':st==='in_progress'?'#c9a82c':'#222226'}` }}>
+      <button onClick={() => setOpenId(m.id)} className="dash-card text-left w-full hover:border-blood transition-colors"
+        style={{ borderLeft: `2px solid ${st === 'completed' ? '#00c060' : st === 'in_progress' ? '#c9a82c' : '#222226'}` }}>
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
             <div className="font-condensed font-bold text-[13px] text-off-white truncate">{m.name}</div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               {m.category && <span className="font-condensed text-[10px] text-gray-3 capitalize">{m.category}</span>}
-              <span className="font-condensed text-[10px] text-gray-3 capitalize">{(m.module_type||'lesson').replace('_',' ')}</span>
+              <span className="font-condensed text-[10px] text-gray-3 capitalize">{(m.module_type || 'lesson').replace('_', ' ')}</span>
               {m.estimated_mins && <span className="font-condensed text-[10px] text-gray-3">{m.estimated_mins}m</span>}
-              {m.is_required && <span className="font-condensed text-[9px] uppercase tracking-widest" style={{ color:'#C41E3A' }}>Required</span>}
+              {m.is_required && <span className="font-condensed text-[9px] uppercase tracking-widest" style={{ color: '#C41E3A' }}>Required</span>}
             </div>
           </div>
           <span className="font-condensed text-[11px] font-bold shrink-0"
-            style={{ color: st==='completed'?'#00c060':st==='in_progress'?'#c9a82c':'#4a4846' }}>
-            {st==='completed' ? '✓ Done' : st==='in_progress' ? `${pct}%` : 'Start →'}
+            style={{ color: st === 'completed' ? '#00c060' : st === 'in_progress' ? '#c9a82c' : '#4a4846' }}>
+            {st === 'completed' ? '✓ Done' : st === 'in_progress' ? `${pct}%` : 'Start →'}
           </span>
         </div>
         {pct > 0 && (
-          <div className="dash-bar-track mt-1" style={{ height:3 }}>
-            <div className="dash-bar-fill" style={{ width:`${pct}%`, height:'100%',
-              background: pct===100?'#00c060':'linear-gradient(90deg,#8b0000,#c00000)' }} />
+          <div className="dash-bar-track mt-1" style={{ height: 3 }}>
+            <div className="dash-bar-fill" style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#00c060' : 'linear-gradient(90deg,#8b0000,#c00000)' }} />
           </div>
         )}
       </button>
@@ -444,7 +824,6 @@ function Education() {
           <span className="font-condensed text-[11px] text-gray-3">{completed.length}/{modules.length} done</span>
         </div>
       </div>
-
       {inProgress.length > 0 && (
         <div>
           <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 mb-2">In Progress</div>
@@ -467,538 +846,148 @@ function Education() {
   )
 }
 
-const IMPACT_COLOR: Record<string, string> = {
-  critical: '#c00000', high: '#c00000', medium: '#c9a82c', low: '#7a7672',
-}
-
-function SponsorForge() {
-  const { data: sfData, loading: sfLoading, error: sfError } = useApi<any>('/api/fighter/sponsorforge')
-  const { data: gapData, loading: gapLoading }               = useApi<any>('/api/fighter/sponsorforge/gaps')
-
-  if (sfLoading) return <DashSkeleton />
-  if (sfError)   return <ApiError message={sfError} />
-
-  const score    = sfData?.eligibility_score  ?? 0
-  const locked   = sfData?.is_locked          ?? true
-  const reqs     = sfData?.requirements       ?? []
-  const progress = sfData?.eligibility_progress ?? []
-  const gaps     = gapData?.gaps              ?? []
-  const readiness = gapData?.readiness_score  ?? 0
-
-  return (
-    <div className="space-y-4">
-      <SectionHeading>SponsorForge</SectionHeading>
-
-      {/* Status + score */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 200px' }}>
-        <div className="dash-card" style={{ borderLeft: locked ? '2px solid #c00000' : '2px solid #00c060' }}>
-          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase mb-3"
-               style={{ color: locked ? '#c00000' : '#00c060' }}>
-            Status: {locked ? 'Locked — Complete Requirements' : 'Unlocked'}
-          </div>
-          {reqs.length > 0
-            ? <ListCard label="Requirements" items={reqs} />
-            : <EmptyState title="No requirements yet" body="Complete your fighter profile to see requirements." />
-          }
-        </div>
-        <div className="dash-card flex flex-col items-center text-center">
-          <div className="dash-label mb-2">Eligibility Score</div>
-          <ReadinessRing pct={score} size={90} />
-          <div className="dash-sub mt-2">{score < 100 ? `${100 - score} pts to unlock` : 'Eligible!'}</div>
-          <div className="dash-sub mt-1">Readiness: {readiness}/100</div>
-        </div>
-      </div>
-
-      {/* Gaps checklist */}
-      {!gapLoading && gaps.length > 0 && (
-        <div className="dash-card space-y-3">
-          <div className="dash-label">Improve Your Match Score</div>
-          <p className="font-condensed text-[11px] text-gray-3">
-            Fix these gaps to appear higher in sponsor match rankings.
-          </p>
-          <div className="space-y-2">
-            {gaps.map((g: any, i: number) => (
-              <div key={i} className="flex items-start gap-3 py-2 border-b border-charcoal-3 last:border-0">
-                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-                  style={{ background: IMPACT_COLOR[g.impact] ?? '#7a7672' }} />
-                <div className="flex-1 min-w-0">
-                  <div className="font-condensed font-bold text-[12px] text-off-white">{g.label}</div>
-                  <div className="font-condensed text-[11px] text-gray-3 mt-0.5">{g.message}</div>
-                  <div className="font-condensed text-[11px] mt-1" style={{ color: '#8b0000' }}>→ {g.action}</div>
-                </div>
-                <span className="font-condensed text-[9px] uppercase tracking-[0.1em] flex-shrink-0"
-                  style={{ color: IMPACT_COLOR[g.impact] }}>
-                  {g.impact}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!gapLoading && gaps.length === 0 && score > 0 && (
-        <div className="dash-card text-center py-4">
-          <div className="font-condensed text-green-400 text-[13px]">✓ No major gaps detected — your profile is match-ready</div>
-        </div>
-      )}
-
-      {/* Progress chart */}
-      {progress.length > 0 && (
-        <div className="dash-card">
-          <div className="dash-label mb-3">Eligibility Breakdown</div>
-          <BarChart height={80} data={progress} />
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Mentorship() {
-  const { data, loading, error } = useApi<any>('/api/fighter/mentorship')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
-
-  const sessions    = data?.sessions    ?? []
-  const thisMonth   = data?.this_month  ?? 0
-  const nextSession = data?.next_session ?? null
-
-  if (!sessions.length) return (
-    <div className="space-y-4">
-      <SectionHeading>Mentorship & Consulting</SectionHeading>
-      <EmptyState icon="🎯" title="No Sessions Yet"
-        body="Mentorship and consulting sessions will appear here once you book a session through the platform." />
-    </div>
-  )
-
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Mentorship & Consulting</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 160px' }}>
-        <ListCard label="Session History" items={sessions} />
-        <div className="dash-card text-center">
-          <div className="dash-label">This Month</div>
-          <div className="dash-stat mt-2">{thisMonth}</div>
-          <div className="dash-sub">sessions</div>
-          {nextSession && (
-            <div className="dash-sub mt-4">Next<br />{nextSession.date}<br />{nextSession.time}</div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Manager connection card ───────────────────────────────────────────────────
-function ManagerCard() {
-  const [connections, setConnections] = useState<ManagerConnection[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [form,     setForm]     = useState({ manager_email: '', team_name: '', message: '' })
-  const [saving,   setSaving]   = useState(false)
-  const [actingId, setActingId] = useState<string|null>(null)
-  const [msg,      setMsg]      = useState<{type:'ok'|'err';text:string}|null>(null)
-
-  const load = useCallback(() => {
-    setLoading(true)
-    getFighterManager()
-      .then(d => { setConnections(d.connections ?? []); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [])
-  useEffect(() => { load() }, [load])
-
-  const active  = connections.find(c => c.status === 'active')
-  const pending = connections.filter(c => c.status === 'pending')
-
-  const submitRequest = async () => {
-    if (!form.manager_email.trim() && !form.team_name.trim()) {
-      setMsg({ type: 'err', text: 'Enter a manager email or team name.' }); return
-    }
-    setSaving(true); setMsg(null)
-    try {
-      await requestManager({
-        manager_email: form.manager_email.trim() || null,
-        team_name:     form.team_name.trim()     || null,
-        message:       form.message.trim()       || null,
-      })
-      setMsg({ type: 'ok', text: 'Request sent. Waiting for manager to accept.' })
-      setForm({ manager_email: '', team_name: '', message: '' })
-      setShowForm(false)
-      load()
-    } catch (e: any) {
-      setMsg({ type: 'err', text: e.message ?? 'Request failed.' })
-    } finally { setSaving(false) }
-  }
-
-  const cancel = async (id: string) => {
-    setActingId(id); setMsg(null)
-    try {
-      await cancelManagerRequest(id)
-      setMsg({ type: 'ok', text: 'Request cancelled.' })
-      load()
-    } catch (e: any) {
-      setMsg({ type: 'err', text: e.message })
-    } finally { setActingId(null) }
-  }
-
-  if (loading) return <div className="dash-card"><div className="dash-sub">Loading manager status…</div></div>
-
-  return (
-    <div className="dash-card space-y-3">
-      <div className="dash-label">Manager / Team</div>
-
-      {/* Active manager */}
-      {active && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 py-2 border-b border-charcoal-3">
-            <div className="flex-1">
-              <div className="font-condensed font-bold text-off-white" style={{ fontSize: 13 }}>
-                {active.manager?.name ?? 'Manager'}
-              </div>
-              {active.manager?.team_name && (
-                <div className="font-condensed text-[11px] text-gray-3">{active.manager.team_name}</div>
-              )}
-              <div className="font-condensed text-[11px] text-gray-3">{active.manager?.email}</div>
-            </div>
-            <span className="badge badge-green">Active</span>
-          </div>
-          <button onClick={() => cancel(active.id)} disabled={actingId === active.id}
-            className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
-            {actingId === active.id ? '…' : 'Leave / Request Change'}
-          </button>
-        </div>
-      )}
-
-      {/* Pending requests */}
-      {pending.map(c => {
-        const isManagerInvite = c.source === 'manager_invite' || c.source === 'manual_create'
-        const accept = async () => {
-          setActingId(c.id); setMsg(null)
-          try {
-            await apiPatch(`/api/fighter/manager/request/${c.id}`, { status: 'active' })
-            setMsg({ type: 'ok', text: 'Invitation accepted.' })
-            load()
-          } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
-          finally { setActingId(null) }
-        }
-        return (
-          <div key={c.id} className="flex items-center gap-3 py-2 border-b border-charcoal-3">
-            <div className="flex-1">
-              <div className="font-condensed text-[12px] text-off-white">
-                {isManagerInvite ? 'Invited by' : 'Request sent to'}{' '}
-                <span className="font-bold">{c.manager?.name ?? c.team_name ?? '—'}</span>
-              </div>
-              {c.request_message && (
-                <div className="font-condensed text-[11px] text-gray-3 italic">"{c.request_message}"</div>
-              )}
-            </div>
-            <span className="badge badge-yellow">Pending</span>
-            {isManagerInvite && (
-              <button onClick={accept} disabled={actingId === c.id}
-                className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2 py-1 border cursor-pointer transition-all disabled:opacity-40"
-                style={{ borderColor: '#2a5c2a', color: '#00c060' }}>
-                {actingId === c.id ? '…' : 'Accept'}
-              </button>
-            )}
-            <button onClick={() => cancel(c.id)} disabled={actingId === c.id}
-              className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2 py-1 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
-              {actingId === c.id ? '…' : isManagerInvite ? 'Decline' : 'Cancel'}
-            </button>
-          </div>
-        )
-      })}
-
-      {/* No manager */}
-      {!active && !pending.length && !showForm && (
-        <div className="space-y-2">
-          <div className="font-condensed text-[12px] text-gray-3">No manager connected.</div>
-          <button onClick={() => setShowForm(true)}
-            className="btn-ghost text-[10px] py-2 px-4">Link a Manager →</button>
-        </div>
-      )}
-
-      {/* Request form */}
-      {showForm && (
-        <div className="space-y-3 pt-1">
-          <div>
-            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Manager Email</label>
-            <input value={form.manager_email} onChange={e => setForm(p=>({...p,manager_email:e.target.value}))}
-              placeholder="manager@email.com" type="email"
-              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none" />
-          </div>
-          <div>
-            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">or Team Name</label>
-            <input value={form.team_name} onChange={e => setForm(p=>({...p,team_name:e.target.value}))}
-              placeholder="Team / gym name"
-              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none" />
-          </div>
-          <div>
-            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Message (optional)</label>
-            <textarea value={form.message} onChange={e => setForm(p=>({...p,message:e.target.value}))} rows={2}
-              placeholder="Introduce yourself…"
-              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none resize-none" />
-          </div>
-          {msg && <p className={`font-condensed text-[11px] ${msg.type==='ok'?'text-green-400':'text-blood-glow'}`}>{msg.text}</p>}
-          <div className="flex gap-2">
-            <button onClick={submitRequest} disabled={saving}
-              className="btn-primary text-[11px] py-2 disabled:opacity-50">
-              {saving ? 'Sending…' : 'Send Request'}
-            </button>
-            <button onClick={() => { setShowForm(false); setMsg(null) }} className="btn-ghost text-[11px] py-2">Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {msg && !showForm && (
-        <p className={`font-condensed text-[11px] ${msg.type==='ok'?'text-green-400':'text-blood-glow'}`}>{msg.text}</p>
-      )}
-    </div>
-  )
-}
-
-function Profile() {
-  const { data, loading, error } = useApi<any>('/api/fighter/profile')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
-
-  const name        = data?.name                ?? '—'
-  const division    = data?.division            ?? '—'
-  const wins        = data?.record_wins         ?? 0
-  const losses      = data?.record_losses       ?? 0
-  const draws       = data?.record_draws        ?? 0
-  const base        = data?.base                ?? '—'
-  const completeness = data?.profile_completeness ?? 0
-
-  return (
-    <div className="space-y-4">
-      <SectionHeading>My Profile</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <div className="dash-card">
-          <div className="dash-label">Fighter Info</div>
-          {([
-            ['Full Name', name],
-            ['Division',  division],
-            ['Record',    `${wins}-${losses}${draws > 0 ? `-${draws}` : ''}`],
-            ['Base',      base],
-          ] as [string,string][]).map(([k,v]) => (
-            <div key={k} className="flex justify-between py-2 border-b border-charcoal-3 last:border-0 text-[12px]">
-              <span className="font-condensed text-gray-3">{k}</span>
-              <span className="font-condensed font-semibold text-off-white">{v}</span>
-            </div>
-          ))}
-        </div>
-        <div className="dash-card">
-          <div className="dash-label mb-3">Profile Completeness</div>
-          <ReadinessRing pct={completeness} size={90} label="Profile" />
-          <div className="space-y-1 mt-4">
-            <Link to="/fighter/profile" className="btn-ghost w-full text-[10px] py-2 no-underline text-center block">
-              Edit Profile
-            </Link>
-          </div>
-        </div>
-      </div>
-      <ManagerCard />
-    </div>
-  )
-}
-
-// ── Compact contracts list for fighter ───────────────────────────────────────
-const FC_COLOR: Record<string, string> = {
-  draft:'#4a4846', pending_fighter:'#b45309', active:'#166534',
-  in_dispute:'#7f1d1d', completed:'#1e3a5f', terminated:'#374151',
-}
-const FC_LABEL: Record<string, string> = {
-  draft:'Draft', pending_fighter:'Awaiting Your Signature', active:'Active',
-  in_dispute:'In Dispute', completed:'Completed', terminated:'Terminated',
-}
-
-function FighterContractsList() {
+// ── Contracts & Obligations zone ──────────────────────────────────────────────
+function ContractsZone() {
   const [contracts, setContracts] = useState<Contract[]>([])
   const [loading, setLoading]     = useState(true)
+  const { data: obsData, loading: obsLoading } = useApi<any>('/api/fighter/obligations')
 
   useEffect(() => {
     getContracts()
-      .then(r => { setContracts((r.contracts ?? []).slice(0, 5)); setLoading(false) })
+      .then(r => { setContracts(r.contracts ?? []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="dash-sub">Loading contracts…</div>
-  if (!contracts.length) return (
-    <EmptyState icon="📄" title="No Contracts Yet"
-      body="Accepted sponsorship applications will generate contracts here." />
-  )
-  return (
-    <div className="space-y-2">
-      {contracts.map(c => (
-        <Link key={c.id} to={`/contracts/${c.id}`}
-          className="dash-card flex items-center gap-3 no-underline block"
-          style={{ borderLeft: `2px solid ${FC_COLOR[c.status] ?? '#222226'}` }}>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5"
-                style={{ background: FC_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
-                {FC_LABEL[c.status] ?? c.status}
-              </span>
-            </div>
-            <div className="font-condensed font-bold text-off-white text-[13px]">
-              ${c.value_usd.toLocaleString()} · {c.payment_schedule}
-            </div>
-          </div>
-          <span className="font-condensed text-[11px] text-gray-3 flex-shrink-0">View →</span>
-        </Link>
-      ))}
-      <Link to="/contracts" className="font-condensed text-[11px] text-gray-3 hover:text-off-white block text-center mt-1 no-underline">
-        View all contracts →
-      </Link>
-    </div>
-  )
-}
+  if (loading || obsLoading) return <DashSkeleton />
 
-// ── Compact recent applications list ─────────────────────────────────────────
-const APP_SC: Record<string,string> = {
-  applied:'#7a7672',under_review:'#C41E3A',shortlisted:'#f5a623',
-  accepted:'#00c060',rejected:'#4a4846',withdrawn:'#4a4846',
-}
-const APP_SL: Record<string,string> = {
-  applied:'Submitted',under_review:'In Review',shortlisted:'Shortlisted',
-  accepted:'Accepted',rejected:'Rejected',withdrawn:'Withdrawn',
-}
-function RecentApplications() {
-  const { data, loading } = useApi<any>('/api/applications/mine')
-  const apps = (data?.applications ?? []).slice(0, 5)
-  if (loading) return <div className="dash-sub">Loading…</div>
-  if (!apps.length) return (
-    <EmptyState icon="🤝" title="No Applications Yet"
-      body="You haven't applied to any opportunities yet."
-      action={<Link to="/opportunities" className="btn-ghost text-[11px] py-2 px-4 no-underline">Browse Opportunities →</Link>} />
-  )
+  const sponsorObs  = obsData?.sponsor ?? []
+  const mediaObs    = obsData?.media   ?? []
+  const fulfillment = obsData?.fulfillment_pct ?? 100
+  const completed   = obsData?.completed_count ?? 0
+
   return (
-    <div className="space-y-2">
-      {apps.map((a: any) => (
-        <div key={a.id} className="dash-card flex items-center gap-3"
-          style={{ borderLeft:`2px solid ${APP_SC[a.status]??'#222226'}` }}>
-          <div className="flex-1 min-w-0">
-            <div className="font-condensed font-bold text-[12px] text-off-white truncate">
-              {a.opportunity?.title ?? 'Opportunity'}
-            </div>
-            <div className="font-condensed text-[11px] text-gray-3">{a.sponsor_detail?.company_name ?? '—'}</div>
-          </div>
-          <span className="font-condensed text-[10px] uppercase tracking-[0.1em] flex-shrink-0"
-            style={{ color: APP_SC[a.status] }}>
-            {APP_SL[a.status] ?? a.status}
-          </span>
+    <div className="space-y-3.5">
+
+      {/* Contracts */}
+      <div className="dash-card">
+        <div className="flex items-center justify-between mb-3">
+          <div className="dash-label">Contracts</div>
+          <Link to="/contracts" className="font-condensed text-[10px] text-gray-3 hover:text-off-white no-underline">View all →</Link>
         </div>
-      ))}
-      <Link to="/fighter/applications"
-        className="font-condensed text-[11px] text-gray-3 hover:text-off-white block text-center mt-1 no-underline">
-        View all applications →
-      </Link>
-    </div>
-  )
-}
+        {contracts.length === 0 ? (
+          <EmptyState icon="■" title="No Contracts Yet" body="Accepted applications will generate contracts here." />
+        ) : (
+          contracts.slice(0, 5).map(c => (
+            <Link key={c.id} to={`/contracts/${c.id}`}
+              className="dash-card flex items-center gap-3 no-underline block mb-2"
+              style={{ borderLeft: `2px solid ${FC_COLOR[c.status] ?? '#222226'}` }}>
+              <div className="flex-1 min-w-0">
+                <span className="font-condensed text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 mr-2"
+                  style={{ background: FC_COLOR[c.status] ?? '#374151', color: '#f0ece4' }}>
+                  {FC_LABEL[c.status] ?? c.status}
+                </span>
+                <span className="font-condensed font-bold text-off-white text-[13px]">
+                  ${c.value_usd.toLocaleString()} · {c.payment_schedule}
+                </span>
+              </div>
+              <span className="font-condensed text-[11px] text-gray-3 flex-shrink-0">View →</span>
+            </Link>
+          ))
+        )}
+      </div>
 
-function Sponsorships() {
-  const { data, loading, error } = useApi<any>('/api/fighter/marketplace')
-  if (loading) return <DashSkeleton />
-  if (error)   return <ApiError message={error} />
-
-  const totalApps    = data?.total_applications    ?? 0
-  const acceptedApps = data?.accepted_applications ?? 0
-  const acceptRate   = data?.acceptance_rate       ?? 0
-  const activeC      = data?.active_contracts      ?? 0
-  const totalC       = data?.total_contracts       ?? 0
-  const earnings     = data?.total_earnings_usd    ?? 0
-  const doneObs      = data?.completed_obligations ?? 0
-  const pendingObs   = data?.pending_obligations   ?? 0
-
-  if (totalApps === 0 && activeC === 0) return (
-    <div className="space-y-4">
-      <SectionHeading>Sponsorship Stats</SectionHeading>
-      <EmptyState icon="🤝" title="No Sponsorship Activity Yet"
-        body="No SponsorForge matches yet. Complete your fighter profile and social accounts to improve match quality."
-        action={<Link to="/opportunities" className="btn-ghost text-[11px] py-2 px-4 no-underline">Browse Opportunities →</Link>} />
-    </div>
-  )
-
-  const earningsDisplay = earnings >= 1000 ? `$${(earnings / 1000).toFixed(1)}K` : `$${earnings}`
-
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Sponsorship Stats</SectionHeading>
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-        <StatCard label="Applications Sent"  value={String(totalApps)}  sub={`${acceptedApps} accepted`} barPct={100} />
-        <StatCard label="Acceptance Rate"    value={`${acceptRate}%`}   sub="of all applications"        barPct={acceptRate} />
-        <StatCard label="Active Contracts"   value={String(activeC)}    sub={`${totalC} total`}           barPct={totalC>0?Math.round(activeC/totalC*100):0} />
+      {/* Obligations */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr 160px' }}>
+        {sponsorObs.length > 0
+          ? <ListCard label="Sponsor Obligations" items={sponsorObs} />
+          : <EmptyState title="No Sponsor Obligations" body="Active sponsor deal deliverables appear here." />}
+        {mediaObs.length > 0
+          ? <ListCard label="Media Obligations" items={mediaObs} />
+          : <EmptyState title="No Media Obligations" body="Event and promotion media duties appear here." />}
         <div className="dash-card text-center">
-          <div className="dash-label">Total Earnings</div>
-          <div className="font-display text-off-white" style={{ fontSize:28 }}>{earningsDisplay}</div>
-          <div className="dash-sub">From succeeded payments</div>
+          <div className="dash-label">Fulfillment</div>
+          <ReadinessRing pct={fulfillment} size={80} color="#00c060" label="%" />
+          <div className="dash-sub mt-2">{completed} completed</div>
         </div>
-      </div>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <div className="dash-card">
-          <div className="dash-label mb-3">Obligations</div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="dash-sub">Completed</span>
-            <span className="font-condensed text-off-white font-bold">{doneObs}</span>
-          </div>
-          <div className="dash-bar-track mb-3">
-            <div className="dash-bar-fill" style={{ width:`${doneObs+pendingObs>0?Math.round(doneObs/(doneObs+pendingObs)*100):0}%`, background:'#00c060' }} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="dash-sub">Pending</span>
-            <span className="font-condensed text-off-white font-bold">{pendingObs}</span>
-          </div>
-        </div>
-        <div className="dash-card flex flex-col gap-3">
-          <div className="dash-label">Quick Links</div>
-          {[
-            { to:'/opportunities',        label:'Browse Opportunities' },
-            { to:'/fighter/applications', label:'My Applications' },
-            { to:'/contracts',            label:'My Contracts' },
-          ].map(l => (
-            <Link key={l.to} to={l.to}
-              className="btn-ghost text-[11px] py-2 text-center block no-underline">{l.label}</Link>
-          ))}
-        </div>
-      </div>
-      <div className="dash-card space-y-3">
-        <div className="dash-label">Recent Applications</div>
-        <RecentApplications />
-      </div>
-      <div className="dash-card space-y-3">
-        <div className="dash-label">My Contracts</div>
-        <FighterContractsList />
       </div>
     </div>
   )
 }
 
-function Transition() {
-  return (
-    <div className="space-y-4">
-      <SectionHeading>Transition Planning</SectionHeading>
-      <div className="dash-card" style={{ borderLeft: '2px solid #222226' }}>
-        <div className="font-condensed text-[10px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-3">
-          Status: Locked — Pipeline Level 3 Required
-        </div>
-        <p className="font-body text-gray-2 text-[13px] leading-relaxed">
-          The Transition Blueprint helps fighters plan life and career beyond active competition. Unlocks at Pipeline Level 3.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-const VIEWS: Record<string, React.FC> = {
-  overview: Overview, sponsorships: Sponsorships, pipeline: Pipeline, obligations: Obligations,
-  education: Education, sponsorforge: SponsorForge, mentorship: Mentorship,
-  transition: Transition, profile: Profile,
-}
-
+// ── Default export — shell + zone routing ────────────────────────────────────
 export default function FighterDashboard() {
+  const [zone, setZone]  = useState('command')
+  const { user, logout } = useAuth()
+  const navigate         = useNavigate()
+
   return (
-    <DashShell navItems={NAV} title="Fighter Dashboard" subtitle="Fighter Portal">
-      {tab => { const V = VIEWS[tab] ?? Overview; return <V /> }}
-    </DashShell>
+    <div className="min-h-screen bg-black flex flex-col" style={{ fontFamily: "'Barlow',sans-serif" }}>
+
+      {/* ── Command bar ── */}
+      <header className="bg-near-black border-b border-charcoal-3 flex items-stretch flex-shrink-0 sticky top-0 z-30">
+        <div className="flex items-center px-5 py-3 border-r border-charcoal-3 flex-shrink-0">
+          <Link to="/" className="no-underline inline-block">
+            <img src="/logo-white.png" alt="Eleventh Round" style={{ height: 22, width: 'auto' }} />
+          </Link>
+        </div>
+        <div className="flex items-center px-5 py-3 border-r border-charcoal-3 flex-shrink-0">
+          <div>
+            <div className="font-condensed text-[8px] font-bold tracking-[0.4em] uppercase leading-none mb-0.5" style={{ color: '#C41E3A' }}>
+              Fighter Portal
+            </div>
+            <div className="font-display text-off-white uppercase leading-none" style={{ fontSize: 14 }}>
+              {user?.name ?? 'My Dashboard'}
+            </div>
+          </div>
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center gap-5 px-5 py-3">
+          {user && (
+            <div className="text-right hidden sm:block">
+              <div className="font-condensed text-[11px] font-bold text-off-white leading-tight">{user.name}</div>
+              <div className="font-condensed text-[9px] text-gray-3 leading-tight">{user.email}</div>
+            </div>
+          )}
+          <div className="relative cursor-pointer">
+            <span className="text-gray-3 hover:text-off-white transition-colors" style={{ fontSize: 17 }}>🔔</span>
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: '#C41E3A' }} />
+          </div>
+          <Link to="/" className="font-condensed font-bold uppercase text-gray-3 hover:text-off-white transition-colors no-underline"
+            style={{ fontSize: 10, letterSpacing: '0.2em' }}>
+            ← Home
+          </Link>
+          <button onClick={() => { logout(); navigate('/login') }}
+            className="font-condensed font-bold uppercase text-gray-3 hover:text-blood-glow transition-colors bg-transparent border-0 cursor-pointer"
+            style={{ fontSize: 10, letterSpacing: '0.25em' }}>
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      {/* ── Zone nav ── */}
+      <div className="bg-near-black border-b border-charcoal-3 px-4 flex overflow-x-auto flex-shrink-0 sticky top-[57px] z-20"
+        style={{ scrollbarWidth: 'none' }}>
+        {ZONES.map(z => (
+          <button key={z.id} onClick={() => setZone(z.id)}
+            className="font-condensed text-[10px] font-bold tracking-[0.18em] uppercase px-5 py-3.5 cursor-pointer border-0 bg-transparent whitespace-nowrap transition-all duration-150"
+            style={{
+              color:        zone === z.id ? '#f0ece4' : '#4a4846',
+              borderBottom: zone === z.id ? '2px solid #C41E3A' : '2px solid transparent',
+              marginBottom: -1,
+            }}>
+            {z.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Zone content ── */}
+      <main className="flex-1 overflow-y-auto p-6 bg-black">
+        {zone === 'command'      && <CommandCenter />}
+        {zone === 'profile'      && <ProfileZone />}
+        {zone === 'sponsorships' && <SponsorshipsZone />}
+        {zone === 'education'    && <EducationZone />}
+        {zone === 'contracts'    && <ContractsZone />}
+      </main>
+    </div>
   )
 }
