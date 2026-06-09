@@ -171,9 +171,17 @@ router.get('/podcast', async (req, res) => {
 
     const { data, error } = await sb
       .from('podcast_episodes')
-      .select('id,title,description,episode_number,season,spotify_url,apple_url,youtube_url,embed_url,thumbnail_path,duration,published_at,sort_order')
+      .select([
+        'id', 'title', 'slug', 'description', 'short_description',
+        'episode_number', 'season',
+        'guest_name', 'guest_title',
+        'spotify_url', 'apple_url', 'youtube_url', 'embed_url',
+        'thumbnail_path', 'duration', 'tags', 'is_featured',
+        'published_at', 'sort_order',
+      ].join(','))
       .eq('status', 'published')
-      .order('published_at', { ascending: false })
+      .order('is_featured', { ascending: false })
+      .order('published_at',  { ascending: false })
       .order('sort_order')
 
     if (error) throw error
@@ -190,14 +198,28 @@ router.get('/apparel', async (req, res) => {
     const sb = adminSupabase
     if (!sb) return res.status(503).json({ error: 'Database not configured.' })
 
-    const { data, error } = await sb
+    let q = sb
       .from('apparel_products')
-      .select('id,name,description,price_display,category,image_path,external_url,featured,sort_order')
+      .select([
+        'id', 'name', 'slug', 'description', 'price_display',
+        'category', 'collection',
+        'image_path', 'gallery_images', 'hover_image_path',
+        'external_url', 'shopify_url',
+        'sizes', 'colors', 'badge', 'stock_status', 'featured', 'sort_order',
+      ].join(','))
       .eq('status', 'published')
-      .order('featured', { ascending: false })
+      .neq('stock_status', 'hidden')
+      .order('featured',   { ascending: false })
       .order('sort_order')
       .order('created_at', { ascending: false })
 
+    const { category, collection, size, color } = req.query
+    if (category)   q = q.eq('category',   category)
+    if (collection) q = q.eq('collection', collection)
+    if (size)       q = q.contains('sizes',  [size])
+    if (color)      q = q.contains('colors', [color])
+
+    const { data, error } = await q
     if (error) throw error
     res.json({ ok: true, products: data ?? [] })
   } catch (err) {

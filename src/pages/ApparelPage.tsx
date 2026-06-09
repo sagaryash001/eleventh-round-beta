@@ -6,43 +6,63 @@ import { apiGet } from '../lib/api/client'
 type Product = {
   id: string
   name: string
+  slug: string | null
   description: string | null
   price_display: string | null
   category: string | null
+  collection: string | null
   image_path: string | null
+  gallery_images: string[] | null
+  hover_image_path: string | null
   external_url: string | null
+  shopify_url: string | null
+  sizes: string[] | null
+  colors: string[] | null
+  badge: string | null
+  stock_status: 'in_stock' | 'low_stock' | 'sold_out' | 'hidden'
   featured: boolean
   sort_order: number
 }
 
 async function trackClick(id: string) {
-  try {
-    await fetch(`/api/public/apparel/${id}/click`, { method: 'POST' })
-  } catch {
-    // best-effort — never block navigation
-  }
+  try { await fetch(`/api/public/apparel/${id}/click`, { method: 'POST' }) } catch { /* best-effort */ }
+}
+
+const STOCK_LABEL: Record<string, string> = {
+  in_stock: 'In Stock', low_stock: 'Low Stock', sold_out: 'Sold Out',
+}
+const STOCK_COLOR: Record<string, string> = {
+  in_stock: '#00c060', low_stock: '#c9a82c', sold_out: '#c00000',
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const handleClick = () => {
-    if (!product.external_url) return
+  const [hovered, setHovered] = useState(false)
+  const soldOut = product.stock_status === 'sold_out'
+  const link    = product.shopify_url || product.external_url || null
+
+  const handleBuy = () => {
+    if (!link || soldOut) return
     trackClick(product.id)
-    window.open(product.external_url, '_blank', 'noopener,noreferrer')
+    window.open(link, '_blank', 'noopener,noreferrer')
   }
+
+  const imgSrc = (hovered && product.hover_image_path) ? product.hover_image_path : product.image_path
 
   return (
     <div
-      className="group border border-charcoal-3 hover:border-blood/40 transition-all duration-300 overflow-hidden cursor-pointer"
+      className="group border border-charcoal-3 hover:border-blood/40 transition-all duration-300 overflow-hidden"
       style={{ background: '#0f0f12' }}
-      onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Image */}
       <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', background: '#0a0a0c' }}>
-        {product.image_path ? (
+        {imgSrc ? (
           <img
-            src={product.image_path}
+            src={imgSrc}
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 w-full h-full object-cover transition-all duration-500"
+            style={{ transform: hovered ? 'scale(1.04)' : 'scale(1)' }}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -51,44 +71,91 @@ function ProductCard({ product }: { product: Product }) {
             </span>
           </div>
         )}
-        {product.featured && (
+
+        {/* Badge */}
+        {product.badge && (
           <div className="absolute top-3 left-3 z-10 font-condensed text-[9px] font-bold tracking-[0.4em] uppercase px-2.5 py-1.5 pointer-events-none"
             style={{ background: '#8b0000', color: '#f0ece4' }}>
-            Featured
+            {product.badge}
+          </div>
+        )}
+
+        {/* Sold-out overlay */}
+        {soldOut && (
+          <div className="absolute inset-0 flex items-end justify-center pb-4 z-10 pointer-events-none"
+            style={{ background: 'rgba(0,0,0,0.55)' }}>
+            <span className="font-condensed text-[11px] font-bold uppercase tracking-[0.3em] text-off-white/70">Sold Out</span>
           </div>
         )}
       </div>
 
       {/* Card info */}
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-start justify-between gap-2 mb-2">
           <div>
             <div className="font-condensed text-[14px] font-bold text-off-white">{product.name}</div>
-            {product.category && (
-              <div className="font-condensed text-[10px] text-gray-3 mt-0.5 uppercase tracking-wide">{product.category}</div>
+            {/* Color chips */}
+            {(product.colors ?? []).length > 0 && (
+              <div className="flex gap-1 flex-wrap mt-1">
+                {(product.colors ?? []).map(c => (
+                  <span key={c} className="font-condensed text-[9px] uppercase tracking-wide px-1.5 py-0.5 border border-charcoal-3 text-gray-3">
+                    {c}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
           {product.price_display && (
             <div className="font-condensed text-[16px] font-bold text-off-white flex-shrink-0">{product.price_display}</div>
           )}
         </div>
-        {product.description && (
-          <p className="font-condensed text-[11px] text-gray-3 leading-relaxed mb-3 line-clamp-2">{product.description}</p>
-        )}
-        {product.external_url && (
-          <div className="w-full font-condensed text-[10px] font-bold tracking-[0.3em] uppercase border border-charcoal-3 group-hover:border-blood/60 group-hover:text-off-white text-gray-3 py-2.5 transition-all duration-200 text-center">
-            Shop Now →
+
+        {/* Sizes */}
+        {(product.sizes ?? []).length > 0 && (
+          <div className="flex gap-1 flex-wrap mb-3">
+            {(product.sizes ?? []).map(s => (
+              <span key={s} className="font-condensed text-[9px] font-bold uppercase px-1.5 py-0.5 border border-charcoal-3 text-gray-3">
+                {s}
+              </span>
+            ))}
           </div>
         )}
+
+        {/* Stock indicator */}
+        {product.stock_status && product.stock_status !== 'in_stock' && (
+          <div className="font-condensed text-[9px] font-bold uppercase tracking-wide mb-2"
+            style={{ color: STOCK_COLOR[product.stock_status] ?? '#4a4846' }}>
+            ● {STOCK_LABEL[product.stock_status] ?? product.stock_status}
+          </div>
+        )}
+
+        {/* CTA */}
+        <button
+          onClick={handleBuy}
+          disabled={soldOut || !link}
+          className="w-full font-condensed text-[10px] font-bold tracking-[0.3em] uppercase border py-2.5 transition-all duration-200"
+          style={{
+            borderColor: soldOut ? '#333' : '#333',
+            color:        soldOut ? '#4a4846' : '#7a7672',
+            cursor:       soldOut || !link ? 'default' : 'pointer',
+          }}
+          onMouseEnter={e => { if (!soldOut && link) { e.currentTarget.style.borderColor = 'rgba(139,0,0,0.6)'; e.currentTarget.style.color = '#f0ece4' } }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = soldOut ? '#4a4846' : '#7a7672' }}
+        >
+          {soldOut ? 'Sold Out' : link ? 'Shop Now →' : 'View Details'}
+        </button>
       </div>
     </div>
   )
 }
 
 export default function ApparelPage() {
-  const [products,       setProducts]       = useState<Product[]>([])
-  const [loading,        setLoading]        = useState(true)
-  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [products,    setProducts]    = useState<Product[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [catFilter,   setCatFilter]   = useState('all')
+  const [colFilter,   setColFilter]   = useState('all')
+  const [sizeFilter,  setSizeFilter]  = useState('all')
+  const [colorFilter, setColorFilter] = useState('all')
 
   useEffect(() => {
     apiGet<{ ok: boolean; products: Product[] }>('/api/public/apparel')
@@ -97,26 +164,64 @@ export default function ApparelPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const categories = useMemo(() => {
-    const cats = [...new Set(products.map(p => p.category).filter(Boolean))] as string[]
-    return cats
+  // Derive unique filter values from loaded products
+  const { categories, collections, sizes, colors } = useMemo(() => {
+    const cats = new Set<string>(), cols = new Set<string>()
+    const szs  = new Set<string>(), cls  = new Set<string>()
+    for (const p of products) {
+      if (p.category)   cats.add(p.category)
+      if (p.collection) cols.add(p.collection)
+      for (const s of p.sizes  ?? []) szs.add(s)
+      for (const c of p.colors ?? []) cls.add(c)
+    }
+    return { categories: [...cats], collections: [...cols], sizes: [...szs], colors: [...cls] }
   }, [products])
 
   const filtered = useMemo(() => {
-    if (categoryFilter === 'all') return products
-    return products.filter(p => p.category === categoryFilter)
-  }, [products, categoryFilter])
+    return products.filter(p => {
+      if (catFilter   !== 'all' && p.category   !== catFilter)              return false
+      if (colFilter   !== 'all' && p.collection !== colFilter)               return false
+      if (sizeFilter  !== 'all' && !(p.sizes  ?? []).includes(sizeFilter))  return false
+      if (colorFilter !== 'all' && !(p.colors ?? []).includes(colorFilter)) return false
+      return true
+    })
+  }, [products, catFilter, colFilter, sizeFilter, colorFilter])
+
+  const hasFilters = catFilter !== 'all' || colFilter !== 'all' || sizeFilter !== 'all' || colorFilter !== 'all'
+  const clearFilters = () => { setCatFilter('all'); setColFilter('all'); setSizeFilter('all'); setColorFilter('all') }
+
+  const showFilters = !loading && products.length > 0 && (categories.length > 1 || collections.length > 1 || sizes.length > 0 || colors.length > 0)
+
+  const FilterRow = ({ label, value, onChange, options }: {
+    label: string; value: string; onChange: (v: string) => void; options: string[]
+  }) => {
+    if (options.length === 0) return null
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-condensed text-[9px] font-bold tracking-[0.4em] uppercase text-gray-3">{label}</span>
+        {['all', ...options].map(opt => (
+          <button key={opt} onClick={() => onChange(opt)}
+            className="font-condensed text-[10px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 border transition-all"
+            style={{
+              background:  value === opt ? '#8b0000' : 'transparent',
+              borderColor: value === opt ? '#8b0000' : '#333',
+              color:       value === opt ? '#f0ece4' : '#7a7672',
+            }}>
+            {opt === 'all' ? 'All' : opt}
+          </button>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
 
-      {/* Slim collection bar */}
+      {/* Collection bar */}
       <div className="pt-[72px]">
-        <div
-          className="flex items-center justify-between px-10 border-b border-charcoal-3"
-          style={{ height: 64, background: '#080809' }}
-        >
+        <div className="flex items-center justify-between px-10 border-b border-charcoal-3"
+          style={{ height: 64, background: '#080809' }}>
           <div className="sec-label" style={{ marginBottom: 0 }}>Eleventh Round · Apparel</div>
           {!loading && products.length > 0 && (
             <div className="font-condensed text-[10px] tracking-[0.3em] uppercase text-gray-3">
@@ -127,7 +232,6 @@ export default function ApparelPage() {
         <div className="red-rule" />
       </div>
 
-      {/* Shop section */}
       <section id="shop" className="pt-10 pb-20 px-10">
         <div className="max-w-[1200px] mx-auto">
 
@@ -140,28 +244,23 @@ export default function ApparelPage() {
             </div>
           </div>
 
-          {/* Category filter — only shown when products exist */}
-          {!loading && categories.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap mb-10 pb-8 border-b border-charcoal-3">
-              <span className="font-condensed text-[9px] font-bold tracking-[0.4em] uppercase text-gray-3">Type</span>
-              {(['all', ...categories] as string[]).map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className="font-condensed text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2 border transition-all"
-                  style={{
-                    background:  categoryFilter === cat ? '#8b0000' : 'transparent',
-                    borderColor: categoryFilter === cat ? '#8b0000' : '#333',
-                    color:       categoryFilter === cat ? '#f0ece4' : '#7a7672',
-                  }}
-                >
-                  {cat === 'all' ? 'All' : cat}
+          {/* Filters */}
+          {showFilters && (
+            <div className="space-y-3 mb-10 pb-8 border-b border-charcoal-3">
+              <FilterRow label="Type"       value={catFilter}   onChange={setCatFilter}   options={categories} />
+              <FilterRow label="Collection" value={colFilter}   onChange={setColFilter}   options={collections} />
+              <FilterRow label="Size"       value={sizeFilter}  onChange={setSizeFilter}  options={sizes} />
+              <FilterRow label="Color"      value={colorFilter} onChange={setColorFilter} options={colors} />
+              {hasFilters && (
+                <button onClick={clearFilters}
+                  className="font-condensed text-[9px] font-bold uppercase tracking-wide text-blood-glow underline hover:no-underline transition-all">
+                  Clear all filters
                 </button>
-              ))}
+              )}
             </div>
           )}
 
-          {/* Product grid */}
+          {/* Grid */}
           {loading ? (
             <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
               {[1, 2, 3].map(i => (
@@ -171,8 +270,8 @@ export default function ApparelPage() {
           ) : filtered.length === 0 ? (
             <div className="py-20 text-center border border-charcoal-3">
               <div className="font-condensed text-gray-3 text-[13px] tracking-wide">
-                {categoryFilter !== 'all'
-                  ? <>No products in this category. <button className="text-blood-glow underline ml-1" onClick={() => setCategoryFilter('all')}>Show all</button></>
+                {hasFilters
+                  ? <>{filtered.length === 0 && 'No products match your filters.'} <button className="text-blood-glow underline ml-1" onClick={clearFilters}>Clear filters</button></>
                   : 'No apparel available yet.'}
               </div>
             </div>
@@ -190,10 +289,8 @@ export default function ApparelPage() {
       <section className="py-16 px-10 bg-near-black">
         <div className="red-rule mb-16" />
         <div className="max-w-[1200px] mx-auto text-center">
-          <p
-            className="font-display text-off-white uppercase"
-            style={{ fontSize: 'clamp(36px,5vw,80px)', lineHeight: 0.9 }}
-          >
+          <p className="font-display text-off-white uppercase"
+            style={{ fontSize: 'clamp(36px,5vw,80px)', lineHeight: 0.9 }}>
             Not Merch.<br />
             <span className="text-blood-glow">Identity.</span>
           </p>

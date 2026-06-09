@@ -19,15 +19,28 @@ function pick(body, keys) {
   return out
 }
 
+// Parse comma-separated string or passthrough array into a clean string[].
+function toArr(v) {
+  if (Array.isArray(v)) return v.map(s => String(s).trim()).filter(Boolean)
+  if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean)
+  return []
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // PODCAST EPISODES
 // ═════════════════════════════════════════════════════════════════════════════
 
-const PODCAST_WRITABLE = [
-  'title', 'description', 'episode_number', 'season',
+const PODCAST_SCALAR = [
+  'title', 'slug', 'description', 'short_description', 'show_notes',
+  'episode_number', 'season',
+  'guest_name', 'guest_title',
   'spotify_url', 'apple_url', 'youtube_url', 'embed_url',
-  'thumbnail_path', 'duration', 'published_at', 'sort_order',
+  'thumbnail_path', 'duration',
+  'is_featured',
+  'published_at', 'sort_order',
+  'meta_title', 'meta_description',
 ]
+const PODCAST_ARRAY_FIELDS = ['tags']
 
 router.get('/podcast', ...guard, async (req, res) => {
   try {
@@ -46,8 +59,9 @@ router.get('/podcast', ...guard, async (req, res) => {
 
 router.post('/podcast', ...guard, async (req, res) => {
   try {
-    const row = pick(req.body, PODCAST_WRITABLE)
+    const row = pick(req.body, [...PODCAST_SCALAR, ...PODCAST_ARRAY_FIELDS])
     if (!row.title?.trim()) return res.status(400).json({ error: 'title is required.' })
+    for (const f of PODCAST_ARRAY_FIELDS) if (row[f] !== undefined) row[f] = toArr(row[f])
     row.status     = 'draft'
     row.created_at = new Date().toISOString()
     row.updated_at = new Date().toISOString()
@@ -64,8 +78,9 @@ router.post('/podcast', ...guard, async (req, res) => {
 
 router.patch('/podcast/:id', ...guard, async (req, res) => {
   try {
-    const updates = pick(req.body, PODCAST_WRITABLE)
+    const updates = pick(req.body, [...PODCAST_SCALAR, ...PODCAST_ARRAY_FIELDS])
     if (!Object.keys(updates).length) return res.status(400).json({ error: 'No updatable fields.' })
+    for (const f of PODCAST_ARRAY_FIELDS) if (updates[f] !== undefined) updates[f] = toArr(updates[f])
     updates.updated_at = new Date().toISOString()
     const { error } = await adminSupabase
       .from('podcast_episodes').update(updates).eq('id', req.params.id)
@@ -83,7 +98,9 @@ router.patch('/podcast/:id/status', ...guard, async (req, res) => {
     if (!['draft', 'published', 'archived'].includes(status))
       return res.status(400).json({ error: 'status must be draft, published, or archived.' })
     const updates = { status, updated_at: new Date().toISOString() }
-    if (status === 'published') updates.published_at = updates.published_at ?? new Date().toISOString()
+    if (status === 'published' && !req.body.published_at) {
+      updates.published_at = new Date().toISOString()
+    }
     const { error } = await adminSupabase
       .from('podcast_episodes').update(updates).eq('id', req.params.id)
     if (error) throw error
@@ -98,10 +115,19 @@ router.patch('/podcast/:id/status', ...guard, async (req, res) => {
 // APPAREL PRODUCTS
 // ═════════════════════════════════════════════════════════════════════════════
 
-const APPAREL_WRITABLE = [
-  'name', 'description', 'price_display', 'category',
-  'image_path', 'external_url', 'featured', 'sort_order', 'metadata',
+const APPAREL_SCALAR = [
+  'name', 'slug', 'description', 'price_display',
+  'category', 'collection',
+  'image_path', 'hover_image_path',
+  'external_url', 'shopify_url',
+  'badge', 'stock_status',
+  'material', 'fit', 'care_instructions',
+  'featured', 'sort_order',
+  'meta_title', 'meta_description',
 ]
+const APPAREL_ARRAY_FIELDS = ['gallery_images', 'sizes', 'colors']
+
+const STOCK_STATUSES = ['in_stock', 'low_stock', 'sold_out', 'hidden']
 
 router.get('/apparel', ...guard, async (req, res) => {
   try {
@@ -118,10 +144,41 @@ router.get('/apparel', ...guard, async (req, res) => {
   }
 })
 
+// Click analytics — aggregate by product
+router.get('/apparel/clicks', ...guard, async (req, res) => {
+  try {
+    const [clicksRes, productsRes] = await Promise.all([
+      adminSupabase.from('apparel_clicks').select('product_id'),
+      adminSupabase.from('apparel_products').select('id, name, slug'),
+    ])
+    if (clicksRes.error) throw clicksRes.error
+
+    const counts = {}
+    for (const row of clicksRes.data ?? []) {
+      counts[row.product_id] = (counts[row.product_id] || 0) + 1
+    }
+
+    const nameMap = {}
+    for (const p of productsRes.data ?? []) nameMap[p.id] = p
+
+    const summary = Object.entries(counts)
+      .map(([pid, count]) => ({ product_id: pid, name: nameMap[pid]?.name ?? pid, slug: nameMap[pid]?.slug ?? null, clicks: count }))
+      .sort((a, b) => b.clicks - a.clicks)
+
+    res.json({ ok: true, total: (clicksRes.data ?? []).length, by_product: summary })
+  } catch (err) {
+    log.error({ err }, 'GET /admin/apparel/clicks threw')
+    // Gracefully return empty if table missing
+    res.json({ ok: true, total: 0, by_product: [] })
+  }
+})
+
 router.post('/apparel', ...guard, async (req, res) => {
   try {
-    const row = pick(req.body, APPAREL_WRITABLE)
+    const row = pick(req.body, [...APPAREL_SCALAR, ...APPAREL_ARRAY_FIELDS])
     if (!row.name?.trim()) return res.status(400).json({ error: 'name is required.' })
+    for (const f of APPAREL_ARRAY_FIELDS) if (row[f] !== undefined) row[f] = toArr(row[f])
+    if (row.stock_status && !STOCK_STATUSES.includes(row.stock_status)) delete row.stock_status
     row.status     = 'draft'
     row.created_at = new Date().toISOString()
     row.updated_at = new Date().toISOString()
@@ -138,8 +195,10 @@ router.post('/apparel', ...guard, async (req, res) => {
 
 router.patch('/apparel/:id', ...guard, async (req, res) => {
   try {
-    const updates = pick(req.body, APPAREL_WRITABLE)
+    const updates = pick(req.body, [...APPAREL_SCALAR, ...APPAREL_ARRAY_FIELDS])
     if (!Object.keys(updates).length) return res.status(400).json({ error: 'No updatable fields.' })
+    for (const f of APPAREL_ARRAY_FIELDS) if (updates[f] !== undefined) updates[f] = toArr(updates[f])
+    if (updates.stock_status && !STOCK_STATUSES.includes(updates.stock_status)) delete updates.stock_status
     updates.updated_at = new Date().toISOString()
     const { error } = await adminSupabase
       .from('apparel_products').update(updates).eq('id', req.params.id)
