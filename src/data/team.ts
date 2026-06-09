@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Team data — The Eleventh Round
-// Headshots live in public/team/ — see photo paths below for filenames needed.
+// Headshots: public/team/don-rudolph.jpg, brian-maieli.jpg, antonio-palmieri.jpeg,
+//            nextplay-communications.jpeg, kevin-leka.png, manager-03.jpg
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface Founder {
