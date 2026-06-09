@@ -6,10 +6,10 @@ import { getContracts } from '../../../lib/api/contracts'
 import { getMyOpportunities } from '../../../lib/api/opportunities'
 import { DashSkeleton, ApiError } from '../DashWidgets'
 import { FunnelBar } from '../admin/AdminCharts'
-import { ReadinessRing, MiniBar } from '../shared/CommandLayout'
+import { ReadinessRing, MiniBar, ClickablePanel } from '../shared/CommandLayout'
 import type { SponsorProfile } from '../../../lib/api/sponsors'
 
-export default function Overview({ sp }: { sp: SponsorProfile }) {
+export default function Overview({ sp, onNavigate }: { sp: SponsorProfile; onNavigate?: (zone: string) => void }) {
   const { data: mkt, loading: mktLoad, error: mktErr } = useApi<any>('/api/sponsor/marketplace')
   const [billing,   setBilling]   = useState<any>(null)
   const [contracts, setContracts] = useState<any[]>([])
@@ -90,7 +90,7 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
 
         {/* ── Panel 1: Live Campaigns ── */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate?.('campaigns')} ariaLabel="Go to Campaigns">
           <div className="dash-label">Live Campaigns</div>
           {pubOpps === 0 ? (
             <>
@@ -118,7 +118,7 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
               </div>
             </>
           )}
-        </div>
+        </ClickablePanel>
 
         {/* ── Panel 2: Deal Readiness ── */}
         <div className="dash-card">
@@ -183,11 +183,11 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
 
       {/* ── Row 3: Campaign Performance + Talent Pipeline ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate?.('pipeline')} ariaLabel="Go to Talent Pipeline">
           <div className="dash-label mb-3">Application Pipeline</div>
           <FunnelBar data={funnelData} />
-        </div>
-        <div className="dash-card">
+        </ClickablePanel>
+        <ClickablePanel onClick={() => onNavigate?.('pipeline')} ariaLabel="Go to Talent Pipeline">
           <div className="dash-label mb-2">Talent Summary</div>
           {[
             { l: 'Applications',  v: totalApps },
@@ -200,12 +200,12 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
               <span className="font-condensed text-[13px] font-bold text-off-white">{v}</span>
             </div>
           ))}
-        </div>
+        </ClickablePanel>
       </div>
 
       {/* ── Row 4: Contract Operations + Billing ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate?.('contracts')} ariaLabel="Go to Contracts">
           <div className="dash-label mb-2">Contract Operations</div>
           {[
             { l: 'Awaiting Your Signature', v: awaitingSign, c: awaitingSign > 0 ? '#c9a82c' : '#4a4846' },
@@ -224,9 +224,9 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
               Review Contracts →
             </Link>
           )}
-        </div>
+        </ClickablePanel>
 
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate?.('company')} ariaLabel="Go to Company & Billing">
           <div className="dash-label mb-2">Billing & Spend</div>
           {billing?.membership ? (
             <div className="flex items-center gap-2 py-1.5 border-b border-charcoal-3">
@@ -249,7 +249,7 @@ export default function Overview({ sp }: { sp: SponsorProfile }) {
               {spentDisplay}
             </span>
           </div>
-        </div>
+        </ClickablePanel>
       </div>
     </div>
   )

@@ -10,10 +10,10 @@ import {
   parseMetadata, parseChecklistState,
   type FighterModule, type ModuleProgress, type ModuleResource, type ChecklistItem,
 } from '../../lib/api/education'
-import { ReadinessRing as CommandRing, MiniBar } from './shared/CommandLayout'
+import { ReadinessRing as CommandRing, MiniBar, ClickablePanel } from './shared/CommandLayout'
 import {
   ReadinessRing, StatCard, ListCard, DashSkeleton, EmptyState, ApiError,
-  SectionHeading, BarChart,
+  SectionHeading,
 } from './DashWidgets'
 
 // ── Zone definitions ──────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => vo
 }
 
 // ── Command Center zone ───────────────────────────────────────────────────────
-function CommandCenter() {
+function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
   const { data: profileData }  = useApi<any>('/api/fighter/profile')
   const { data: overviewData } = useApi<any>('/api/fighter/overview')
   const { data: activityData } = useApi<any>('/api/fighter/activity')
@@ -353,7 +353,7 @@ function CommandCenter() {
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
 
         {/* Panel 1: Fighter Readiness */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate('profile')} ariaLabel="Go to Profile">
           <div className="dash-label">Fighter Readiness</div>
           <div className="dash-stat">{overallPct}</div>
           <div className="dash-sub">Sponsor-ready profile</div>
@@ -365,10 +365,10 @@ function CommandCenter() {
               ? sponsorReady ? 'Sponsor-ready' : 'Core profile complete'
               : `${missingReq.length} required item${missingReq.length > 1 ? 's' : ''} left`}
           </div>
-        </div>
+        </ClickablePanel>
 
         {/* Panel 2: Sponsor Readiness */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate('sponsorships')} ariaLabel="Go to Sponsorships">
           <div className="dash-label">Sponsor Readiness</div>
           <div className="flex gap-5 items-center mt-1 flex-wrap">
             <CommandRing pct={overallPct} />
@@ -379,7 +379,7 @@ function CommandCenter() {
               <MiniBar label="Education"   pct={eduPct}      />
             </div>
           </div>
-        </div>
+        </ClickablePanel>
 
         {/* Panel 3: Actions Due */}
         <div className="dash-card">
@@ -432,13 +432,13 @@ function CommandCenter() {
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
 
         {/* Sponsorship Pipeline */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate('sponsorships')} ariaLabel="Go to Sponsorships">
           <div className="dash-label mb-2">Sponsorship Pipeline</div>
           <SponsorshipPipelineCompact />
-        </div>
+        </ClickablePanel>
 
         {/* Education Progress */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate('education')} ariaLabel="Go to Education">
           <div className="dash-label mb-2">Education Progress</div>
           {modsData ? (
             <>
@@ -461,13 +461,13 @@ function CommandCenter() {
               ))}
             </>
           ) : <div className="dash-sub">Loading…</div>}
-        </div>
+        </ClickablePanel>
       </div>
 
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
 
         {/* Profile Improvement */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate('profile')} ariaLabel="Go to Profile">
           <div className="dash-label mb-2">Profile Improvement</div>
           {profileData ? (
             <>
@@ -493,10 +493,10 @@ function CommandCenter() {
               <Link to="/fighter/profile" className="btn-ghost w-full text-[10px] py-2 no-underline text-center block mt-3">Edit Profile →</Link>
             </>
           ) : <div className="dash-sub">Loading…</div>}
-        </div>
+        </ClickablePanel>
 
         {/* Contracts Summary */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => onNavigate('contracts')} ariaLabel="Go to Contracts & Obligations">
           <div className="dash-label mb-2">Contracts</div>
           {contracts.length === 0 ? (
             <div className="dash-sub">No contracts yet.</div>
@@ -522,7 +522,7 @@ function CommandCenter() {
               </div>
             </div>
           )}
-        </div>
+        </ClickablePanel>
       </div>
     </div>
   )
@@ -982,7 +982,7 @@ export default function FighterDashboard() {
 
       {/* ── Zone content ── */}
       <main className="flex-1 overflow-y-auto p-6 bg-black">
-        {zone === 'command'      && <CommandCenter />}
+        {zone === 'command'      && <CommandCenter onNavigate={setZone} />}
         {zone === 'profile'      && <ProfileZone />}
         {zone === 'sponsorships' && <SponsorshipsZone />}
         {zone === 'education'    && <EducationZone />}

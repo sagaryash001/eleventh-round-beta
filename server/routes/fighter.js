@@ -840,7 +840,7 @@ router.patch('/manager/request/:connectionId', ...guard, async (req, res) => {
 })
 
 // ── GET /api/fighter/marketplace — fighter's marketplace analytics ────────────
-router.get('/marketplace', requireAuth, async (req, res) => {
+router.get('/marketplace', ...guard, async (req, res) => {
   try {
     const uid = req.user.id
     const [

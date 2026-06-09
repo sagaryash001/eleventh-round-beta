@@ -4,7 +4,7 @@ import { getAdminDashboard } from '../../../lib/api/admin'
 import { DashSkeleton, ApiError, EmptyState } from '../DashWidgets'
 import { FunnelBar, TrendLine } from './AdminCharts'
 import { SubNav } from './AdminUtils'
-import { ReadinessRing, MiniBar } from '../shared/CommandLayout'
+import { ReadinessRing, MiniBar, ClickablePanel } from '../shared/CommandLayout'
 
 const TABS = [
   { id: 'overview',  label: 'Overview'     },
@@ -13,8 +13,10 @@ const TABS = [
   { id: 'health',    label: 'Health'       },
 ]
 
+type Navigate = (zone: string, subTab?: string) => void
+
 // ── Overview — Command Center hero layout ────────────────────────────────────
-function CCOverview() {
+function CCOverview({ navigate }: { navigate?: Navigate }) {
   const [metrics, setMetrics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
@@ -90,7 +92,7 @@ function CCOverview() {
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
 
         {/* ── Panel 1: Active Platform ── */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => navigate?.('users')} ariaLabel="Go to Users & Vetting">
           <div className="dash-label">Active Platform</div>
           <div className="dash-stat">{totalUsers}</div>
           <div className="dash-sub">Users in system</div>
@@ -98,7 +100,7 @@ function CCOverview() {
             <div className="dash-bar-fill" style={{ width: `${rolePct}%` }} />
           </div>
           <div className="dash-sub">{fighters}F · {managers}M · {sponsors}S</div>
-        </div>
+        </ClickablePanel>
 
         {/* ── Panel 2: Platform Readiness ── */}
         <div className="dash-card">
@@ -115,7 +117,7 @@ function CCOverview() {
         </div>
 
         {/* ── Panel 3: Actions Due ── */}
-        <div className="dash-card">
+        <ClickablePanel onClick={() => navigate?.('command', 'queue')} ariaLabel="Go to Action Queue">
           <div className="dash-label">Actions Due</div>
           {totalActions === 0 ? (
             <>
@@ -139,7 +141,7 @@ function CCOverview() {
               </div>
             </>
           )}
-        </div>
+        </ClickablePanel>
 
         {/* ── Row 2: Full-width Recent Activity ── */}
         <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
@@ -163,11 +165,11 @@ function CCOverview() {
 
       {/* ── Row 3: Marketplace Pulse + Platform Vitals ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
-        <div className="dash-card">
+        <ClickablePanel onClick={() => navigate?.('marketplace')} ariaLabel="Go to Marketplace Ops">
           <div className="dash-label mb-3">Marketplace Pulse</div>
           <FunnelBar data={funnelData} />
-        </div>
-        <div className="dash-card">
+        </ClickablePanel>
+        <ClickablePanel onClick={() => navigate?.('marketplace')} ariaLabel="Go to Marketplace Ops">
           <div className="dash-label mb-2">Platform Vitals</div>
           {[
             { l: 'Active Opportunities', v: activeOpps },
@@ -180,12 +182,12 @@ function CCOverview() {
               <span className="font-condensed text-[13px] font-bold text-off-white">{v}</span>
             </div>
           ))}
-        </div>
+        </ClickablePanel>
       </div>
 
       {/* ── Row 4: Education + Revenue + System Health ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-        <div className="dash-card">
+        <ClickablePanel onClick={() => navigate?.('education')} ariaLabel="Go to Education">
           <div className="dash-label">Education Engine</div>
           <div className="dash-stat-md">{pubModules}</div>
           <div className="dash-sub">Published modules</div>
@@ -195,9 +197,9 @@ function CCOverview() {
           <div className="dash-sub">
             {totalModules > 0 ? `${eduPct}% of ${totalModules} published` : 'No modules yet'}
           </div>
-        </div>
+        </ClickablePanel>
 
-        <div className="dash-card">
+        <ClickablePanel onClick={() => navigate?.('billing')} ariaLabel="Go to Billing & System">
           <div className="dash-label">Revenue</div>
           <div className="dash-stat-md"
             style={{ color: (m.total_revenue_usd ?? 0) > 0 ? '#f0ece4' : '#4a4846' }}>
@@ -209,9 +211,9 @@ function CCOverview() {
               <TrendLine data={revenueData} label="GMV $" height={56} />
             </div>
           )}
-        </div>
+        </ClickablePanel>
 
-        <div className="dash-card">
+        <ClickablePanel onClick={() => navigate?.('command', 'health')} ariaLabel="Go to System Health">
           <div className="dash-label">System Health</div>
           <div className="space-y-2 mt-1">
             {[
@@ -234,7 +236,7 @@ function CCOverview() {
               </div>
             ))}
           </div>
-        </div>
+        </ClickablePanel>
       </div>
     </div>
   )
@@ -354,12 +356,16 @@ function CCHealth() {
 }
 
 // ── Zone export ───────────────────────────────────────────────────────────────
-export default function CommandCenter() {
+export default function CommandCenter({ onNavigate }: { onNavigate?: (zone: string) => void }) {
   const [sub, setSub] = useState('overview')
+  const navigate: Navigate = (zone, subTab) => {
+    if (subTab) setSub(subTab)
+    else onNavigate?.(zone)
+  }
   return (
     <div>
       <SubNav tabs={TABS} active={sub} onChange={setSub} />
-      {sub === 'overview' && <CCOverview />}
+      {sub === 'overview' && <CCOverview navigate={navigate} />}
       {sub === 'queue'    && <ActionQueue />}
       {sub === 'activity' && <CCActivity />}
       {sub === 'health'   && <CCHealth />}

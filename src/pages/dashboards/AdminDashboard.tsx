@@ -83,7 +83,7 @@ export default function AdminDashboard() {
 
       {/* ── Zone content ── */}
       <main className="flex-1 overflow-y-auto p-6 bg-black">
-        {zone === 'command'     && <CommandCenter />}
+        {zone === 'command'     && <CommandCenter onNavigate={setZone} />}
         {zone === 'users'       && <UsersVetting />}
         {zone === 'marketplace' && <MarketplaceOps />}
         {zone === 'education'   && <Education />}

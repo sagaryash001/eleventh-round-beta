@@ -47,10 +47,18 @@ router.get('/overview', ...guard, async (req, res) => {
   try {
     const sb  = adminSupabase
     const mid = req.user.id
-    const fids = await activeFighterIds(mid)
+
+    const [fids, { data: pendingConns }] = await Promise.all([
+      activeFighterIds(mid),
+      sb.from('manager_fighters').select('id, source').eq('manager_id', mid).eq('status', 'pending'),
+    ])
+    const pendingRequests = (pendingConns ?? []).filter(c => c.source === 'fighter_request').length
+    const pendingInvites  = (pendingConns ?? []).length
 
     if (!fids.length) {
-      return res.json({ active_roster: 0, overdue_obligations: 0, sf_ready: 0, roster_health: 0, roster_chart: [], fulfillment_trend: [], action_items: [] })
+      return res.json({ active_roster: 0, overdue_obligations: 0, sf_ready: 0, roster_health: 0,
+        roster_chart: [], fulfillment_trend: [], action_items: [],
+        pending_invites: pendingInvites, pending_requests: pendingRequests })
     }
 
     const [{ data: readiness }, { data: obs }, { data: sf }] = await Promise.all([
@@ -78,7 +86,8 @@ router.get('/overview', ...guard, async (req, res) => {
       .map(o => ({ name: `${nameMap[o.owner_id] ?? 'Fighter'} — ${o.title}`, badge: 'Act Now', type: 'red' }))
 
     res.json({ active_roster: fids.length, overdue_obligations: overdue, sf_ready: sfReady,
-      roster_health: avgReadiness, roster_chart: rosterChart, fulfillment_trend: [], action_items: actionItems })
+      roster_health: avgReadiness, roster_chart: rosterChart, fulfillment_trend: [], action_items: actionItems,
+      pending_invites: pendingInvites, pending_requests: pendingRequests })
   } catch (err) {
     log.error({ err }, '/manager/overview threw')
     res.status(500).json({ error: err.message })
@@ -476,7 +485,8 @@ router.get('/budget', ...guard, async (req, res) => {
   try {
     const { data, error } = await adminSupabase
       .from('camp_budgets').select('*').eq('manager_id', req.user.id).order('event_date')
-    if (error) throw error
+    // Table may not be provisioned yet — return empty rather than crashing.
+    if (error) return res.json({ total_budget: 0, budget_util: 0, unplanned: 0, camps: [] })
 
     const camps     = (data ?? []).map(c => ({ name: c.name, alloc: c.total_budget, spent: c.spent }))
     const total     = camps.reduce((s, c) => s + c.alloc, 0)
@@ -494,7 +504,8 @@ router.get('/playbooks', ...guard, async (req, res) => {
   try {
     const { data, error } = await adminSupabase
       .from('playbooks').select('id, title').in('target_role', ['manager', 'all']).order('order_num')
-    if (error) throw error
+    // Table may not be provisioned yet — return empty rather than crashing.
+    if (error) return res.json({ playbooks: [] })
     res.json({ playbooks: data ?? [] })
   } catch (err) {
     log.error({ err }, '/manager/playbooks threw')
@@ -669,6 +680,82 @@ router.get('/modules/progress', ...guard, async (req, res) => {
     res.json({ ok: true, modules, fighters, summary: { total_modules: (mods ?? []).length, avg_completion: overallAvg } })
   } catch (err) {
     log.error({ err }, '/manager/modules/progress threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/manager/activity ─────────────────────────────────────────────────
+router.get('/activity', ...guard, async (req, res) => {
+  try {
+    const mid   = req.user.id
+    const sb    = adminSupabase
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    const fids  = await activeFighterIds(mid)
+
+    const [{ data: connections }, appResult, contractResult, modResult] = await Promise.all([
+      sb.from('manager_fighters').select('id, status, source, invited_name, fighter_id, updated_at')
+        .eq('manager_id', mid).gte('updated_at', since).order('updated_at', { ascending: false }).limit(4),
+      fids.length
+        ? sb.from('applications').select('id, status, fighter_id, updated_at, opportunities(title)')
+            .in('fighter_id', fids).gte('updated_at', since).order('updated_at', { ascending: false }).limit(4)
+        : { data: [] },
+      fids.length
+        ? sb.from('contracts').select('id, status, value_usd, fighter_id, updated_at')
+            .in('fighter_id', fids).gte('updated_at', since).order('updated_at', { ascending: false }).limit(3)
+        : { data: [] },
+      fids.length
+        ? sb.from('module_progress').select('user_id, status, updated_at, education_modules(name)')
+            .in('user_id', fids).eq('status', 'completed').gte('updated_at', since)
+            .order('updated_at', { ascending: false }).limit(4)
+        : { data: [] },
+    ])
+
+    const apps      = appResult.data ?? []
+    const contracts = contractResult.data ?? []
+    const mods      = modResult.data ?? []
+
+    const allFids = [...new Set([...(connections ?? []).map(c => c.fighter_id).filter(Boolean), ...fids])]
+    const { data: profiles } = allFids.length
+      ? await sb.from('profiles').select('id, name').in('id', allFids)
+      : { data: [] }
+    const nameMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.name]))
+
+    const events = []
+
+    ;(connections ?? []).forEach(c => {
+      const name = c.fighter_id ? (nameMap[c.fighter_id] ?? 'Fighter') : (c.invited_name ?? 'Fighter')
+      if (c.status === 'active') {
+        events.push({ date: c.updated_at, name: `${name} joined your roster`, badge: 'Roster', type: 'green' })
+      } else if (c.status === 'pending' && c.source === 'fighter_request') {
+        events.push({ date: c.updated_at, name: `${name} requested to join`, badge: 'Pending', type: 'yellow' })
+      }
+    })
+
+    const APP_LABELS = { applied: 'applied', under_review: 'in review', shortlisted: 'shortlisted', accepted: 'accepted', rejected: 'not accepted' }
+    const APP_TYPES  = { accepted: 'green', rejected: 'red', shortlisted: 'yellow' }
+    ;(apps).forEach(a => {
+      const name = nameMap[a.fighter_id] ?? 'Fighter'
+      events.push({ date: a.updated_at, name: `${name} ${APP_LABELS[a.status] ?? a.status} — ${a.opportunities?.title ?? 'opportunity'}`, badge: 'Application', type: APP_TYPES[a.status] ?? 'yellow' })
+    })
+
+    const CONTRACT_LABELS = { pending_fighter: 'contract awaiting signature', active: 'contract active', completed: 'contract completed' }
+    const CONTRACT_TYPES  = { pending_fighter: 'yellow', active: 'green', completed: 'green' }
+    ;(contracts).forEach(c => {
+      const name = nameMap[c.fighter_id] ?? 'Fighter'
+      const val  = `$${(c.value_usd ?? 0).toLocaleString()}`
+      events.push({ date: c.updated_at, name: `${name} — ${val} ${CONTRACT_LABELS[c.status] ?? `contract (${c.status})`}`, badge: 'Contract', type: CONTRACT_TYPES[c.status] ?? 'yellow' })
+    })
+
+    ;(mods).forEach(m => {
+      const name    = nameMap[m.user_id] ?? 'Fighter'
+      const modName = m.education_modules?.name ?? 'module'
+      events.push({ date: m.updated_at, name: `${name} completed ${modName}`, badge: 'Education', type: 'green' })
+    })
+
+    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    res.json({ events: events.slice(0, 10) })
+  } catch (err) {
+    log.error({ err }, 'GET /manager/activity threw')
     res.status(500).json({ error: err.message })
   }
 })

@@ -116,7 +116,7 @@ export default function SponsorDashboard() {
 
       {/* ── Zone content ── */}
       <main className="flex-1 overflow-y-auto p-6 bg-black">
-        {zone === 'overview'  && <Overview sp={sp} />}
+        {zone === 'overview'  && <Overview sp={sp} onNavigate={setZone} />}
         {zone === 'campaigns' && <Campaigns sp={sp} />}
         {zone === 'pipeline'  && <TalentPipeline sp={sp} />}
         {zone === 'contracts' && <Contracts />}

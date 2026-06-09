@@ -228,7 +228,7 @@ export default function FighterProfileEditPage() {
               </div>
               <div>
                 <Label>Base City</Label>
-                <Input value={p.base_city ?? ''} onChange={v => set({ base_city: v } as any)} placeholder="e.g. Las Vegas, NV" />
+                <Input value={p.base_city ?? ''} onChange={v => set({ base_city: v })} placeholder="e.g. Las Vegas, NV" />
               </div>
               <div>
                 <Label>Short Bio</Label>
