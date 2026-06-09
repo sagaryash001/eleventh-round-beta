@@ -6,6 +6,15 @@
 //
 // Anything that requires elevated privileges goes through our Express API,
 // which uses the service-role key server-side.
+//
+// ── Supabase Dashboard Auth URL Configuration (required for password reset) ──
+// Authentication → URL Configuration:
+//   Site URL:      https://eleventh-round-beta.vercel.app
+//   Redirect URLs:
+//     https://eleventh-round-beta.vercel.app/**
+//     https://eleventh-round-beta.vercel.app/reset-password
+//     https://eleventh-round-beta.vercel.app/verify-email
+//     http://localhost:5173/**   (dev)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'

@@ -2,7 +2,23 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, RegisterData } from '../hooks/useAuth'
 import { apiFetch } from '../lib/api'
+import { validatePassword, getPasswordRules } from '../lib/passwordValidation'
 import Navbar from '../components/Navbar'
+
+// ── Inline SVG eye icon ───────────────────────────────────────────────────────
+function EyeIcon({ visible }: { visible: boolean }) {
+  return visible ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Step = 'account' | 'role' | 'goal' | 'problems' | 'pipeline' | 'team' | 'done'
@@ -38,28 +54,46 @@ const GOAL_OPTIONS = [
 // ── Input field ───────────────────────────────────────────────────────────────
 function Field({
   label, type = 'text', value, onChange, placeholder, hint, autoFocus,
+  showEye, eyeVisible, onToggleEye,
 }: {
   label: string; type?: string; value: string
   onChange: (v: string) => void; placeholder?: string; hint?: string; autoFocus?: boolean
+  showEye?: boolean; eyeVisible?: boolean; onToggleEye?: () => void
 }) {
   const [focused, setFocused] = useState(false)
+  const inputType = showEye ? (eyeVisible ? 'text' : 'password') : type
   return (
     <div>
       <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-2">
         {label}
       </label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        className="w-full bg-charcoal-2 border text-off-white font-body text-[14px] px-4 py-3
-                   outline-none transition-all duration-200 placeholder:text-gray-3"
-        style={{ borderColor: focused ? '#8b0000' : '#222226' }}
-      />
+      <div className={showEye ? 'relative' : undefined}>
+        <input
+          type={inputType}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full bg-charcoal-2 border text-off-white font-body text-[14px] px-4 py-3
+                     outline-none transition-all duration-200 placeholder:text-gray-3"
+          style={{
+            borderColor: focused ? '#8b0000' : '#222226',
+            paddingRight: showEye ? '2.75rem' : undefined,
+          }}
+        />
+        {showEye && onToggleEye && (
+          <button
+            type="button"
+            onClick={onToggleEye}
+            aria-label={eyeVisible ? 'Hide password' : 'Show password'}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-3 hover:text-off-white transition-colors p-1"
+          >
+            <EyeIcon visible={!!eyeVisible} />
+          </button>
+        )}
+      </div>
       {hint && <p className="font-condensed text-[10px] text-gray-3 mt-1.5 tracking-wide">{hint}</p>}
     </div>
   )
@@ -140,6 +174,10 @@ export default function RegisterPage() {
   const [subStatus, setSubStatus] = useState<'idle'|'checking'|'ok'|'taken'|'invalid'>('idle')
   const subTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
 
+  // Password eye-toggle state for the account step
+  const [showPw,   setShowPw]   = useState(false)
+  const [showConf, setShowConf] = useState(false)
+
   const [form, setForm] = useState<FormState>({
     name: '', email: '', password: '', confirm: '',
     accountType: '',
@@ -207,9 +245,10 @@ export default function RegisterPage() {
 
   // ── Step validators ──────────────────────────────────────────────────────
   const submitAccount = () => {
-    if (!form.name.trim())        return setError('Please enter your name.')
-    if (!form.email.trim())       return setError('Please enter your email.')
-    if (form.password.length < 8) return setError('Password must be at least 8 characters.')
+    if (!form.name.trim())  return setError('Please enter your name.')
+    if (!form.email.trim()) return setError('Please enter your email.')
+    if (!validatePassword(form.password))
+      return setError('Password must include uppercase, lowercase, number, special character, and be at least 8 characters.')
     if (form.password !== form.confirm) return setError('Passwords do not match.')
     goNext('role')
   }
@@ -228,13 +267,12 @@ export default function RegisterPage() {
   }
 
   const submitProblems = () => {
-    if (!form.commonProblem.trim()) return setError('Please describe the most common problem.')
+    // Q3 is optional — user may leave blank and continue.
     goNext('pipeline')
   }
 
   const submitPipeline = () => {
-    if (!form.endGoal.trim())   return setError('Please describe your end goal.')
-    if (!form.upcomingEvent)    return setError('Please answer the upcoming event question.')
+    // Q4 (endGoal) and Q5 (upcomingEvent) are optional — user may skip.
     if (form.accountType === 'fighter') submitFinal()
     else goNext('team')
   }
@@ -331,10 +369,54 @@ export default function RegisterPage() {
                       Your Account
                     </h2>
                     <div className="space-y-4">
-                      <Field label="Full Name"    value={form.name}     onChange={set('name')}     placeholder="Alex Torres" autoFocus />
+                      <Field label="Full Name"     value={form.name}  onChange={set('name')}  placeholder="Alex Torres" autoFocus />
                       <Field label="Email Address" type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" />
-                      <Field label="Password"     type="password" value={form.password} onChange={set('password')} placeholder="Min. 8 characters" hint="At least 8 characters." />
-                      <Field label="Confirm Password" type="password" value={form.confirm} onChange={set('confirm')} placeholder="••••••••" />
+
+                      {/* Password with eye toggle + live rules */}
+                      <div>
+                        <Field
+                          label="Password"
+                          value={form.password}
+                          onChange={set('password')}
+                          placeholder="Min. 8 characters"
+                          showEye
+                          eyeVisible={showPw}
+                          onToggleEye={() => setShowPw(v => !v)}
+                        />
+                        {form.password && (
+                          <div className="mt-2 space-y-1">
+                            {getPasswordRules(form.password).map(r => (
+                              <div key={r.id} className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold" style={{ color: r.passed ? '#00c060' : '#4a4846' }}>
+                                  {r.passed ? '✓' : '○'}
+                                </span>
+                                <span className="font-condensed text-[10px] tracking-wide"
+                                      style={{ color: r.passed ? '#6aab6a' : '#4a4846' }}>
+                                  {r.label}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <Field
+                          label="Confirm Password"
+                          value={form.confirm}
+                          onChange={set('confirm')}
+                          placeholder="••••••••"
+                          showEye
+                          eyeVisible={showConf}
+                          onToggleEye={() => setShowConf(v => !v)}
+                        />
+                        {form.confirm && form.confirm !== form.password && (
+                          <p className="font-condensed text-[10px] text-blood-glow mt-1.5">Passwords do not match.</p>
+                        )}
+                        {form.confirm && form.confirm === form.password && validatePassword(form.password) && (
+                          <p className="font-condensed text-[10px] mt-1.5" style={{ color: '#00c060' }}>✓ Passwords match</p>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
@@ -395,13 +477,14 @@ export default function RegisterPage() {
                       Common Problems
                     </h2>
                     <p className="font-narrow text-gray-2 mb-6" style={{ fontSize:13 }}>
-                      What is the most common problem on your roster — or in your own camp?
+                      What is the most common problem on your roster — or in your own camp?{' '}
+                      <span className="text-gray-3">(Optional — you can skip this.)</span>
                     </p>
                     <TextArea
-                      label="Describe the problem"
+                      label="Describe the problem (optional)"
                       value={form.commonProblem}
                       onChange={set('commonProblem')}
-                      placeholder="e.g. Fighters miss media obligations, no structured onboarding, unprofessional conduct at events…"
+                      placeholder="e.g. Fighters miss media obligations, no structured onboarding… or leave blank to skip."
                       rows={4}
                     />
                   </>
@@ -415,22 +498,28 @@ export default function RegisterPage() {
                         style={{ fontSize:'clamp(28px,3.5vw,42px)', lineHeight:0.92 }}>
                       The Pipeline
                     </h2>
+                    <p className="font-narrow text-gray-3 mb-4" style={{ fontSize:12 }}>
+                      Both questions below are optional — you can skip and continue.
+                    </p>
                     <div className="space-y-5">
                       <TextArea
-                        label="Q4 — What is your end goal with The Eleventh Round's Pipeline?"
+                        label="Q4 — What is your end goal with The Eleventh Round's Pipeline? (optional)"
                         value={form.endGoal}
                         onChange={set('endGoal')}
-                        placeholder="e.g. Get my fighters sponsor-ready within 6 months, build a sustainable management operation…"
+                        placeholder="e.g. Get my fighters sponsor-ready within 6 months… or leave blank to skip."
                         rows={4}
                       />
                       <div>
                         <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-3">
-                          Q5 — Are you (or your team) preparing for an upcoming event?
+                          Q5 — Are you (or your team) preparing for an upcoming event? <span className="normal-case text-gray-3 font-normal">(optional)</span>
                         </label>
                         <div className="flex gap-3">
                           {['yes', 'no'].map(v => (
                             <button key={v} type="button"
-                              onClick={() => setForm(p => ({ ...p, upcomingEvent: v as 'yes'|'no' }))}
+                              onClick={() => setForm(p => ({
+                                ...p,
+                                upcomingEvent: p.upcomingEvent === v ? '' : v as 'yes'|'no',
+                              }))}
                               className="flex-1 py-3 border font-condensed font-bold uppercase tracking-[0.2em] text-[12px] transition-all cursor-pointer"
                               style={{
                                 borderColor: form.upcomingEvent === v ? '#8b0000' : '#222226',
@@ -441,6 +530,7 @@ export default function RegisterPage() {
                             </button>
                           ))}
                         </div>
+                        <p className="font-condensed text-[9px] text-gray-3 mt-1.5">Click again to deselect.</p>
                       </div>
                     </div>
                   </>

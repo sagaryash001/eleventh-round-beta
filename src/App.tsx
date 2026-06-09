@@ -27,6 +27,8 @@ const ContractsListPage      = lazy(() => import('./pages/contracts/ListPage'))
 const ContractDetailPage     = lazy(() => import('./pages/contracts/DetailPage'))
 const FighterPublicPage      = lazy(() => import('./pages/public/FighterPublicPage'))
 const TeamPublicPage         = lazy(() => import('./pages/public/TeamPublicPage'))
+const ForgotPasswordPage     = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage      = lazy(() => import('./pages/ResetPasswordPage'))
 
 // Onboarding pages
 const FighterOnboarding = lazy(() => import('./pages/onboarding/FighterOnboarding'))
@@ -113,9 +115,11 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/"            element={<HomePage />} />
-      <Route path="/login"       element={<LoginPage />} />
-      <Route path="/register"    element={<RegisterPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/login"            element={<LoginPage />} />
+      <Route path="/register"         element={<RegisterPage />} />
+      <Route path="/verify-email"     element={<VerifyEmailPage />} />
+      <Route path="/forgot-password"  element={<ForgotPasswordPage />} />
+      <Route path="/reset-password"   element={<ResetPasswordPage />} />
       <Route path="/podcast"     element={<PodcastPage />} />
       <Route path="/apparel"     element={<ApparelPage />} />
       <Route path="/team"        element={<TeamPage />} />
