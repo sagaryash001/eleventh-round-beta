@@ -46,8 +46,8 @@ function PdfUploadField({ value, onChange }: { value: string; onChange: (v: stri
     if (file.type !== 'application/pdf') { setErr('Only PDF files are allowed.'); return }
     setErr(''); setUploading(true)
     try {
-      const { path } = await uploadFile('module-pdf', file)
-      onChange(path)
+      const { publicUrl } = await uploadFile('module-pdf', file)
+      onChange(publicUrl)
     } catch (ex: any) {
       setErr(ex.message ?? 'Upload failed.')
     } finally {

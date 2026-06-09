@@ -292,7 +292,25 @@ router.get('/modules/:id', ...guard, async (req, res) => {
       )
       .select().maybeSingle()
 
-    res.json({ ok: true, module: mod, progress, resources: resources ?? [] })
+    // Resolve any storage paths to public URLs so the frontend never sees
+    // a raw Supabase path that React Router would intercept as a route.
+    const PDF_BUCKET = 'education-content'
+    const toPublic = (storagePath) => {
+      const { data } = adminSupabase.storage.from(PDF_BUCKET).getPublicUrl(storagePath)
+      return data?.publicUrl ?? null
+    }
+
+    const resolvedMod = (mod.content_url && !mod.content_url.startsWith('http'))
+      ? { ...mod, content_url: toPublic(mod.content_url) }
+      : mod
+
+    const resolvedResources = (resources ?? []).map(r => {
+      if (r.url && r.url.startsWith('http')) return r
+      if (r.storage_path) return { ...r, url: toPublic(r.storage_path) }
+      return r
+    })
+
+    res.json({ ok: true, module: resolvedMod, progress, resources: resolvedResources })
   } catch (err) {
     log.error({ err }, 'GET /fighter/modules/:id threw')
     res.status(500).json({ error: err.message })

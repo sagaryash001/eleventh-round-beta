@@ -255,20 +255,25 @@ function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => vo
           <div className="font-body text-gray-1 text-[13px] leading-relaxed whitespace-pre-wrap">{mod.content_body}</div>
         </div>
       )}
-      {mod.content_url && (['video', 'link', 'pdf', 'mixed'].includes(mod.module_type)) && (
+      {(['video', 'link', 'pdf', 'mixed'].includes(mod.module_type)) && (
         <div className="dash-card">
           <div className="dash-label mb-3">{mod.module_type === 'video' ? 'Video' : mod.module_type === 'pdf' ? 'PDF Resource' : 'Resource'}</div>
-          {mod.module_type === 'video' && (mod.content_url.includes('youtube') || mod.content_url.includes('youtu.be') || mod.content_url.includes('vimeo') || mod.content_url.includes('loom')) ? (
+          {mod.module_type === 'video' && mod.content_url && (mod.content_url.includes('youtube') || mod.content_url.includes('youtu.be') || mod.content_url.includes('vimeo') || mod.content_url.includes('loom')) ? (
             <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
               <iframe
                 src={mod.content_url.includes('youtu.be') ? mod.content_url.replace('youtu.be/', 'youtube.com/embed/') : mod.content_url.includes('watch?v=') ? mod.content_url.replace('watch?v=', 'embed/') : mod.content_url}
                 title={mod.name} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', background: '#000' }} />
             </div>
-          ) : (
-            <a href={mod.content_url} target="_blank" rel="noopener noreferrer" className="btn-primary inline-block text-[11px] no-underline">
+          ) : mod.content_url && mod.content_url.startsWith('http') ? (
+            <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
+               className="btn-primary inline-block text-[11px] no-underline">
               {mod.module_type === 'pdf' ? 'Open PDF' : 'Open Resource'}
             </a>
+          ) : (
+            <span className="font-condensed text-[11px] text-gray-3 uppercase tracking-[0.15em]">
+              PDF unavailable
+            </span>
           )}
         </div>
       )}
@@ -290,13 +295,23 @@ function ModuleDetail({ moduleId, onBack }: { moduleId: string; onBack: () => vo
       {resources.length > 0 && (
         <div className="dash-card space-y-2">
           <div className="dash-label mb-2">Resources</div>
-          {resources.map(r => (
-            <a key={r.id} href={r.url || '#'} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-3 font-condensed text-[12px] text-gray-2 hover:text-off-white no-underline py-1">
-              <span style={{ color: '#8b0000' }}>{r.resource_type === 'pdf' ? '■' : r.resource_type === 'video' ? '▶' : '→'}</span>
-              {r.title}
-            </a>
-          ))}
+          {resources.map(r => {
+            const href = (r.url && r.url.startsWith('http')) ? r.url : null
+            const icon = r.resource_type === 'pdf' ? '■' : r.resource_type === 'video' ? '▶' : '→'
+            return href ? (
+              <a key={r.id} href={href} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 font-condensed text-[12px] text-gray-2 hover:text-off-white no-underline py-1">
+                <span style={{ color: '#8b0000' }}>{icon}</span>
+                {r.title}
+              </a>
+            ) : (
+              <div key={r.id} className="flex items-center gap-3 font-condensed text-[12px] text-gray-3 py-1">
+                <span style={{ color: '#4a4846' }}>{icon}</span>
+                {r.title}
+                <span className="text-[10px] uppercase tracking-wide">(unavailable)</span>
+              </div>
+            )
+          })}
         </div>
       )}
       {msg && <p className="font-condensed text-[12px]" style={{ color: msg.includes('complete') ? '#00c060' : '#C41E3A' }}>{msg}</p>}
