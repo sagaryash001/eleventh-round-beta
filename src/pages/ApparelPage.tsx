@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { apiGet } from '../lib/api/client'
@@ -35,23 +35,144 @@ const STOCK_COLOR: Record<string, string> = {
   in_stock: '#00c060', low_stock: '#c9a82c', sold_out: '#c00000',
 }
 
-function ProductCard({ product }: { product: Product }) {
+function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
+  const link    = product.shopify_url || product.external_url || null
+  const soldOut = product.stock_status === 'sold_out'
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', handler); document.body.style.overflow = '' }
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-[2000] flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.88)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        style={{ background: '#0d0d0f', border: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 text-gray-3 hover:text-off-white transition-colors"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+
+        <div className="grid sm:grid-cols-2">
+          {/* Image */}
+          <div className="relative" style={{ aspectRatio: '4/5', background: '#0a0a0c', minHeight: 240 }}>
+            {product.image_path ? (
+              <img
+                src={product.image_path}
+                alt={product.name}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="font-display text-charcoal-3 uppercase" style={{ fontSize: 48 }}>
+                  {product.name.slice(0, 2)}
+                </span>
+              </div>
+            )}
+            {product.badge && (
+              <div
+                className="absolute top-3 left-3 font-condensed text-[9px] font-bold tracking-[0.4em] uppercase px-2.5 py-1.5"
+                style={{ background: '#8b0000', color: '#f0ece4' }}
+              >
+                {product.badge}
+              </div>
+            )}
+          </div>
+
+          {/* Details */}
+          <div className="p-6 flex flex-col">
+            <div className="font-condensed text-[9px] font-bold tracking-[0.4em] uppercase text-blood-glow mb-2">
+              {product.collection || product.category || 'Apparel'}
+            </div>
+            <h2 className="font-display text-off-white uppercase mb-1" style={{ fontSize: 28, lineHeight: 0.95 }}>
+              {product.name}
+            </h2>
+            {product.price_display && (
+              <div className="font-condensed text-[22px] font-bold text-off-white mb-4">{product.price_display}</div>
+            )}
+            {product.description && (
+              <p className="font-condensed text-gray-2 text-[13px] leading-relaxed mb-4">{product.description}</p>
+            )}
+
+            {(product.sizes ?? []).length > 0 && (
+              <div className="mb-4">
+                <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-2">Sizes</div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(product.sizes ?? []).map(s => (
+                    <span key={s} className="font-condensed text-[10px] font-bold uppercase px-2 py-1 border border-charcoal-3 text-gray-2">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(product.colors ?? []).length > 0 && (
+              <div className="mb-4">
+                <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-2">Colors</div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(product.colors ?? []).map(c => (
+                    <span key={c} className="font-condensed text-[10px] uppercase px-2 py-1 border border-charcoal-3 text-gray-2">{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {product.stock_status && product.stock_status !== 'in_stock' && (
+              <div className="font-condensed text-[10px] font-bold uppercase tracking-wide mb-4"
+                style={{ color: STOCK_COLOR[product.stock_status] ?? '#4a4846' }}>
+                ● {STOCK_LABEL[product.stock_status] ?? product.stock_status}
+              </div>
+            )}
+
+            <div className="mt-auto pt-2">
+              {link && !soldOut ? (
+                <button
+                  onClick={() => { trackClick(product.id); window.open(link, '_blank', 'noopener,noreferrer') }}
+                  className="w-full font-condensed text-[11px] font-bold tracking-[0.3em] uppercase border py-3 transition-all duration-200"
+                  style={{ borderColor: '#333', color: '#7a7672', cursor: 'pointer', background: 'transparent' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(139,0,0,0.6)'; e.currentTarget.style.color = '#f0ece4' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#7a7672' }}
+                >
+                  Shop Now →
+                </button>
+              ) : soldOut ? (
+                <div className="w-full font-condensed text-[11px] font-bold tracking-[0.3em] uppercase text-center py-3 border"
+                  style={{ borderColor: '#333', color: '#4a4846' }}>
+                  Sold Out
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ProductCard({ product, onOpen }: { product: Product; onOpen: (p: Product) => void }) {
   const [hovered, setHovered] = useState(false)
   const soldOut = product.stock_status === 'sold_out'
   const link    = product.shopify_url || product.external_url || null
-
-  const handleBuy = () => {
-    if (!link || soldOut) return
-    trackClick(product.id)
-    window.open(link, '_blank', 'noopener,noreferrer')
-  }
 
   const imgSrc = (hovered && product.hover_image_path) ? product.hover_image_path : product.image_path
 
   return (
     <div
-      className="group border border-charcoal-3 hover:border-blood/40 transition-all duration-300 overflow-hidden"
+      className="group border border-charcoal-3 hover:border-blood/40 transition-all duration-300 overflow-hidden cursor-pointer"
       style={{ background: '#0f0f12' }}
+      onClick={() => onOpen(product)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -129,17 +250,18 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* CTA */}
+        {/* CTA — "Shop Now" opens link directly; everything else bubbles to card modal */}
         <button
-          onClick={handleBuy}
-          disabled={soldOut || !link}
-          className="w-full font-condensed text-[10px] font-bold tracking-[0.3em] uppercase border py-2.5 transition-all duration-200"
-          style={{
-            borderColor: soldOut ? '#333' : '#333',
-            color:        soldOut ? '#4a4846' : '#7a7672',
-            cursor:       soldOut || !link ? 'default' : 'pointer',
+          onClick={e => {
+            if (!soldOut && link) {
+              e.stopPropagation()
+              trackClick(product.id)
+              window.open(link, '_blank', 'noopener,noreferrer')
+            }
           }}
-          onMouseEnter={e => { if (!soldOut && link) { e.currentTarget.style.borderColor = 'rgba(139,0,0,0.6)'; e.currentTarget.style.color = '#f0ece4' } }}
+          className="w-full font-condensed text-[10px] font-bold tracking-[0.3em] uppercase border py-2.5 transition-all duration-200"
+          style={{ borderColor: '#333', color: soldOut ? '#4a4846' : '#7a7672', cursor: 'pointer', background: 'transparent' }}
+          onMouseEnter={e => { if (!soldOut) { e.currentTarget.style.borderColor = 'rgba(139,0,0,0.6)'; e.currentTarget.style.color = '#f0ece4' } }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = soldOut ? '#4a4846' : '#7a7672' }}
         >
           {soldOut ? 'Sold Out' : link ? 'Shop Now →' : 'View Details'}
@@ -156,6 +278,9 @@ export default function ApparelPage() {
   const [colFilter,   setColFilter]   = useState('all')
   const [sizeFilter,  setSizeFilter]  = useState('all')
   const [colorFilter, setColorFilter] = useState('all')
+  const [selected,    setSelected]    = useState<Product | null>(null)
+  const openModal  = useCallback((p: Product) => setSelected(p), [])
+  const closeModal = useCallback(() => setSelected(null), [])
 
   useEffect(() => {
     apiGet<{ ok: boolean; products: Product[] }>('/api/public/apparel')
@@ -216,6 +341,7 @@ export default function ApparelPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      {selected && <ProductModal product={selected} onClose={closeModal} />}
       <Navbar />
 
       {/* Collection bar */}
@@ -278,7 +404,7 @@ export default function ApparelPage() {
           ) : (
             <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
               {filtered.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} onOpen={openModal} />
               ))}
             </div>
           )}

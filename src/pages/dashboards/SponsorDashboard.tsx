@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import NotificationBell from '../../components/NotificationBell'
 import { getSponsorDashboard, type SponsorProfile } from '../../lib/api/sponsors'
 import Overview       from './sponsor/Overview'
 import Campaigns      from './sponsor/Campaigns'
@@ -82,10 +83,7 @@ export default function SponsorDashboard() {
               <div className="font-condensed text-[9px] text-gray-3 leading-tight">{user.email}</div>
             </div>
           )}
-          <div className="relative cursor-pointer">
-            <span className="text-gray-3 hover:text-off-white transition-colors" style={{ fontSize: 17 }}>🔔</span>
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: '#C41E3A' }} />
-          </div>
+          <NotificationBell />
           <Link to="/" className="font-condensed font-bold uppercase text-gray-3 hover:text-off-white transition-colors no-underline"
             style={{ fontSize: 10, letterSpacing: '0.2em' }}>
             ← Home
