@@ -2,6 +2,7 @@ import React, { useEffect, Component, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './context/CartContext'
+import { Analytics } from '@vercel/analytics/react'
 
 const HomePage               = lazy(() => import('./pages/HomePage'))
 const LoginPage              = lazy(() => import('./pages/LoginPage'))
@@ -175,6 +176,7 @@ export default function App() {
             <Suspense fallback={<PageFallback />}>
               <AppRoutes />
             </Suspense>
+            <Analytics />
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>
