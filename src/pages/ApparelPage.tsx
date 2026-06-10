@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import CartDrawer from '../components/apparel/CartDrawer'
+import ProductImageViewer from '../components/apparel/ProductImageViewer'
+import { useCart } from '../context/CartContext'
 import { apiGet } from '../lib/api/client'
 
 type Product = {
@@ -36,8 +39,21 @@ const STOCK_COLOR: Record<string, string> = {
 }
 
 function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
-  const link    = product.shopify_url || product.external_url || null
+  const cart    = useCart()
   const soldOut = product.stock_status === 'sold_out'
+  const sizes   = product.sizes  ?? []
+  const colors  = product.colors ?? []
+  const images  = (product.gallery_images ?? []).filter(Boolean).length > 0
+    ? product.gallery_images!.filter(Boolean)
+    : product.image_path ? [product.image_path] : []
+
+  const [selectedSize,  setSelectedSize]  = useState(sizes.length === 1 ? sizes[0] : '')
+  const [selectedColor, setSelectedColor] = useState(colors.length === 1 ? colors[0] : '')
+  const [sizeError,     setSizeError]     = useState(false)
+  const [added,         setAdded]         = useState(false)
+
+  const parsePrice = (s: string | null) =>
+    parseFloat((s || '0').replace(/[^0-9.]/g, '')) || 0
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -45,6 +61,21 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', handler); document.body.style.overflow = '' }
   }, [onClose])
+
+  const handleAddToCart = () => {
+    if (sizes.length > 0 && !selectedSize) { setSizeError(true); return }
+    cart.add({
+      productId: product.id,
+      name:      product.name,
+      variant:   selectedColor || '',
+      size:      selectedSize  || 'One Size',
+      price:     parsePrice(product.price_display),
+      image:     product.image_path || '',
+    })
+    setAdded(true)
+    trackClick(product.id)
+    setTimeout(() => onClose(), 800)
+  }
 
   return (
     <div
@@ -67,14 +98,10 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         </button>
 
         <div className="grid sm:grid-cols-2">
-          {/* Image */}
-          <div className="relative" style={{ aspectRatio: '4/5', background: '#0a0a0c', minHeight: 240 }}>
-            {product.image_path ? (
-              <img
-                src={product.image_path}
-                alt={product.name}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+          {/* Gallery */}
+          <div style={{ aspectRatio: '4/5', background: '#0a0a0c', minHeight: 280, position: 'relative' }}>
+            {images.length > 0 ? (
+              <ProductImageViewer images={images} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="font-display text-charcoal-3 uppercase" style={{ fontSize: 48 }}>
@@ -83,10 +110,8 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
               </div>
             )}
             {product.badge && (
-              <div
-                className="absolute top-3 left-3 font-condensed text-[9px] font-bold tracking-[0.4em] uppercase px-2.5 py-1.5"
-                style={{ background: '#8b0000', color: '#f0ece4' }}
-              >
+              <div className="absolute top-3 left-3 z-20 font-condensed text-[9px] font-bold tracking-[0.4em] uppercase px-2.5 py-1.5 pointer-events-none"
+                style={{ background: '#8b0000', color: '#f0ece4' }}>
                 {product.badge}
               </div>
             )}
@@ -97,62 +122,92 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             <div className="font-condensed text-[9px] font-bold tracking-[0.4em] uppercase text-blood-glow mb-2">
               {product.collection || product.category || 'Apparel'}
             </div>
-            <h2 className="font-display text-off-white uppercase mb-1" style={{ fontSize: 28, lineHeight: 0.95 }}>
+            <h2 className="font-display text-off-white uppercase mb-1" style={{ fontSize: 26, lineHeight: 0.95 }}>
               {product.name}
             </h2>
             {product.price_display && (
-              <div className="font-condensed text-[22px] font-bold text-off-white mb-4">{product.price_display}</div>
+              <div className="font-condensed text-[20px] font-bold text-off-white mb-3">{product.price_display}</div>
             )}
             {product.description && (
-              <p className="font-condensed text-gray-2 text-[13px] leading-relaxed mb-4">{product.description}</p>
+              <p className="font-condensed text-gray-2 text-[12px] leading-relaxed mb-4">{product.description}</p>
             )}
 
-            {(product.sizes ?? []).length > 0 && (
+            {/* Color picker */}
+            {colors.length > 1 && (
               <div className="mb-4">
-                <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-2">Sizes</div>
+                <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-2">
+                  Color{selectedColor ? `: ${selectedColor}` : ''}
+                </div>
                 <div className="flex gap-1.5 flex-wrap">
-                  {(product.sizes ?? []).map(s => (
-                    <span key={s} className="font-condensed text-[10px] font-bold uppercase px-2 py-1 border border-charcoal-3 text-gray-2">{s}</span>
+                  {colors.map(c => (
+                    <button key={c}
+                      onClick={() => setSelectedColor(c)}
+                      className="font-condensed text-[10px] uppercase px-2.5 py-1 border transition-all"
+                      style={{
+                        background:  selectedColor === c ? '#8b0000' : 'transparent',
+                        borderColor: selectedColor === c ? '#8b0000' : '#333',
+                        color:       selectedColor === c ? '#f0ece4' : '#7a7672',
+                        cursor: 'pointer',
+                      }}
+                    >{c}</button>
                   ))}
                 </div>
               </div>
             )}
 
-            {(product.colors ?? []).length > 0 && (
+            {/* Size picker */}
+            {sizes.length > 0 && (
               <div className="mb-4">
-                <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-2">Colors</div>
+                <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase mb-2"
+                  style={{ color: sizeError ? '#c00000' : '#7a7672' }}>
+                  Size{selectedSize ? `: ${selectedSize}` : sizeError ? ' — required' : ''}
+                </div>
                 <div className="flex gap-1.5 flex-wrap">
-                  {(product.colors ?? []).map(c => (
-                    <span key={c} className="font-condensed text-[10px] uppercase px-2 py-1 border border-charcoal-3 text-gray-2">{c}</span>
+                  {sizes.map(s => (
+                    <button key={s}
+                      onClick={() => { setSelectedSize(s); setSizeError(false) }}
+                      className="font-condensed text-[10px] font-bold uppercase px-2.5 py-1 border transition-all"
+                      style={{
+                        background:  selectedSize === s ? '#8b0000' : 'transparent',
+                        borderColor: selectedSize === s ? '#8b0000' : sizeError ? 'rgba(192,0,0,0.5)' : '#333',
+                        color:       selectedSize === s ? '#f0ece4' : '#7a7672',
+                        cursor: 'pointer',
+                      }}
+                    >{s}</button>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Stock */}
             {product.stock_status && product.stock_status !== 'in_stock' && (
-              <div className="font-condensed text-[10px] font-bold uppercase tracking-wide mb-4"
+              <div className="font-condensed text-[10px] font-bold uppercase tracking-wide mb-3"
                 style={{ color: STOCK_COLOR[product.stock_status] ?? '#4a4846' }}>
                 ● {STOCK_LABEL[product.stock_status] ?? product.stock_status}
               </div>
             )}
 
-            <div className="mt-auto pt-2">
-              {link && !soldOut ? (
-                <button
-                  onClick={() => { trackClick(product.id); window.open(link, '_blank', 'noopener,noreferrer') }}
-                  className="w-full font-condensed text-[11px] font-bold tracking-[0.3em] uppercase border py-3 transition-all duration-200"
-                  style={{ borderColor: '#333', color: '#7a7672', cursor: 'pointer', background: 'transparent' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(139,0,0,0.6)'; e.currentTarget.style.color = '#f0ece4' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#7a7672' }}
-                >
-                  Shop Now →
-                </button>
-              ) : soldOut ? (
+            {/* CTA */}
+            <div className="mt-auto pt-2 space-y-2">
+              {soldOut ? (
                 <div className="w-full font-condensed text-[11px] font-bold tracking-[0.3em] uppercase text-center py-3 border"
                   style={{ borderColor: '#333', color: '#4a4846' }}>
                   Sold Out
                 </div>
-              ) : null}
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full font-condensed text-[11px] font-bold tracking-[0.3em] uppercase border py-3 transition-all duration-200"
+                  style={{
+                    background:  added ? '#8b0000' : 'transparent',
+                    borderColor: added ? '#8b0000' : '#333',
+                    color:       added ? '#f0ece4' : '#f0ece4',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {added ? 'Added to Cart ✓' : 'Add to Cart'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -339,9 +394,12 @@ export default function ApparelPage() {
     )
   }
 
+  const { count: cartCount, openCart } = useCart()
+
   return (
     <div className="min-h-screen bg-black">
       {selected && <ProductModal product={selected} onClose={closeModal} />}
+      <CartDrawer />
       <Navbar />
 
       {/* Collection bar */}
@@ -349,11 +407,36 @@ export default function ApparelPage() {
         <div className="flex items-center justify-between px-10 border-b border-charcoal-3"
           style={{ height: 64, background: '#080809' }}>
           <div className="sec-label" style={{ marginBottom: 0 }}>Eleventh Round · Apparel</div>
-          {!loading && products.length > 0 && (
-            <div className="font-condensed text-[10px] tracking-[0.3em] uppercase text-gray-3">
-              {products.length} piece{products.length !== 1 ? 's' : ''}
-            </div>
-          )}
+          <div className="flex items-center gap-6">
+            {!loading && products.length > 0 && (
+              <div className="font-condensed text-[10px] tracking-[0.3em] uppercase text-gray-3">
+                {products.length} piece{products.length !== 1 ? 's' : ''}
+              </div>
+            )}
+            {/* Cart button */}
+            <button
+              onClick={openCart}
+              className="relative flex items-center gap-2 font-condensed text-[10px] font-bold tracking-[0.25em] uppercase transition-colors"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7a7672' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#f0ece4')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#7a7672')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+              Cart
+              {cartCount > 0 && (
+                <span
+                  className="text-[9px] font-bold leading-none rounded-full flex items-center justify-center"
+                  style={{ background: '#8b0000', color: '#f0ece4', minWidth: 16, height: 16, padding: '0 3px' }}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
         <div className="red-rule" />
       </div>
