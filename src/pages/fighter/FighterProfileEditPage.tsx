@@ -279,7 +279,7 @@ export default function FighterProfileEditPage() {
                 label="Headshot" hint="Square photo, max 5 MB" accept="image/jpeg,image/png,image/webp"
                 onUploaded={(path) => { set({ headshot_path: path }); updateFighterProfile({ headshot_path: path } as any).catch(() => {}) }} />
               <ImageUpload uploadType="fighter-banner" currentPath={p.banner_path}
-                label="Banner" hint="Wide image (16:9), max 5 MB" accept="image/jpeg,image/png,image/webp"
+                label="Banner" hint="Wide image (16:9), max 8 MB" accept="image/jpeg,image/png,image/webp"
                 onUploaded={(path) => { set({ banner_path: path }); updateFighterProfile({ banner_path: path } as any).catch(() => {}) }} />
             </div>
             <ImageUpload uploadType="fighter-media-kit" currentPath={null} bucket="public-assets"

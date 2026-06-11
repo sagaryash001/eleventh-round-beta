@@ -23,8 +23,9 @@ const log    = childLogger('uploads')
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const ALLOWED_PDF_TYPES   = ['application/pdf']
-const MAX_IMAGE_BYTES     = 5 * 1024 * 1024   // 5 MB
-const MAX_PDF_BYTES       = 10 * 1024 * 1024  // 10 MB
+const MAX_IMAGE_BYTES     = 5 * 1024 * 1024   // 5 MB  — headshots, logos
+const MAX_BANNER_BYTES    = 8 * 1024 * 1024   // 8 MB  — wide banner images
+const MAX_PDF_BYTES       = 10 * 1024 * 1024  // 10 MB — media kits, module PDFs
 
 const EXT_MAP = {
   'image/jpeg':       'jpg',
@@ -36,7 +37,7 @@ const EXT_MAP = {
 
 const UPLOAD_TYPES = {
   'fighter-headshot':  { bucket: 'public-assets',     prefix: 'headshots',    allowedTypes: ALLOWED_IMAGE_TYPES, maxBytes: MAX_IMAGE_BYTES, role: 'fighter' },
-  'fighter-banner':    { bucket: 'public-assets',     prefix: 'banners',      allowedTypes: ALLOWED_IMAGE_TYPES, maxBytes: MAX_IMAGE_BYTES, role: 'fighter' },
+  'fighter-banner':    { bucket: 'public-assets',     prefix: 'banners',      allowedTypes: ALLOWED_IMAGE_TYPES, maxBytes: MAX_BANNER_BYTES, role: 'fighter' },
   'fighter-media-kit': { bucket: 'public-assets',     prefix: 'media-kits',   allowedTypes: ALLOWED_PDF_TYPES,   maxBytes: MAX_PDF_BYTES,   role: 'fighter' },
   'sponsor-logo':      { bucket: 'public-assets',     prefix: 'sponsor-logos', allowedTypes: ALLOWED_IMAGE_TYPES, maxBytes: MAX_IMAGE_BYTES, role: 'sponsor' },
   'obligation-proof':  { bucket: 'obligation-proofs', prefix: 'proofs',       allowedTypes: [...ALLOWED_IMAGE_TYPES, ...ALLOWED_PDF_TYPES], maxBytes: MAX_PDF_BYTES, role: null },
@@ -87,7 +88,24 @@ router.post('/sign', requireAuth, async (req, res) => {
       .from(config.bucket)
       .createSignedUploadUrl(path)
 
-    if (error) throw error
+    if (error) {
+      // The most common cause is a non-existent bucket. Supabase returns
+      // "The related resource does not exist" / "Bucket not found" here —
+      // turn that into an actionable message instead of leaking the raw text.
+      const m = (error.message || '').toLowerCase()
+      const bucketMissing =
+        m.includes('not exist') || m.includes('not found') || m.includes('bucket')
+      // Always log the raw error for developers.
+      log.error({ err: error, bucket: config.bucket, type }, 'createSignedUploadUrl failed')
+      if (bucketMissing) {
+        return res.status(503).json({
+          error:
+            `Storage bucket "${config.bucket}" is missing. Create it in Supabase ` +
+            `Storage (New bucket → name "${config.bucket}", Public), then retry.`,
+        })
+      }
+      throw error
+    }
 
     log.info({ uid: req.user.id, type, bucket: config.bucket, path }, 'signed upload URL issued')
     res.json({
