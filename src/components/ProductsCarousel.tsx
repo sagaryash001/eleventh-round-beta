@@ -198,11 +198,11 @@ export default function ProductsSection() {
   const openData = openRoot ? ROOTS.find(r=>r.id===openRoot) : null
 
   return (
-    <section ref={sectionRef} id="products" className="bg-black py-32 relative overflow-hidden">
+    <section ref={sectionRef} id="products" className="bg-black py-20 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none"
         style={{background:'radial-gradient(ellipse at 50% 70%,rgba(60,0,0,0.07) 0%,transparent 60%)'}}/>
 
-      <div className="max-w-[1300px] mx-auto px-10">
+      <div className="max-w-[1300px] mx-auto px-5 md:px-10">
         <div ref={headerRef}>
           <div className="sec-label reveal mb-5">The Ecosystem</div>
           <h2 className="font-display text-off-white uppercase mb-2"
@@ -211,14 +211,18 @@ export default function ProductsSection() {
             <div className="line-clip"><span ref={line2Ref} className="block">Every Role.</span></div>
           </h2>
         </div>
-        <p className="reveal font-narrow italic text-gray-3 mb-14 uppercase"
+        <p className="reveal font-narrow italic text-gray-3 mb-14 uppercase hidden md:block"
           style={{fontSize:12,letterSpacing:'0.2em',marginTop:'1rem'}}>
           Hover to preview · Click a node to expand
+        </p>
+        <p className="reveal font-narrow italic text-gray-3 mb-8 uppercase md:hidden"
+          style={{fontSize:11,letterSpacing:'0.2em',marginTop:'0.75rem'}}>
+          Tap a role to expand
         </p>
       </div>
 
       {/* Tree */}
-      <div ref={containerRef} className="relative w-full" style={{height:SVG_H}}>
+      <div ref={containerRef} className="relative w-full hidden md:block" style={{height:SVG_H}}>
         <svg className="absolute inset-0 w-full pointer-events-none" style={{height:SVG_H}}>
           {/* Root spine */}
           <line
@@ -288,7 +292,7 @@ export default function ProductsSection() {
       </div>
 
       {/* Info strip — hover OR active keeps it open */}
-      <div className="max-w-[1300px] mx-auto px-10 mt-2" style={{minHeight:openData?'auto':0}}>
+      <div className="max-w-[1300px] mx-auto px-10 mt-2 hidden md:block" style={{minHeight:openData?'auto':0}}>
         {openData&&(
           <div className="border border-charcoal-3 p-8 relative overflow-hidden"
             style={{background:'#0c0c0d',animation:'fadeIn 0.3s ease'}}
@@ -318,12 +322,65 @@ export default function ProductsSection() {
         )}
       </div>
 
+      {/* Mobile vertical ecosystem flow — replaces the absolute node map on phones/tablets.
+          Reuses activeRoot (click-to-expand) and the shared DetailModal. */}
+      <div className="md:hidden px-5 mt-2">
+        <div className="flex flex-col items-center mb-1">
+          <div className="font-condensed font-bold uppercase text-off-white border border-charcoal-3 bg-charcoal px-5 py-1.5 whitespace-nowrap"
+            style={{fontSize:10,letterSpacing:'0.4em'}}>THE ECOSYSTEM</div>
+          <div className="w-px bg-charcoal-3" style={{height:18}}/>
+        </div>
+        {ROOTS.map((root,i)=>{
+          const open = activeRoot === root.id
+          return (
+            <div key={root.id}>
+              {i>0 && <div className="flex justify-center"><div className="w-px bg-charcoal-3" style={{height:14}}/></div>}
+              <div
+                role="button" tabIndex={0}
+                onClick={()=>setActiveRoot(p=>p===root.id?null:root.id)}
+                onKeyDown={e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setActiveRoot(p=>p===root.id?null:root.id) } }}
+                className="bg-charcoal border p-5 cursor-pointer transition-colors"
+                style={{borderColor: open?root.color:'#2a2a2e', borderLeft:`2px solid ${root.color}`}}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-display text-off-white uppercase" style={{fontSize:24,lineHeight:1}}>{root.label}</div>
+                    <div className="font-condensed font-bold uppercase mt-1" style={{fontSize:9,letterSpacing:'0.3em',color:open?root.color:'#4a4846'}}>{root.sublabel}</div>
+                  </div>
+                  <span className="font-condensed flex-shrink-0" style={{fontSize:22,lineHeight:1,color:open?root.color:'#4a4846'}}>{open?'−':'+'}</span>
+                </div>
+                <p className="font-narrow italic text-gray-2 mt-2 leading-snug" style={{fontSize:12}}>{root.point}</p>
+                {open && (
+                  <div className="mt-4 pt-4 border-t border-charcoal-3">
+                    <p className="font-body font-light text-gray-1 leading-relaxed mb-4" style={{fontSize:13}}>{root.detail.desc}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {root.children.map(child=>(
+                        <button key={child.id}
+                          onClick={e=>{ e.stopPropagation(); setDetail({node:child,color:root.color}) }}
+                          className="font-condensed font-bold uppercase border px-3 py-1.5 transition-colors"
+                          style={{fontSize:10,letterSpacing:'0.06em',borderColor:`${root.color}55`,color:'#c8c4be',background:`${root.color}14`}}>
+                          {child.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={e=>{ e.stopPropagation(); setDetail({node:root,color:root.color}) }}
+                      className="btn-primary w-full text-center text-[10px] py-2.5">
+                      {root.detail.cta}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
       {/* ── Podcast & Apparel — dedicated home sections ── */}
-      <div className="max-w-[1300px] mx-auto px-10 mt-24">
-        <div className="red-rule mb-16"/>
+      <div className="max-w-[1300px] mx-auto px-5 md:px-10 mt-16 md:mt-24">
+        <div className="red-rule mb-12 md:mb-16"/>
 
         {/* Podcast */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24 reveal">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-16 md:mb-24 reveal">
           <div>
             <div className="sec-label mb-5">Ecosystem · Audio</div>
             <h2 className="font-display text-off-white uppercase mb-5" style={{fontSize:'clamp(48px,6.5vw,104px)',lineHeight:0.87,letterSpacing:'-0.02em'}}>
@@ -354,7 +411,7 @@ export default function ProductsSection() {
         </div>
 
         {/* Apparel */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center reveal reveal-delay-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center reveal reveal-delay-1">
           {/* Photo grid */}
           <div className="order-last lg:order-first relative overflow-hidden">
             <div className="grid grid-cols-3 gap-1">

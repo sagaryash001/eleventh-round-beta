@@ -49,41 +49,48 @@ function DashItem({ name, badge, type }: { name: string; badge: string; type: 'g
 
 function CommandUI() {
   return (
-    <div className="grid gap-3.5" style={{ gridTemplateColumns: '250px 1fr 1fr' }}>
-      <div className="dash-card">
-        <div className="dash-label">Active Roster</div>
-        <div className="dash-stat">47</div>
-        <div className="dash-sub">Fighters in system</div>
-        <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '78%' }} /></div>
-        <div className="dash-sub">78% fully onboarded</div>
-      </div>
-      <div className="dash-card">
-        <div className="dash-label">Readiness Overview</div>
-        <div className="flex gap-5 items-center mt-1">
-          <ReadinessRing pct={72} />
-          <div className="grid grid-cols-2 gap-2 flex-1">
-            <MiniBar label="Brand" pct={68} />
-            <MiniBar label="Financial" pct={55} />
-            <MiniBar label="Conduct" pct={84} />
-            <MiniBar label="Sponsor" pct={41} />
+    <div className="space-y-3.5">
+      {/* 3 top panels — 1 col mobile · 2 col tablet · 3 col desktop */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Readiness Overview */}
+        <div className="dash-card">
+          <div className="dash-label">Readiness Overview</div>
+          <div className="flex gap-5 items-center mt-1 flex-wrap">
+            <ReadinessRing pct={72} />
+            <div className="grid grid-cols-2 gap-2 flex-1" style={{ minWidth: 150 }}>
+              <MiniBar label="Brand" pct={68} />
+              <MiniBar label="Financial" pct={55} />
+              <MiniBar label="Conduct" pct={84} />
+              <MiniBar label="Sponsor" pct={41} />
+            </div>
           </div>
         </div>
+        {/* Obligations Due */}
+        <div className="dash-card">
+          <div className="dash-label">Obligations Due</div>
+          <div className="dash-stat" style={{ color: '#C41E3A' }}>3</div>
+          <div className="dash-sub">Overdue this week</div>
+          <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '22%', background: '#C41E3A' }} /></div>
+          <div className="dash-sub">2 sponsor · 1 media</div>
+        </div>
+        {/* Action Queue */}
+        <div className="dash-card">
+          <div className="dash-label">Action Queue</div>
+          <div className="dash-stat">8</div>
+          <div className="dash-sub">Pending actions</div>
+          <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '60%' }} /></div>
+          <div className="dash-sub">Marketplace · obligations · review</div>
+        </div>
       </div>
+
+      {/* Recent Activity — full width */}
       <div className="dash-card">
-        <div className="dash-label">Obligations Due</div>
-        <div className="dash-stat" style={{ color: '#C41E3A' }}>3</div>
-        <div className="dash-sub">Overdue this week</div>
-        <div className="dash-bar-track"><div className="dash-bar-fill" style={{ width: '22%', background: '#C41E3A' }} /></div>
-        <div className="dash-sub">2 sponsor · 1 media</div>
-      </div>
-      <div className="dash-card" style={{ gridColumn: 'span 3' }}>
         <div className="dash-label">Recent Activity</div>
         <ul className="dc-list">
           <DashItem name="Marcus T. — Onboarding Complete"        badge="Ready"           type="green"  />
-          <DashItem name="Jordan K. — Sponsor Obligation Overdue" badge="Action Required"  type="red"    />
-          <DashItem name="SponsorForge — 2 New Matches Available" badge="New"              type="green"  />
-          <DashItem name="Diego M. — Financial Module 60%"        badge="In Progress"      type="yellow" />
-          <DashItem name="3 Consultations Scheduled This Week"    badge="Confirmed"        type="green"  />
+          <DashItem name="Jordan K. — Sponsor Obligation Overdue" badge="Action Required" type="red"    />
+          <DashItem name="SponsorForge — 2 New Matches Available" badge="New"             type="green"  />
+          <DashItem name="Diego M. — Financial Module 60%"        badge="In Progress"     type="yellow" />
         </ul>
       </div>
     </div>
@@ -270,12 +277,12 @@ export default function DashboardPreview() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="dashboard" className="bg-near-black py-32 px-10 relative overflow-hidden">
+    <section ref={sectionRef} id="dashboard" className="bg-near-black py-20 md:py-32 px-5 md:px-10 relative overflow-hidden">
       <div className="red-rule absolute top-0 left-0 right-0" />
 
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-end mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-end mb-10 md:mb-16">
           <div ref={headerRef}>
             <div className="sec-label reveal mb-5">The Platform</div>
             <h2 className="font-display text-off-white uppercase"
@@ -332,10 +339,10 @@ export default function DashboardPreview() {
         </div>
 
         {/* CTA */}
-        <div className="reveal reveal-delay-3 mt-10 flex items-center gap-5">
-          <Link to="/login" className="btn-primary">Access Full Dashboard</Link>
+        <div className="reveal reveal-delay-3 mt-10 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+          <Link to="/login" className="btn-primary w-full sm:w-auto text-center">Access Full Dashboard</Link>
           <span className="font-narrow italic text-[11px] tracking-[0.2em] uppercase text-gray-3">
-            Fighter · Manager · Admin roles
+            Sample preview · Fighter · Manager · Admin roles
           </span>
         </div>
       </div>

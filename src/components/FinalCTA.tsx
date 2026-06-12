@@ -79,7 +79,7 @@ export default function FinalCTA() {
     <section
       ref={sectionRef}
       id="cta"
-      className="bg-black py-40 px-10 relative overflow-hidden text-center"
+      className="bg-black py-24 md:py-40 px-5 md:px-10 relative overflow-hidden text-center"
     >
       <div className="fight-rule absolute top-0 left-0 right-0" />
 

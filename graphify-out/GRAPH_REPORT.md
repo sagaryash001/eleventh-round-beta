@@ -1,7 +1,7 @@
 # Graph Report - C:\Users\athar\eleventh-round-beta  (2026-06-11)
 
 ## Corpus Check
-- 129 files · ~5,363,110 words
+- 129 files · ~5,354,193 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -121,12 +121,12 @@
   C:\Users\athar\eleventh-round-beta\src\lib\api\applications.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
 - `inviteFighter()` --calls--> `apiPost()`  [INFERRED]
   C:\Users\athar\eleventh-round-beta\src\lib\api\applications.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
-- `getContracts()` --calls--> `apiGet()`  [INFERRED]
-  C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
-- `getContractObligations()` --calls--> `apiGet()`  [INFERRED]
-  C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
-- `getFighterProfile()` --calls--> `apiGet()`  [INFERRED]
-  C:\Users\athar\eleventh-round-beta\src\lib\api\fighters.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
+- `apiGet()` --calls--> `getContracts()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts
+- `apiGet()` --calls--> `getContractObligations()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts
+- `apiGet()` --calls--> `getFighterProfile()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\fighters.ts
 
 ## Communities
 
@@ -521,7 +521,7 @@ Nodes (0):
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 40`** (2 nodes): `tick()`, `IntroSequence.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (2 nodes): `HexNode()`, `ProblemsSection.tsx`
+- **Thin community `Community 41`** (2 nodes): `ProblemsSection.tsx`, `HexNode()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 42`** (2 nodes): `ProductsCarousel.tsx`, `getChildXs()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.

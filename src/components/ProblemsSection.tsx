@@ -145,7 +145,7 @@ export default function ProblemsSection() {
   const row2 = PROBLEMS.slice(5, 9)
 
   return (
-    <section id="problems" ref={sectionRef} className="bg-near-black py-32 px-10 relative overflow-hidden">
+    <section id="problems" ref={sectionRef} className="bg-near-black py-20 md:py-32 px-5 md:px-10 relative overflow-hidden">
       <div className="red-rule absolute top-0 left-0 right-0" />
 
       <div className="max-w-[1200px] mx-auto">
@@ -168,7 +168,7 @@ export default function ProblemsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-start">
           {/* Left: hex map */}
           <div className="reveal">
             <div className="flex items-end" style={{ gap:0, marginBottom:8 }}>

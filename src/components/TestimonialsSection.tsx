@@ -166,7 +166,7 @@ export default function TestimonialsSection() {
     <section
       ref={sectionRef}
       id="testimonials"
-      className="bg-black py-32 px-10 relative overflow-hidden"
+      className="bg-black py-20 md:py-32 px-5 md:px-10 relative overflow-hidden"
     >
       {/* Top rule */}
       <div className="red-rule absolute top-0 left-0 right-0" />
@@ -212,7 +212,7 @@ export default function TestimonialsSection() {
         {/* Cards grid */}
         <div
           ref={gridRef}
-          className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16"
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 lg:gap-16"
         >
           {TESTIMONIALS.map((item, i) => (
             <TestimonialCard
