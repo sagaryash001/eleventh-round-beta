@@ -404,9 +404,11 @@ export default function ApparelPage() {
 
       {/* Collection bar */}
       <div className="pt-[72px]">
-        <div className="flex items-center justify-between px-10 border-b border-charcoal-3"
+        <div className="flex items-center justify-between px-4 sm:px-10 border-b border-charcoal-3"
           style={{ height: 64, background: '#080809' }}>
-          <div className="sec-label" style={{ marginBottom: 0 }}>Eleventh Round · Apparel</div>
+          <div className="hidden sm:block">
+            <div className="sec-label" style={{ marginBottom: 0 }}>Eleventh Round · Apparel</div>
+          </div>
           <div className="flex items-center gap-6">
             {!loading && products.length > 0 && (
               <div className="font-condensed text-[10px] tracking-[0.3em] uppercase text-gray-3">

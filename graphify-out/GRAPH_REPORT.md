@@ -1,18 +1,13 @@
-# Graph Report - er-app  (2026-05-31)
+# Graph Report - C:\Users\athar\eleventh-round-beta  (2026-06-11)
 
 ## Corpus Check
-- 99 files · ~5,211,026 words
+- 129 files · ~5,363,110 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 786 nodes · 1196 edges · 56 communities (50 shown, 6 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
+- 650 nodes · 847 edges · 93 communities detected
+- Extraction: 69% EXTRACTED · 31% INFERRED · 0% AMBIGUOUS · INFERRED: 259 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
-
-## Graph Freshness
-- Built from commit: `a8792667`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Community 0|Community 0]]
@@ -66,49 +61,90 @@
 - [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
 - [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
+- [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 65|Community 65]]
+- [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
+- [[_COMMUNITY_Community 72|Community 72]]
+- [[_COMMUNITY_Community 73|Community 73]]
+- [[_COMMUNITY_Community 74|Community 74]]
+- [[_COMMUNITY_Community 75|Community 75]]
+- [[_COMMUNITY_Community 76|Community 76]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `useAuth()` - 37 edges
-2. `useApi()` - 30 edges
-3. `apiGet()` - 30 edges
-4. `apiPost()` - 28 edges
-5. `Eleventh Round — Sponsor ↔ Fighter Marketplace` - 22 edges
-6. `childLogger()` - 17 edges
-7. `apiPatch()` - 15 edges
-8. `requireAuth()` - 13 edges
-9. `4. Schema design — new tables` - 11 edges
-10. `The Eleventh Round — React App` - 10 edges
+1. `apiGet()` - 46 edges
+2. `apiPost()` - 36 edges
+3. `apiPatch()` - 26 edges
+4. `Eleventh Round — Sponsor ↔ Fighter Marketplace` - 22 edges
+5. `load()` - 21 edges
+6. `ctaButton()` - 19 edges
+7. `emailHtml()` - 18 edges
+8. `esc()` - 17 edges
+9. `email()` - 16 edges
+10. `getProfile()` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `ProtectedRoute()` --calls--> `useAuth()`  [EXTRACTED]
-  src/App.tsx → src/hooks/useAuth.tsx
-- `Navbar()` --calls--> `useAuth()`  [EXTRACTED]
-  src/components/Navbar.tsx → src/hooks/useAuth.tsx
-- `RegisterPage()` --calls--> `useAuth()`  [EXTRACTED]
-  src/pages/RegisterPage.tsx → src/hooks/useAuth.tsx
-- `VerifyEmailPage()` --calls--> `useAuth()`  [EXTRACTED]
-  src/pages/VerifyEmailPage.tsx → src/hooks/useAuth.tsx
-- `InboxPage()` --calls--> `useAuth()`  [EXTRACTED]
-  src/pages/InboxPage.tsx → src/hooks/useAuth.tsx
+- `getMyApplications()` --calls--> `apiGet()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\applications.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
+- `inviteFighter()` --calls--> `apiPost()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\applications.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
+- `getContracts()` --calls--> `apiGet()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
+- `getContractObligations()` --calls--> `apiGet()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
+- `getFighterProfile()` --calls--> `apiGet()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\lib\api\fighters.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
 
-## Communities (56 total, 6 thin omitted)
+## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (60): Application, applyToOpportunity(), getMyApplications(), inviteFighter(), updateApplicationStatus(), apiGet(), apiPatch(), apiPost() (+52 more)
+Cohesion: 0.04
+Nodes (63): createModule(), updateAdminUser(), verifySponsor(), handleStatus(), apiPatch(), apiPost(), apiPut(), authHeader() (+55 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.09
-Nodes (41): Content(), Marketplace(), Mentors(), NAV, Overview(), Packages(), Reports(), SponsorForgeAdmin() (+33 more)
+Cohesion: 0.04
+Nodes (53): adminLockConversation(), createPackage(), getAdminContracts(), getAdminConversationList(), getAdminDashboard(), getAdminModules(), getAdminPackages(), getAdminUsers() (+45 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.05
-Nodes (37): computeMatchesForOpp(), computeMatchScore(), WEIGHTS, allowed, APPLICATION_COLS, data, fetches, FIGHTER_TRANSITIONS (+29 more)
+Cohesion: 0.03
+Nodes (58): 0. TL;DR for stakeholders, 10.1 Channels per event type, 10.2 Worker, 10. Notifications fan-out, 11.1 v1: Postgres-native, 11.2 v2 (when listings > ~50k), 11. Search & discovery, 12.1 What stays (+50 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.08
-Nodes (31): BATCH_SIZE, getTransport(), handleMessageReceived(), handlePaymentSucceeded(), HANDLERS, log, POLL_MS, processBatch() (+23 more)
+Cohesion: 0.23
+Nodes (27): ctaButton(), emailHtml(), esc(), send(), sendEmail(), sendVerificationEmail(), sendWelcomeEmail(), smtpTransport() (+19 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
@@ -116,187 +152,494 @@ Nodes (32): 4.10 Migrations strategy, 4.1 Profile-extension tables, 4.2 Marketpl
 
 ### Community 5 - "Community 5"
 Cohesion: 0.08
-Nodes (20): getSponsorDashboard(), getSponsorStatus(), onboardSponsor(), SponsorOnboardInput, SponsorProfile, updateSponsorProfile(), DEMO_PROFILE, GOALS (+12 more)
+Nodes (19): acceptWithContract(), compute(), dismiss(), move(), openConversation(), acceptAndCreateContract(), applyToOpportunity(), getMyApplications() (+11 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.07
 Nodes (28): Admin Dashboard, Backend, Backend setup, code:bash (npm install), code:block2 (src/), code:bash (# 1. Copy the example env and fill in the keys you have), code:bash (curl http://localhost:3001/api/health), code:block5 (server/) (+20 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.07
-Nodes (26): active, activity, alertItems, byStatus, closed, consultants, d, end (+18 more)
+Cohesion: 0.09
+Nodes (10): optionalAuth(), requireAdmin(), requireAuth(), requireFighter(), next(), requireManager(), optionalAuth(), requireSponsor() (+2 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (20): CartDrawer(), Props, Action, CartContext, CartContextType, CartItem, CartProvider(), loadCart() (+12 more)
+Cohesion: 0.11
+Nodes (18): updateModule(), handleFileSelect(), handleFile(), handleStatus(), handleUpdate(), setModuleStatus(), update(), handleFile() (+10 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.08
-Nodes (23): actionItems, chartData, d, eligibility_progress, FIGHTER_WRITABLE, guard, log, media (+15 more)
+Cohesion: 0.09
+Nodes (7): apiFetch(), apiUrl(), setStatus(), submit(), submit(), submit(), poll()
 
 ### Community 10 - "Community 10"
-Cohesion: 0.08
-Nodes (20): actionItems, camps, fids, fighters, fpMap, fulfillmentByFighter, guard, log (+12 more)
+Cohesion: 0.1
+Nodes (9): handleCta(), handleMarkAllRead(), load(), scrollTo(), handleMarkAllRead(), load(), getNotifications(), markAllNotificationsRead() (+1 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.12
-Nodes (12): childLogger(), limit, log, query, router, line_items, log, router (+4 more)
+Cohesion: 0.15
+Nodes (9): buildEpPayload(), epToForm(), fromArr(), openEdit(), parseTags(), saveEdit(), setFeatured(), submit() (+1 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.14
-Nodes (12): requireSupabase(), log, requireAdmin(), requireAuth(), log, OBLIGATION_COLS, PROOF_COLS, router (+4 more)
-
-### Community 13 - "Community 13"
-Cohesion: 0.12
-Nodes (16): assertContractTransition(), assertObligationTransition(), CONTRACT_FIGHTER_TRANSITIONS, CONTRACT_SPONSOR_TRANSITIONS, OBLIGATION_ADMIN_TRANSITIONS, OBLIGATION_OWNER_TRANSITIONS, CONTRACT_COLS, CONTRACT_LIST_COLS (+8 more)
-
-### Community 14 - "Community 14"
-Cohesion: 0.12
-Nodes (16): allParticipants, allUserIds, convIds, convQ, lastMsgMap, limit, log, page (+8 more)
-
-### Community 15 - "Community 15"
-Cohesion: 0.17
-Nodes (11): createOpportunity(), getOpportunity(), OppInput, Opportunity, publishOpportunity(), updateOpportunity(), OpportunityDetailPage(), CAMPAIGN_TYPES (+3 more)
-
-### Community 16 - "Community 16"
-Cohesion: 0.21
-Nodes (13): Conversation, ConversationParticipant, createConversation(), getConversations(), getMessages(), markConversationRead(), Message, sendMessage() (+5 more)
-
-### Community 17 - "Community 17"
-Cohesion: 0.14
-Nodes (10): base, byStatus, company_name, guard, log, router, row, totalSpent (+2 more)
-
-### Community 18 - "Community 18"
-Cohesion: 0.19
-Nodes (10): CONN, getClient(), IDLE, MAX, query(), withTransaction(), logger, app (+2 more)
-
-### Community 19 - "Community 19"
 Cohesion: 0.15
 Nodes (12): Brand & Style, Buttons, Cards, Colors, Components, Elevation & Depth, Input Fields, Layout & Spacing (+4 more)
 
-### Community 20 - "Community 20"
-Cohesion: 0.17
-Nodes (5): getOpportunities(), CAMPAIGN_TYPES, DemoBanner(), EPISODES, TOPICS
-
-### Community 21 - "Community 21"
-Cohesion: 0.21
-Nodes (7): ApiState, apiFetch(), apiUrl(), ANON, URL, Status, VerifyEmailPage()
-
-### Community 22 - "Community 22"
-Cohesion: 0.23
-Nodes (3): Founder, Manager, MANAGERS
-
-### Community 23 - "Community 23"
-Cohesion: 0.17
-Nodes (3): Role, TABS, tabVariants
-
-### Community 24 - "Community 24"
+### Community 13 - "Community 13"
 Cohesion: 0.18
-Nodes (6): RegisterData, FormState, GOAL_OPTIONS, RegisterPage(), Step, STEPS
+Nodes (6): startCheckout(), handleCheckout(), patch(), save(), toggle(), updateSponsorProfile()
 
-### Community 25 - "Community 25"
-Cohesion: 0.2
-Nodes (8): AuthContext, AuthContextValue, AuthProvider(), AuthUser, DEMO, DEMO_USERS, loadLocal(), UserRole
+### Community 14 - "Community 14"
+Cohesion: 0.23
+Nodes (6): createOpportunity(), publishOpportunity(), updateOpportunity(), buildPayload(), publish(), save()
 
-### Community 26 - "Community 26"
-Cohesion: 0.22
-Nodes (9): ContractDetailPage(), DashShell(), NavItem, Props, FighterProfileEditPage(), useAuth(), DEMO_CREDENTIALS, LoginPage() (+1 more)
-
-### Community 27 - "Community 27"
+### Community 15 - "Community 15"
 Cohesion: 0.18
 Nodes (11): 5.1 Cross-cutting middleware, 5.2 Validation, 5.3 State machines (the part most teams get wrong), 5. API surface (REST under `/api`), Application, code:block2 (# Phase 1), code:block3 (applied ──┬─► under_review ──┬─► shortlisted ──► accepted ──), code:block4 (draft ──► pending_fighter ──► pending_sponsor ──► active ──┬) (+3 more)
 
-### Community 28 - "Community 28"
-Cohesion: 0.2
-Nodes (3): ErrorBoundary, ProtectedRoute(), lenis
-
-### Community 29 - "Community 29"
-Cohesion: 0.2
-Nodes (9): 0. TL;DR for stakeholders, 15. Open questions / decisions — RESOLVED 2026-05-30, 16. Risks & mitigations, 17. What we are NOT changing, 18. Appendix — file map (where new code will land), 19. Acceptance for this TDD, code:block9 (server/), Eleventh Round — Sponsor ↔ Fighter Marketplace (+1 more)
-
-### Community 30 - "Community 30"
-Cohesion: 0.25
-Nodes (4): CHAPTERS, HERO_FRAMES, POSITIONS, HERO_FRAMES
-
-### Community 31 - "Community 31"
-Cohesion: 0.22
-Nodes (4): ChildNode, Detail, ROOTS, TreeNode
-
-### Community 32 - "Community 32"
-Cohesion: 0.22
-Nodes (9): 14. Implementation roadmap (10-week target, single-dev cadence; double-up with Atharv to halve), Cross-phase: ops, Phase 1 — Profiles & roles (~2 weeks), Phase 2 — Opportunities + applications + matching (~2 weeks), Phase 3 — Messaging + notifications (~2 weeks), Phase 4 — Contracts + obligations (~2 weeks), Phase 5a — Stripe payments (~1.5 weeks), Phase 5b — Connect payout (~1 week, optional / can defer) (+1 more)
-
-### Community 33 - "Community 33"
+### Community 16 - "Community 16"
 Cohesion: 0.22
 Nodes (9): 7.1 Profile-extension tables, 7.2 Opportunities, 7.3 Applications, contracts, messages — the sensitive ones, 7.4 Notifications, audit_log, outbox, 7.5 Storage buckets to create, 7. Row Level Security policies, code:sql (-- sponsor_profiles), code:sql ("public reads published opps"             SELECT  USING (sta) (+1 more)
 
+### Community 17 - "Community 17"
+Cohesion: 0.38
+Nodes (3): handleAddToCart(), parsePrice(), trackClick()
+
+### Community 18 - "Community 18"
+Cohesion: 0.33
+Nodes (2): useApi(), useAuth()
+
+### Community 19 - "Community 19"
+Cohesion: 0.5
+Nodes (2): CartProvider(), loadCart()
+
+### Community 20 - "Community 20"
+Cohesion: 0.83
+Nodes (3): getClient(), query(), withTransaction()
+
+### Community 21 - "Community 21"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 22 - "Community 22"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 23 - "Community 23"
+Cohesion: 0.67
+Nodes (1): requireSupabase()
+
+### Community 24 - "Community 24"
+Cohesion: 1.0
+Nodes (2): computeMatchesForOpp(), computeMatchScore()
+
+### Community 25 - "Community 25"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 26 - "Community 26"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 27 - "Community 27"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 28 - "Community 28"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 29 - "Community 29"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 30 - "Community 30"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 31 - "Community 31"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 32 - "Community 32"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 33 - "Community 33"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 34 - "Community 34"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 35 - "Community 35"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 36 - "Community 36"
+Cohesion: 1.0
+Nodes (0): 
+
 ### Community 37 - "Community 37"
-Cohesion: 0.4
-Nodes (3): getMyOpportunities(), SponsorOpportunitiesPage(), STATUS_COLORS
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 38 - "Community 38"
-Cohesion: 0.4
-Nodes (3): Flash, FLASH_ORIGINS, IntroSequenceProps
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 39 - "Community 39"
-Cohesion: 0.4
-Nodes (5): 8.1 Inputs, 8.2 Scoring function (deterministic, transparent), 8.3 When recomputation runs, 8.4 Pluggability for ML v2, 8. Matching engine (v1 rule-based)
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 40 - "Community 40"
-Cohesion: 0.4
-Nodes (5): 13.1 Background work, 13.2 Observability, 13.3 Backups & disaster recovery, 13.4 Rate-limit buckets, 13. Operational concerns
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 41 - "Community 41"
-Cohesion: 0.4
-Nodes (5): 9.1 v1 (Phases 1–5a): Direct card capture, manual payout, 9.2 v1b (Phase 5b): Stripe Connect Custom for fighter payouts, 9.3 Webhook safety, 9.4 Money invariants, 9. Payments architecture
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 42 - "Community 42"
-Cohesion: 0.5
-Nodes (4): 3.1 Actors (= `profiles.role` values, EXTENDED), 3.2 Why role-extension tables instead of one fat `profiles`?, 3. Domain model (conceptual), code:block1 (┌──────────┐)
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 43 - "Community 43"
-Cohesion: 0.5
-Nodes (4): 1.1 What's already in production, 1.2 Existing 25 tables (today), 1.3 Architectural debt to acknowledge before we layer on more, 1. Existing system audit (what we're building on)
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 44 - "Community 44"
-Cohesion: 0.5
-Nodes (4): 12.1 What stays, 12.2 What's new, 12.3 Pattern, 12. Frontend impact
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 45 - "Community 45"
-Cohesion: 0.5
-Nodes (4): 6.1 What's published, 6.2 Patterns, 6.3 What's NOT realtime, 6. Realtime
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 46 - "Community 46"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 47 - "Community 47"
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 48 - "Community 48"
-Cohesion: 0.67
-Nodes (3): 2.1 Principles, 2.2 Explicit non-goals (v1), 2. Product principles & non-goals
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 49 - "Community 49"
-Cohesion: 0.67
-Nodes (3): 11.1 v1: Postgres-native, 11.2 v2 (when listings > ~50k), 11. Search & discovery
+Cohesion: 1.0
+Nodes (0): 
 
 ### Community 50 - "Community 50"
-Cohesion: 0.67
-Nodes (3): 10.1 Channels per event type, 10.2 Worker, 10. Notifications fan-out
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 51 - "Community 51"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 52 - "Community 52"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 53 - "Community 53"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 54 - "Community 54"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 55 - "Community 55"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 56 - "Community 56"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 57 - "Community 57"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 58 - "Community 58"
+Cohesion: 1.0
+Nodes (1): graphify
+
+### Community 59 - "Community 59"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 60 - "Community 60"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 61 - "Community 61"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 62 - "Community 62"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 63 - "Community 63"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 64 - "Community 64"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 65 - "Community 65"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 66 - "Community 66"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 67 - "Community 67"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 68 - "Community 68"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 69 - "Community 69"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 70 - "Community 70"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 71 - "Community 71"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 72 - "Community 72"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 73 - "Community 73"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 74 - "Community 74"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 75 - "Community 75"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 76 - "Community 76"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 77 - "Community 77"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 78 - "Community 78"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 79 - "Community 79"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 80 - "Community 80"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 81 - "Community 81"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 82 - "Community 82"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 83 - "Community 83"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 84 - "Community 84"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 85 - "Community 85"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 86 - "Community 86"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 87 - "Community 87"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 88 - "Community 88"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 89 - "Community 89"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 90 - "Community 90"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 91 - "Community 91"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 92 - "Community 92"
+Cohesion: 1.0
+Nodes (0): 
 
 ## Knowledge Gaps
-- **383 isolated node(s):** `app`, `extraOrigins`, `publicLimiter`, `log`, `CONTRACT_SPONSOR_TRANSITIONS` (+378 more)
+- **109 isolated node(s):** `code:bash (npm install)`, `Tech Stack`, `Pages & Routes`, `Demo Credentials`, `Landing Page Sections` (+104 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **Thin community `Community 33`** (2 nodes): `index.js`, `shutdown()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 34`** (2 nodes): `logger.js`, `childLogger()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 35`** (2 nodes): `validate.js`, `validate()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 36`** (2 nodes): `pick()`, `admin.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 37`** (2 nodes): `conversations.js`, `validateContextAccess()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 38`** (2 nodes): `sponsorship-payments.js`, `getStripe()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 39`** (2 nodes): `stripe.js`, `getStripe()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 40`** (2 nodes): `tick()`, `IntroSequence.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 41`** (2 nodes): `HexNode()`, `ProblemsSection.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 42`** (2 nodes): `ProductsCarousel.tsx`, `getChildXs()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 43`** (2 nodes): `TeamSection.tsx`, `Headshot()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 44`** (2 nodes): `CartDrawer.tsx`, `handleCheckout()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 45`** (2 nodes): `ProductViewer3D.tsx`, `GarmentMesh()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 46`** (2 nodes): `useScrollReveal.ts`, `useScrollReveal()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 47`** (2 nodes): `useSubdomain.ts`, `useSubdomain()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 48`** (2 nodes): `HomePage()`, `HomePage.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 49`** (2 nodes): `RegisterPage.tsx`, `EyeIcon()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 50`** (2 nodes): `TeamPage.tsx`, `Headshot()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 51`** (2 nodes): `DashWidgets.tsx`, `toXY()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 52`** (2 nodes): `ChartEmpty()`, `AdminCharts.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 53`** (2 nodes): `FField()`, `AdminUtils.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 54`** (2 nodes): `CommandLayout.tsx`, `ClickablePanel()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 55`** (2 nodes): `LoginPage.test.tsx`, `Wrapper()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 56`** (2 nodes): `Navbar.test.tsx`, `Wrapper()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 57`** (2 nodes): `useAuth.test.tsx`, `wrapper()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 58`** (2 nodes): `CLAUDE.md`, `graphify`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 59`** (1 nodes): `postcss.config.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 60`** (1 nodes): `tailwind.config.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 61`** (1 nodes): `vite.config.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 62`** (1 nodes): `vitest.config.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 63`** (1 nodes): `app.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 64`** (1 nodes): `vitest.config.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 65`** (1 nodes): `applications.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 66`** (1 nodes): `auth.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 67`** (1 nodes): `contracts.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 68`** (1 nodes): `notifications.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 69`** (1 nodes): `obligations.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 70`** (1 nodes): `public.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 71`** (1 nodes): `uploads.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 72`** (1 nodes): `auth-guard.test.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 73`** (1 nodes): `auth-validation.test.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 74`** (1 nodes): `health.test.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 75`** (1 nodes): `main.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 76`** (1 nodes): `DashboardPreview.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 77`** (1 nodes): `FinalCTA.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 78`** (1 nodes): `Footer.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 79`** (1 nodes): `TestimonialsSection.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 80`** (1 nodes): `ProductImageViewer.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 81`** (1 nodes): `frames.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 82`** (1 nodes): `problems.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 83`** (1 nodes): `products.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 84`** (1 nodes): `team.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 85`** (1 nodes): `AdminDashboard.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 86`** (1 nodes): `DashShell.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 87`** (1 nodes): `SponsorDashboard.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 88`** (1 nodes): `Contracts.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 89`** (1 nodes): `Overview.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 90`** (1 nodes): `TeamPublicPage.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 91`** (1 nodes): `SponsorOnboardPage.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 92`** (1 nodes): `setup.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useAuth()` connect `Community 26` to `Community 0`, `Community 1`, `Community 5`, `Community 37`, `Community 15`, `Community 16`, `Community 20`, `Community 21`, `Community 24`, `Community 25`, `Community 28`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `Eleventh Round — Sponsor ↔ Fighter Marketplace` connect `Community 29` to `Community 32`, `Community 33`, `Community 4`, `Community 39`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 45`, `Community 48`, `Community 49`, `Community 50`, `Community 27`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `childLogger()` connect `Community 11` to `Community 2`, `Community 3`, `Community 7`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 14`, `Community 17`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **What connects `app`, `extraOrigins`, `publicLimiter` to the rest of the system?**
-  _383 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.09 - nodes in this community are weakly interconnected._
-- **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
+- **Why does `apiPost()` connect `Community 0` to `Community 1`, `Community 5`, `Community 8`, `Community 10`, `Community 11`, `Community 13`, `Community 14`?**
+  _High betweenness centrality (0.090) - this node is a cross-community bridge._
+- **Why does `apiGet()` connect `Community 1` to `Community 0`, `Community 9`, `Community 10`, `Community 5`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `apiFetch()` connect `Community 9` to `Community 0`, `Community 1`?**
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+- **Are the 44 inferred relationships involving `apiGet()` (e.g. with `getAdminUsers()` and `getPendingSponsors()`) actually correct?**
+  _`apiGet()` has 44 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 34 inferred relationships involving `apiPost()` (e.g. with `createModule()` and `createPackage()`) actually correct?**
+  _`apiPost()` has 34 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 24 inferred relationships involving `apiPatch()` (e.g. with `updateAdminUser()` and `verifySponsor()`) actually correct?**
+  _`apiPatch()` has 24 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 19 inferred relationships involving `load()` (e.g. with `getContractPayments()` and `getMilestones()`) actually correct?**
+  _`load()` has 19 INFERRED edges - model-reasoned connections that need verification._

@@ -391,7 +391,7 @@ function PaymentSection({
     <div>
       {/* Payment summary */}
       <Card style={{ marginBottom: 16 }}>
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div>
             <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: '#4a4846' }}>Contract value</p>
             <p className="text-sm font-bold" style={{ color: '#f0ece4' }}>${contract.value_usd.toLocaleString()}</p>
@@ -671,7 +671,7 @@ export default function ContractDetailPage() {
         {/* Signature status */}
         <Section title="Signatures">
           <Card>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: '#4a4846' }}>Sponsor</p>
                 <p className="text-sm font-semibold" style={{ color: contract.sponsor_accepted_at ? '#4ade80' : '#7a7672' }}>
@@ -717,7 +717,7 @@ export default function ContractDetailPage() {
         {/* Contract details */}
         <Section title="Details">
           <Card>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
               {[
                 { label: 'Value', value: `$${contract.value_usd.toLocaleString()}` },
                 { label: 'Payment', value: contract.payment_schedule },

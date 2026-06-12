@@ -244,7 +244,7 @@ export default function FighterProfileEditPage() {
           <div className="bg-charcoal border border-charcoal-3 p-6 mb-4" style={{ borderLeft: '2px solid #4a4846' }}>
             <SectionHeader label="Fight Details" />
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><Label optional>Gym / Team</Label><Input value={p.gym_name ?? ''} onChange={v => set({ gym_name: v })} placeholder="e.g. American Top Team" /></div>
                 <div><Label optional>Coach</Label><Input value={p.coach_name ?? ''} onChange={v => set({ coach_name: v })} placeholder="Head coach name" /></div>
               </div>
@@ -253,7 +253,7 @@ export default function FighterProfileEditPage() {
                 <Select value={p.current_promotion ?? ''} onChange={v => set({ current_promotion: v })}
                   options={PROMOTIONS.map(x => ({ value: x, label: x }))} placeholder="Select promotion" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label optional>Status</Label>
                   <Select value={p.pro_status ?? ''} onChange={v => set({ pro_status: v as any })}
@@ -274,7 +274,7 @@ export default function FighterProfileEditPage() {
           {/* ── Section 3: Profile Images & Media ── */}
           <div className="bg-charcoal border border-charcoal-3 p-6 mb-4" style={{ borderLeft: '2px solid #4a4846' }}>
             <SectionHeader label="Profile Images & Media" />
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <ImageUpload uploadType="fighter-headshot" currentPath={p.headshot_path}
                 label="Headshot" hint="Square photo, max 5 MB" accept="image/jpeg,image/png,image/webp"
                 onUploaded={(path) => { set({ headshot_path: path }); updateFighterProfile({ headshot_path: path } as any).catch(() => {}) }} />
@@ -316,7 +316,7 @@ export default function FighterProfileEditPage() {
                 <p className="font-condensed text-[10px] text-gray-3 mb-3">
                   Select categories that match your brand and audience. Helps sponsors find you.
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {SPONSORSHIP_INTERESTS.map(interest => {
                     const active = (p.sponsorship_interests ?? []).includes(interest)
                     return (
@@ -348,7 +348,7 @@ export default function FighterProfileEditPage() {
             </div>
             <div className="space-y-4">
               {PLATFORMS.map(pl => (
-                <div key={pl} className="grid grid-cols-2 gap-3">
+                <div key={pl} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label optional>{pl.charAt(0).toUpperCase() + pl.slice(1)} Handle</Label>
                     <Input value={socialVal(pl, 'handle')} onChange={v => setSocial(pl, 'handle', v)} placeholder="@handle" />

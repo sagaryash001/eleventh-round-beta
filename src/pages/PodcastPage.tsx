@@ -121,7 +121,7 @@ export default function PodcastPage() {
                   />
                 </div>
               )}
-              <div className="px-7 py-5 flex items-start gap-6">
+              <div className="px-5 sm:px-7 py-5 flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
                 <div className="flex-1 min-w-0">
                   {epLabel(featured) && (
                     <div className="font-condensed text-[10px] font-bold tracking-[0.3em] text-blood-glow mb-1">{epLabel(featured)}</div>
@@ -147,7 +147,7 @@ export default function PodcastPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col gap-2 flex-shrink-0">
+                <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 flex-wrap">
                   {featured.spotify_url && (
                     <a href={featured.spotify_url} target="_blank" rel="noopener noreferrer"
                       className="font-condensed text-[10px] font-bold uppercase tracking-wide px-4 py-2 border border-green-900 text-green-500 hover:border-green-700 transition-colors whitespace-nowrap">
@@ -217,7 +217,7 @@ export default function PodcastPage() {
               {filtered.map(ep => (
                 <div
                   key={ep.id}
-                  className="bg-charcoal border border-charcoal-3 px-7 py-5 flex items-center gap-6 hover:border-blood/40 transition-all group"
+                  className="bg-charcoal border border-charcoal-3 px-4 sm:px-7 py-4 sm:py-5 flex items-center gap-3 sm:gap-6 hover:border-blood/40 transition-all group"
                   style={{ borderLeft: '2px solid transparent', transition: 'all 0.25s' }}
                   onMouseEnter={e => (e.currentTarget.style.borderLeftColor = '#8b0000')}
                   onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
@@ -255,8 +255,8 @@ export default function PodcastPage() {
                       {ep.duration}
                     </div>
                   )}
-                  {/* Platform links */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Platform links — hidden on mobile; the play button below still opens the episode */}
+                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
                     {ep.spotify_url && (
                       <a href={ep.spotify_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                         className="font-condensed text-[9px] font-bold uppercase tracking-wide px-2 py-1 border border-charcoal-3 text-gray-3 hover:text-off-white hover:border-green-900 transition-colors">

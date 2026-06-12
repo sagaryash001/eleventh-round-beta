@@ -365,7 +365,7 @@ export default function FighterOnboarding() {
                       Social media data helps sponsors find and evaluate you.
                     </p>
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="Instagram Handle" value={form.instagram_handle}
                           onChange={set('instagram_handle')} placeholder="@username" autoFocus />
                         <Field label="Followers" type="number" value={form.instagram_followers}

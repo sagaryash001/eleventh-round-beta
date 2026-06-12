@@ -262,3 +262,27 @@
   }
   .btn-primary, .btn-ghost { padding: 12px 24px; }
 }
+
+/* ─── Responsive grid retrofit ───────────────────────────────────
+   Dashboards/cards set column templates via inline `style` (49 spots),
+   which can't carry breakpoints. These rules collapse every inline grid
+   to a single column on phones and to two columns on tablets for the
+   densest stat rows — overriding inline styles via `!important`.
+   Desktop layouts are untouched. */
+@media (max-width: 640px) {
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* Tablet: thin out the densest KPI rows (repeat(4..) / repeat(5..)) to
+   two columns so tiles stay readable. Product grids use repeat(auto-fill, …)
+   and are intentionally NOT matched here. */
+@media (min-width: 641px) and (max-width: 820px) {
+  [style*="repeat(4"],
+  [style*="repeat(5"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Defensive: media never forces horizontal overflow inside a section. */
+img, video, iframe { max-width: 100%; }

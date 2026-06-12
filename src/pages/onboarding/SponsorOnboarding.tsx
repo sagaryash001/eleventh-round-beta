@@ -195,7 +195,7 @@ export default function SponsorOnboarding() {
                           })}
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="HQ Country" value={form.hq_country} onChange={set('hq_country')} placeholder="US" />
                         <Field label="HQ Region"  value={form.hq_region}  onChange={set('hq_region')} placeholder="California" />
                       </div>
@@ -219,7 +219,7 @@ export default function SponsorOnboarding() {
                       Sponsorship Targeting
                     </h2>
                     <div className="space-y-5">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="Budget Min (USD/yr)" type="number" value={form.budget_min_usd}
                           onChange={set('budget_min_usd')} placeholder="5000" />
                         <Field label="Budget Max (USD/yr)" type="number" value={form.budget_max_usd}

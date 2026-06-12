@@ -184,7 +184,7 @@ export default function OpportunityDetailPage() {
         {Object.keys(reqs).length > 0 && (
           <div className="mb-8">
             <h2 className="font-condensed font-bold uppercase text-[10px] tracking-[0.35em] text-gray-3 mb-3">Requirements</h2>
-            <div className="bg-charcoal border border-charcoal-3 p-6 grid grid-cols-2 gap-4 font-condensed text-[13px]">
+            <div className="bg-charcoal border border-charcoal-3 p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 font-condensed text-[13px]">
               {reqs.min_followers && <div><span className="text-gray-3">Min Followers</span><div className="text-off-white">{Number(reqs.min_followers).toLocaleString()}</div></div>}
               {reqs.weight_classes?.length > 0 && <div><span className="text-gray-3">Weight Classes</span><div className="text-off-white">{reqs.weight_classes.join(', ')}</div></div>}
               {reqs.promotions?.length > 0 && <div><span className="text-gray-3">Promotions</span><div className="text-off-white">{reqs.promotions.join(', ')}</div></div>}
@@ -197,7 +197,7 @@ export default function OpportunityDetailPage() {
         {(opp.campaign_start || opp.campaign_end || opp.application_deadline) && (
           <div className="mb-8">
             <h2 className="font-condensed font-bold uppercase text-[10px] tracking-[0.35em] text-gray-3 mb-3">Timeline</h2>
-            <div className="bg-charcoal border border-charcoal-3 p-6 grid grid-cols-3 gap-4 font-condensed text-[13px]">
+            <div className="bg-charcoal border border-charcoal-3 p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 font-condensed text-[13px]">
               {opp.application_deadline && <div><span className="text-gray-3 block">Application Deadline</span><span className="text-off-white">{new Date(opp.application_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>}
               {opp.campaign_start && <div><span className="text-gray-3 block">Campaign Start</span><span className="text-off-white">{new Date(opp.campaign_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>}
               {opp.campaign_end && <div><span className="text-gray-3 block">Campaign End</span><span className="text-off-white">{new Date(opp.campaign_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>}

@@ -155,12 +155,12 @@ function EpisodeForm({
   return (
     <div className="space-y-3">
       {/* Row 1: title + ep/season */}
-      <div className="grid gap-3 grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <div className="col-span-2">
           <FField label="Title" value={form.title} onChange={set('title')} required
             hint="Required." />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <FField label="Ep #"    value={form.episode_number} onChange={set('episode_number')} type="number" placeholder="12" />
           <FField label="Season"  value={form.season}         onChange={set('season')}         type="number" placeholder="1" />
         </div>
@@ -178,7 +178,7 @@ function EpisodeForm({
       </div>
 
       {/* Guest */}
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Guest Name"  value={form.guest_name}  onChange={set('guest_name')}  placeholder="Marcus Torres" />
         <FField label="Guest Title" value={form.guest_title} onChange={set('guest_title')} placeholder="Former WBA Champion" />
       </div>
@@ -190,7 +190,7 @@ function EpisodeForm({
 
       {/* URLs */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">Links</div>
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Spotify URL ★"  value={form.spotify_url}  onChange={set('spotify_url')}  placeholder="https://open.spotify.com/episode/…" />
         <FField label="Apple URL"      value={form.apple_url}    onChange={set('apple_url')}    placeholder="https://podcasts.apple.com/…" />
         <FField label="YouTube URL"    value={form.youtube_url}  onChange={set('youtube_url')}  placeholder="https://youtube.com/watch?v=…" />
@@ -198,14 +198,14 @@ function EpisodeForm({
       </div>
 
       {/* Media + meta */}
-      <div className="grid gap-3 grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <FField label="Thumbnail Path" value={form.thumbnail_path} onChange={set('thumbnail_path')} placeholder="/podcast/ep12.jpg" />
         <FField label="Duration"       value={form.duration}       onChange={set('duration')}       placeholder="58m" />
         <FField label="Sort Order"     value={form.sort_order}     onChange={set('sort_order')}     type="number" />
       </div>
 
       {/* Tags + featured + date */}
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Tags (comma-sep)" value={form.tags} onChange={set('tags')} placeholder="sponsorship, career-transition" />
         <FSelect label="Featured"        value={form.is_featured} onChange={set('is_featured')}
           options={[{ value: 'false', label: 'No' }, { value: 'true', label: 'Yes — show first' }]} />
@@ -214,7 +214,7 @@ function EpisodeForm({
 
       {/* SEO */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">SEO (optional)</div>
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Meta Title"       value={form.meta_title}       onChange={set('meta_title')} />
         <FField label="Meta Description" value={form.meta_description} onChange={set('meta_description')} />
       </div>
@@ -297,7 +297,7 @@ function EpisodesTab({ episodes, load }: { episodes: any[]; load: () => void }) 
       {episodes.length === 0 ? (
         <EmptyState icon="🎙" title="No Episodes Yet" body="Create your first podcast episode above." />
       ) : (
-        <div className="dash-card p-0 overflow-hidden">
+        <div className="dash-card p-0 overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-charcoal-3">
@@ -585,7 +585,7 @@ function ProductForm({
   return (
     <div className="space-y-3">
       {/* Row 1: name + price + category + collection */}
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Name" value={form.name} onChange={set('name')} required />
         <FField label="Price Display" value={form.price_display} onChange={set('price_display')} placeholder="$45" />
         <FField label="Category" value={form.category} onChange={set('category')} placeholder="hoodie" />
@@ -607,7 +607,7 @@ function ProductForm({
 
       {/* Images */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">Images</div>
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Main Image Path"  value={form.image_path}       onChange={set('image_path')}       placeholder="/apparel/products/…" />
         <FField label="Hover Image Path" value={form.hover_image_path} onChange={set('hover_image_path')} placeholder="/apparel/products/…-hover.jpg" />
       </div>
@@ -616,28 +616,28 @@ function ProductForm({
 
       {/* Links */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">Purchase Links</div>
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Shopify URL ★"  value={form.shopify_url}  onChange={set('shopify_url')}  placeholder="https://…myshopify.com/products/…" />
         <FField label="External URL"   value={form.external_url} onChange={set('external_url')} placeholder="https://…" />
       </div>
 
       {/* Variants */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">Variants</div>
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Sizes (comma-sep)"  value={form.sizes}  onChange={set('sizes')}  placeholder="XS, S, M, L, XL, XXL" />
         <FField label="Colors (comma-sep)" value={form.colors} onChange={set('colors')} placeholder="Onyx, Bone" />
       </div>
 
       {/* Details */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">Details</div>
-      <div className="grid gap-3 grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <FField label="Material"           value={form.material}           onChange={set('material')}           placeholder="Heavyweight fleece" />
         <FField label="Fit"                value={form.fit}                onChange={set('fit')}                placeholder="Relaxed / Tapered" />
         <FField label="Care Instructions"  value={form.care_instructions}  onChange={set('care_instructions')}  placeholder="Machine wash cold" />
       </div>
 
       {/* Badge + stock + featured */}
-      <div className="grid gap-3 grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <FField label="Badge" value={form.badge} onChange={set('badge')} placeholder="Best Seller" />
         <div>
           <FSelect label="Stock Status" value={form.stock_status} onChange={set('stock_status')} options={STOCK_STATUS_OPTIONS} />
@@ -657,7 +657,7 @@ function ProductForm({
 
       {/* SEO */}
       <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 pt-1">SEO (optional)</div>
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FField label="Meta Title"       value={form.meta_title}       onChange={set('meta_title')} />
         <FField label="Meta Description" value={form.meta_description} onChange={set('meta_description')} />
       </div>
@@ -739,7 +739,7 @@ function ProductsTab({ products, load }: { products: any[]; load: () => void }) 
       {products.length === 0 ? (
         <EmptyState icon="👕" title="No Products Yet" body="Create your first apparel product above." />
       ) : (
-        <div className="dash-card p-0 overflow-hidden">
+        <div className="dash-card p-0 overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-charcoal-3">
@@ -813,7 +813,7 @@ function CollectionsTab({ products }: { products: any[] }) {
     return <EmptyState icon="○" title="No Collections" body="Collections are derived from product collection and category fields." />
 
   return (
-    <div className="dash-card p-0 overflow-hidden max-w-lg">
+    <div className="dash-card p-0 overflow-x-auto max-w-lg">
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-charcoal-3">
@@ -865,7 +865,7 @@ function ClickAnalyticsTab() {
       {rows.length === 0 ? (
         <EmptyState icon="○" title="No Clicks Recorded Yet" body="Click analytics appear here once visitors click product links on the /apparel page." />
       ) : (
-        <div className="dash-card p-0 overflow-hidden">
+        <div className="dash-card p-0 overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-charcoal-3">
@@ -1016,14 +1016,14 @@ function ConsultantsTab() {
       {showForm && (
         <div className="dash-card space-y-3">
           <div className="font-condensed text-[10px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-3">New Consultant</div>
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FField label="Name" value={form.name} onChange={setF('name')} required />
             <FField label="Title" value={form.title} onChange={setF('title')} placeholder="Combat Sports Attorney" />
             <FField label="Specialty" value={form.specialty} onChange={setF('specialty')} placeholder="Contract Law" />
             <FField label="Location" value={form.location} onChange={setF('location')} placeholder="Las Vegas, NV" />
           </div>
           <FField label="Bio" value={form.bio} onChange={setF('bio')} />
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FField label="Email" value={form.email} onChange={setF('email')} type="email" />
             <FField label="Phone" value={form.phone} onChange={setF('phone')} placeholder="+1 555…" />
             <FField label="Booking URL" value={form.booking_url} onChange={setF('booking_url')} placeholder="https://calendly.com/…" />
@@ -1031,7 +1031,7 @@ function ConsultantsTab() {
             <FField label="Image Path" value={form.image_path} onChange={setF('image_path')} placeholder="/mentors/…" />
             <FField label="Hourly Rate (USD)" value={form.hourly_rate_usd} onChange={setF('hourly_rate_usd')} type="number" placeholder="150" />
           </div>
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FField label="Tags (comma-sep)" value={form.tags} onChange={setF('tags')} placeholder="contracts, legal, NIL" />
             <FField label="Sort Order" value={form.sort_order} onChange={setF('sort_order')} type="number" />
           </div>
@@ -1050,7 +1050,7 @@ function ConsultantsTab() {
       {consultants.length === 0 ? (
         <EmptyState icon="○" title="No Consultants Yet" body="Add your first consultant above." />
       ) : (
-        <div className="dash-card p-0 overflow-hidden">
+        <div className="dash-card p-0 overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-charcoal-3">
@@ -1089,14 +1089,14 @@ function ConsultantsTab() {
                     <tr className="border-b border-charcoal-3">
                       <td colSpan={6} className="px-3 py-4 bg-charcoal-2">
                         <div className="space-y-3">
-                          <div className="grid gap-3 grid-cols-2">
+                          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                             <FField label="Name" value={editForm.name ?? ''} onChange={v => setEditForm(f => ({ ...f, name: v }))} required />
                             <FField label="Title" value={editForm.title ?? ''} onChange={v => setEditForm(f => ({ ...f, title: v }))} />
                             <FField label="Specialty" value={editForm.specialty ?? ''} onChange={v => setEditForm(f => ({ ...f, specialty: v }))} />
                             <FField label="Location" value={editForm.location ?? ''} onChange={v => setEditForm(f => ({ ...f, location: v }))} />
                           </div>
                           <FField label="Bio" value={editForm.bio ?? ''} onChange={v => setEditForm(f => ({ ...f, bio: v }))} />
-                          <div className="grid gap-3 grid-cols-2">
+                          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                             <FField label="Email" value={editForm.email ?? ''} onChange={v => setEditForm(f => ({ ...f, email: v }))} type="email" />
                             <FField label="Phone" value={editForm.phone ?? ''} onChange={v => setEditForm(f => ({ ...f, phone: v }))} />
                             <FField label="Booking URL" value={editForm.booking_url ?? ''} onChange={v => setEditForm(f => ({ ...f, booking_url: v }))} />
@@ -1104,7 +1104,7 @@ function ConsultantsTab() {
                             <FField label="Image Path" value={editForm.image_path ?? ''} onChange={v => setEditForm(f => ({ ...f, image_path: v }))} />
                             <FField label="Hourly Rate (USD)" value={editForm.hourly_rate_usd ?? ''} onChange={v => setEditForm(f => ({ ...f, hourly_rate_usd: v }))} type="number" />
                           </div>
-                          <div className="grid gap-3 grid-cols-2">
+                          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                             <FField label="Tags (comma-sep)" value={editForm.tags ?? ''} onChange={v => setEditForm(f => ({ ...f, tags: v }))} />
                             <FField label="Sort Order" value={editForm.sort_order ?? '100'} onChange={v => setEditForm(f => ({ ...f, sort_order: v }))} type="number" />
                           </div>
