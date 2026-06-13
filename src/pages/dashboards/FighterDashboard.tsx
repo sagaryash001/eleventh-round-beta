@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import NotificationBell from '../../components/NotificationBell'
+import EventCalendar from '../../components/events/EventCalendar'
 import { useApi } from '../../hooks/useApi'
 import { getContracts, type Contract } from '../../lib/api/contracts'
+import { getSponsorForge, submitSponsorForge, type SponsorForgeStatus, type SFChecklistItem, type SFItemStatus } from '../../lib/api/fighters'
 import { getFighterManager, requestManager, cancelManagerRequest, type ManagerConnection } from '../../lib/api/manager'
 import { apiPatch } from '../../lib/api/client'
 import {
@@ -23,6 +25,7 @@ const ZONES = [
   { id: 'profile',      label: 'Profile'                },
   { id: 'sponsorships', label: 'Sponsorships'           },
   { id: 'education',    label: 'Education'              },
+  { id: 'events',       label: 'Event Calendar'         },
   { id: 'contracts',    label: 'Contracts & Obligations'},
 ]
 
@@ -332,7 +335,6 @@ function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
   const { data: overviewData } = useApi<any>('/api/fighter/overview')
   const { data: activityData } = useApi<any>('/api/fighter/activity')
   const { data: modsData }     = useApi<any>('/api/fighter/modules')
-  const { data: sfData }       = useApi<any>('/api/fighter/sponsorforge')
   const [contracts, setContracts] = useState<Contract[]>([])
 
   useEffect(() => {
@@ -668,10 +670,113 @@ function ProfileZone() {
   )
 }
 
+// ── SponsorForge access card — exact unlock checklist + review flow ───────────
+function SFIcon({ status }: { status: SFItemStatus }) {
+  const m = {
+    complete:   { ch: '✓', color: '#00c060', bg: 'rgba(0,160,80,0.12)',  bd: 'rgba(0,160,80,0.35)' },
+    pending:    { ch: '•', color: '#c9a82c', bg: 'rgba(180,140,0,0.12)',  bd: 'rgba(180,140,0,0.35)' },
+    rejected:   { ch: '!', color: '#c00000', bg: 'rgba(139,0,0,0.14)',    bd: 'rgba(139,0,0,0.4)' },
+    incomplete: { ch: '',  color: '#4a4846', bg: 'transparent',           bd: '#2a2a2e' },
+  }[status]
+  return (
+    <span className="flex items-center justify-center flex-shrink-0 rounded-full font-condensed font-bold"
+      style={{ width: 22, height: 22, fontSize: 12, color: m.color, background: m.bg, border: `1px solid ${m.bd}` }}>
+      {m.ch}
+    </span>
+  )
+}
+
+function SponsorForgeCard({ onNavigate }: { onNavigate: (z: string) => void }) {
+  const [sf, setSf]                 = useState<SponsorForgeStatus | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [msg, setMsg]               = useState<string | null>(null)
+
+  const load = useCallback(() => {
+    getSponsorForge().then(d => { setSf(d); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const submit = async () => {
+    setSubmitting(true); setMsg(null)
+    try { await submitSponsorForge(); load() }
+    catch (e: any) { setMsg(e.message ?? 'Could not submit for review.') }
+    finally { setSubmitting(false) }
+  }
+
+  if (loading) return <div className="dash-card"><div className="dash-sub">Loading SponsorForge…</div></div>
+  if (!sf)     return <div className="dash-card"><div className="dash-sub">SponsorForge status unavailable.</div></div>
+
+  if (!sf.locked) {
+    return (
+      <div className="dash-card" style={{ borderLeft: '2px solid #00c060' }}>
+        <div className="dash-label mb-1">SponsorForge</div>
+        <div className="font-condensed text-[11px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: '#00c060' }}>
+          Unlocked — Sponsor Matching Active
+        </div>
+        <p className="font-condensed text-[12px] text-gray-2 mb-3">You're approved. Browse sponsor opportunities and apply.</p>
+        <Link to="/opportunities" className="btn-primary text-[10px] py-2 no-underline inline-block">Browse Opportunities →</Link>
+      </div>
+    )
+  }
+
+  const actionFor = (item: SFChecklistItem) => {
+    if (!item.action || item.action === 'view_feedback') return null
+    if (item.action === 'continue_profile')
+      return <Link to="/fighter/profile" className="btn-ghost text-[9px] py-1.5 px-3 no-underline whitespace-nowrap">{item.action_label}</Link>
+    if (item.action === 'submit_review')
+      return <button onClick={submit} disabled={submitting} className="btn-primary text-[9px] py-1.5 px-3 disabled:opacity-50 whitespace-nowrap">{submitting ? 'Submitting…' : item.action_label}</button>
+    // continue_modules + view_readiness both route to the Education zone (where readiness is built)
+    return <button onClick={() => onNavigate('education')} className="btn-ghost text-[9px] py-1.5 px-3 whitespace-nowrap">{item.action_label}</button>
+  }
+
+  return (
+    <div className="dash-card" style={{ borderLeft: '2px solid #c00000' }}>
+      <div className="dash-label mb-1">SponsorForge</div>
+      <h3 className="font-display text-off-white uppercase mb-1" style={{ fontSize: 18, lineHeight: 1.05 }}>
+        Sponsor matching unlocks after training + admin approval
+      </h3>
+      <p className="font-condensed text-[11px] text-gray-3 mb-4">
+        Complete each step. An admin reviews your request before access opens.
+      </p>
+
+      {sf.status === 'pending' && (
+        <div className="mb-4 p-3 border" style={{ borderColor: 'rgba(180,140,0,0.35)', background: 'rgba(180,140,0,0.08)' }}>
+          <span className="font-condensed text-[12px]" style={{ color: '#c9a82c' }}>
+            Your SponsorForge review is pending. We'll notify you when it is approved.
+          </span>
+        </div>
+      )}
+      {sf.status === 'rejected' && sf.admin_notes && (
+        <div className="mb-4 p-3 border" style={{ borderColor: 'rgba(139,0,0,0.4)', background: 'rgba(139,0,0,0.08)' }}>
+          <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.2em] mb-1" style={{ color: '#c00000' }}>Admin Feedback</div>
+          <p className="font-condensed text-[12px] text-gray-1 leading-relaxed">{sf.admin_notes}</p>
+        </div>
+      )}
+
+      <div className="space-y-1">
+        {sf.checklist.map((item, i) => (
+          <div key={item.id} className="flex items-start gap-3 py-2.5 border-b border-charcoal-3 last:border-0">
+            <SFIcon status={item.status} />
+            <div className="flex-1 min-w-0">
+              <div className="font-condensed font-bold text-[12px] text-off-white">
+                <span className="text-gray-3 mr-1">{i + 1}.</span>{item.label}
+              </div>
+              <div className="font-condensed text-[11px] text-gray-3">{item.detail}</div>
+            </div>
+            <div className="flex-shrink-0">{actionFor(item)}</div>
+          </div>
+        ))}
+      </div>
+
+      {msg && <p className="font-condensed text-[11px] mt-3" style={{ color: '#c00000' }}>{msg}</p>}
+    </div>
+  )
+}
+
 // ── Sponsorships zone ─────────────────────────────────────────────────────────
-function SponsorshipsZone() {
+function SponsorshipsZone({ onNavigate }: { onNavigate: (z: string) => void }) {
   const { data: mkt, loading, error } = useApi<any>('/api/fighter/marketplace')
-  const { data: sfData }              = useApi<any>('/api/fighter/sponsorforge')
   const { data: appsData }            = useApi<any>('/api/applications/mine')
 
   if (loading) return <DashSkeleton />
@@ -686,8 +791,6 @@ function SponsorshipsZone() {
   const pendingObs   = mkt?.pending_obligations   ?? 0
   const earningsDisplay = earnings >= 1000 ? `$${(earnings / 1000).toFixed(1)}K` : earnings > 0 ? `$${earnings}` : '$—'
 
-  const sfScore  = sfData?.eligibility_score ?? 0
-  const sfLocked = sfData?.is_locked ?? true
   const apps     = (appsData?.applications ?? []).slice(0, 5)
 
   return (
@@ -705,41 +808,22 @@ function SponsorshipsZone() {
         </div>
       </div>
 
-      <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        {/* SponsorForge status */}
-        <div className="dash-card" style={{ borderLeft: sfLocked ? '2px solid #c00000' : '2px solid #00c060' }}>
-          <div className="dash-label mb-1">SponsorForge</div>
-          <div className="font-condensed text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: sfLocked ? '#c00000' : '#00c060' }}>
-            {sfLocked ? 'Locked — Complete Requirements' : 'Unlocked'}
-          </div>
-          <div className="flex items-center gap-4">
-            <ReadinessRing pct={sfScore} size={64} label="Score" />
-            <div className="text-[12px] font-condensed text-gray-2">
-              {sfScore < 100 ? `${100 - sfScore} pts to unlock` : 'Eligible for matching'}
-            </div>
-          </div>
-          {(sfData?.requirements ?? []).slice(0, 2).map((r: any, i: number) => (
-            <div key={i} className="flex items-center gap-2 mt-2 pt-2 border-t border-charcoal-3 first:border-0">
-              <span className={`badge badge-${r.type}`}>{r.badge}</span>
-              <span className="font-condensed text-[11px] text-gray-2">{r.name}</span>
-            </div>
-          ))}
-        </div>
+      {/* SponsorForge access — full-width unlock checklist */}
+      <SponsorForgeCard onNavigate={onNavigate} />
 
-        {/* Obligations */}
-        <div className="dash-card">
-          <div className="dash-label mb-3">Obligations</div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-condensed text-[11px] text-gray-2">Completed</span>
-            <span className="font-condensed font-bold text-off-white">{doneObs}</span>
-          </div>
-          <div className="dash-bar-track mb-3">
-            <div className="dash-bar-fill" style={{ width: `${doneObs + pendingObs > 0 ? Math.round(doneObs / (doneObs + pendingObs) * 100) : 0}%`, background: '#00c060' }} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-condensed text-[11px] text-gray-2">Pending</span>
-            <span className="font-condensed font-bold text-off-white">{pendingObs}</span>
-          </div>
+      {/* Obligations */}
+      <div className="dash-card">
+        <div className="dash-label mb-3">Obligations</div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-condensed text-[11px] text-gray-2">Completed</span>
+          <span className="font-condensed font-bold text-off-white">{doneObs}</span>
+        </div>
+        <div className="dash-bar-track mb-3">
+          <div className="dash-bar-fill" style={{ width: `${doneObs + pendingObs > 0 ? Math.round(doneObs / (doneObs + pendingObs) * 100) : 0}%`, background: '#00c060' }} />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="font-condensed text-[11px] text-gray-2">Pending</span>
+          <span className="font-condensed font-bold text-off-white">{pendingObs}</span>
         </div>
       </div>
 
@@ -997,8 +1081,9 @@ export default function FighterDashboard() {
       <main className="flex-1 overflow-y-auto p-6 bg-black">
         {zone === 'command'      && <CommandCenter onNavigate={setZone} />}
         {zone === 'profile'      && <ProfileZone />}
-        {zone === 'sponsorships' && <SponsorshipsZone />}
+        {zone === 'sponsorships' && <SponsorshipsZone onNavigate={setZone} />}
         {zone === 'education'    && <EducationZone />}
+        {zone === 'events'       && <EventCalendar assignable={user ? [{ id: user.id, name: user.name }] : []} />}
         {zone === 'contracts'    && <ContractsZone />}
       </main>
     </div>

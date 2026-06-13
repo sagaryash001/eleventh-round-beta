@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useApi } from '../../../hooks/useApi'
 import {
   getAdminContracts, getAdminConversationList, adminLockConversation,
+  getSponsorForgeReviews, decideSponsorForgeReview, type SFReview,
 } from '../../../lib/api/admin'
 import { adminRecompute } from '../../../lib/api/opportunities'
 import { getAdminDashboard } from '../../../lib/api/admin'
@@ -288,6 +289,90 @@ function ObligationsTab() {
   )
 }
 
+// ── SponsorForge access review queue ──────────────────────────────────────────
+function SponsorForgeReviews() {
+  const [reviews, setReviews]   = useState<SFReview[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [actingId, setActingId] = useState<string | null>(null)
+  const [rejectId, setRejectId] = useState<string | null>(null)
+  const [note, setNote]         = useState('')
+  const [msg, setMsg]           = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  const load = useCallback(() => {
+    setLoading(true)
+    getSponsorForgeReviews('pending')
+      .then(r => { setReviews(r.reviews ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const decide = async (id: string, action: 'approve' | 'reject', notes?: string) => {
+    setActingId(id); setMsg(null)
+    try {
+      await decideSponsorForgeReview(id, action, notes)
+      setMsg({ type: 'ok', text: action === 'approve' ? 'Approved — SponsorForge unlocked.' : 'Returned to fighter with feedback.' })
+      setRejectId(null); setNote(''); load()
+    } catch (e: any) {
+      setMsg({ type: 'err', text: e.message ?? 'Action failed.' })
+    } finally { setActingId(null) }
+  }
+
+  return (
+    <div className="dash-card" style={{ borderLeft: '2px solid #c00000' }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="dash-label">SponsorForge Review Queue</div>
+        <span className={`badge ${reviews.length > 0 ? 'badge-red' : 'badge-green'}`}>{reviews.length} pending</span>
+      </div>
+      {msg && <p className={`font-condensed text-[11px] mb-3 ${msg.type === 'ok' ? 'text-green-400' : 'text-blood-glow'}`}>{msg.text}</p>}
+      {loading ? (
+        <div className="dash-sub">Loading requests…</div>
+      ) : reviews.length === 0 ? (
+        <div className="dash-sub">No pending SponsorForge access requests.</div>
+      ) : (
+        <div className="space-y-1">
+          {reviews.map(r => (
+            <div key={r.id} className="py-2.5 border-b border-charcoal-3 last:border-0">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-condensed font-bold text-[13px] text-off-white truncate">{r.name}</div>
+                  <div className="font-condensed text-[11px] text-gray-3">
+                    {r.email ?? '—'}{r.submitted_at ? ` · submitted ${new Date(r.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                  </div>
+                </div>
+                {rejectId !== r.id && (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => decide(r.id, 'approve')} disabled={actingId === r.id}
+                      className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-3 py-1.5 border cursor-pointer disabled:opacity-40"
+                      style={{ borderColor: '#2a5c2a', color: '#00c060', background: 'rgba(0,160,80,0.08)' }}>
+                      {actingId === r.id ? '…' : 'Approve'}
+                    </button>
+                    <button onClick={() => { setRejectId(r.id); setNote('') }} disabled={actingId === r.id}
+                      className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-3 py-1.5 border border-charcoal-3 text-gray-3 hover:text-blood-glow hover:border-blood cursor-pointer disabled:opacity-40">
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+              {rejectId === r.id && (
+                <div className="mt-2 space-y-2">
+                  <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
+                    placeholder="What does the fighter need to fix? (sent to them)"
+                    className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[12px] px-3 py-2 outline-none resize-none" />
+                  <div className="flex gap-2">
+                    <button onClick={() => decide(r.id, 'reject', note)} disabled={actingId === r.id || !note.trim()}
+                      className="btn-primary text-[10px] py-1.5 px-4 disabled:opacity-40">Send Rejection</button>
+                    <button onClick={() => { setRejectId(null); setNote('') }} className="btn-ghost text-[10px] py-1.5 px-4">Cancel</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── SponsorForge ──────────────────────────────────────────────────────────────
 function SponsorForgeTab() {
   const { data, loading, error } = useApi<any>('/api/admin/sponsorforge')
@@ -334,6 +419,9 @@ function SponsorForgeTab() {
           </button>
         </div>
       </div>
+
+      {/* Access requests awaiting admin decision */}
+      <SponsorForgeReviews />
 
       <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
         <div className="dash-card text-center" style={{ borderTop: '2px solid #00c060' }}>

@@ -75,8 +75,9 @@ type Step = 'setup' | 'team' | 'done'
 const STEPS: Step[] = ['setup', 'team', 'done']
 
 export default function ManagerOnboarding() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, logout } = useAuth()
   const navigate = useNavigate()
+  const signOut = async () => { await logout(); navigate('/login', { replace: true }) }
   const [step, setStep] = useState<Step>('setup')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -176,6 +177,10 @@ export default function ManagerOnboarding() {
             <p className="font-condensed text-[11px] tracking-[0.3em] uppercase text-gray-3 mt-2">
               Manager / Team Setup
             </p>
+            <button onClick={signOut}
+              className="font-condensed text-[10px] tracking-[0.2em] uppercase text-gray-3 hover:text-blood-glow transition-colors mt-3 bg-transparent border-0 cursor-pointer">
+              Not you? Sign out
+            </button>
           </div>
 
           {step !== 'done' && (

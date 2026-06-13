@@ -234,6 +234,28 @@ router.post('/fighter', requireAuth, validate(FighterOnboardSchema), async (req,
       updated_at:              new Date().toISOString(),
     }, { onConflict: 'user_id' })
 
+    // ── 6b. Event Calendar — turn the "upcoming event" answer into a real event ──
+    // Previously has_upcoming_event only nudged a score; now it seeds a real
+    // calendar event the fighter can build obligations around.
+    if (p.has_upcoming_event && (p.event_name || p.event_date)) {
+      try {
+        const { data: ev } = await sb.from('events').insert({
+          name:        (p.event_name && p.event_name.trim()) || 'Upcoming Fight',
+          event_type:  'fight',
+          event_date:  p.event_date || new Date(Date.now() + 30 * 86400000).toISOString(),
+          status:      'planned',
+          visibility:  'manager_visible',
+          weight_class: p.weight_class || null,
+          owner_id:    uid,
+          created_by:  uid,
+        }).select('id').maybeSingle()
+        if (ev?.id) {
+          await sb.from('event_participants')
+            .upsert({ event_id: ev.id, user_id: uid, role: 'fighter' }, { onConflict: 'event_id,user_id,role' })
+        }
+      } catch (e) { log.warn({ err: e, uid }, 'could not seed onboarding event') }
+    }
+
     // ── 7. Mark onboarding complete ───────────────────────────────────────
     await sb.from('profiles').update({
       name:                p.full_name.trim(),

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import NotificationBell from '../../components/NotificationBell'
+import EventCalendar from '../../components/events/EventCalendar'
 import { useApi } from '../../hooks/useApi'
 import {
   getManagerRoster, inviteFighter, createPendingFighter,
@@ -18,8 +19,22 @@ const ZONES = [
   { id: 'roster',      label: 'Roster'                 },
   { id: 'fighter-ops', label: 'Fighter Ops'            },
   { id: 'education',   label: 'Education'              },
+  { id: 'events',      label: 'Event Calendar'         },
   { id: 'contracts',   label: 'Contracts & Obligations'},
 ]
+
+// ── Events zone — Event Calendar with roster fighters assignable ──────────────
+function ManagerEventsZone() {
+  const { user } = useAuth()
+  const { data: rosterData } = useApi<any>('/api/manager/roster')
+  const assignable = [
+    ...(user ? [{ id: user.id, name: `${user.name} (me)` }] : []),
+    ...((rosterData?.roster ?? [])
+      .filter((r: any) => r.status === 'active' && r.fighter?.id)
+      .map((r: any) => ({ id: r.fighter.id as string, name: r.fighter.name as string }))),
+  ]
+  return <EventCalendar assignable={assignable} canLinkFighters />
+}
 
 // ── Status maps ───────────────────────────────────────────────────────────────
 const MC_COLOR: Record<string, string> = {
@@ -983,6 +998,7 @@ export default function ManagerDashboard() {
         {zone === 'roster'      && <RosterZone />}
         {zone === 'fighter-ops' && <FighterOpsZone />}
         {zone === 'education'   && <EducationZone />}
+        {zone === 'events'      && <ManagerEventsZone />}
         {zone === 'contracts'   && <ContractsZone />}
       </main>
     </div>

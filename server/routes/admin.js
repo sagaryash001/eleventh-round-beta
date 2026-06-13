@@ -433,6 +433,7 @@ router.post('/modules', ...guard, validate(ModuleCreateSchema), async (req, res)
         content_body:   p.content_body   ?? null,
         metadata:       JSON.stringify(p.metadata ?? {}),
         is_required:    p.is_required,
+        required_for_sponsorforge: !!req.body.required_for_sponsorforge,
         audience:       p.audience,
         status:         p.status,
         published_at:   isPublished ? new Date().toISOString() : null,
@@ -457,6 +458,7 @@ router.patch('/modules/:id', ...guard, async (req, res) => {
       'name', 'description', 'category', 'order_num', 'is_published',
       'estimated_mins', 'content_url', 'thumbnail_path',
       'module_type', 'content_body', 'metadata', 'is_required', 'audience', 'status',
+      'required_for_sponsorforge',
     ]
     const updates = pick(req.body, allowed)
     if (!Object.keys(updates).length) {
@@ -787,11 +789,12 @@ router.get('/mentors', ...guard, async (req, res) => {
 
 router.get('/sponsorforge', ...guard, async (req, res) => {
   try {
-    const [{ data: sf }, { count: sponsorCount }, { count: matchCount }, { count: activeOppCount }] = await Promise.all([
+    const [{ data: sf }, { count: sponsorCount }, { count: matchCount }, { count: activeOppCount }, { count: pendingReviews }] = await Promise.all([
       adminSupabase.from('sponsorforge_profiles').select('user_id, is_locked'),
       adminSupabase.from('sponsor_profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
       adminSupabase.from('matches').select('*', { count: 'exact', head: true }).eq('stale', false).neq('status', 'dismissed'),
       adminSupabase.from('sponsorship_opportunities').select('*', { count: 'exact', head: true }).eq('status', 'published').is('deleted_at', null),
+      adminSupabase.from('sponsorforge_reviews').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     ])
 
     const eligible = (sf ?? []).filter(s => !s.is_locked).length
@@ -801,12 +804,106 @@ router.get('/sponsorforge', ...guard, async (req, res) => {
       active_matches:       matchCount    ?? 0,
       eligible_fighters:    eligible,
       active_opportunities: activeOppCount ?? 0,
+      pending_reviews:      pendingReviews ?? 0,
       deals_closed:         0,
       total_value:          0,
       activity:             [],
     })
   } catch (err) {
     log.error({ err }, '/admin/sponsorforge threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/admin/sponsorforge/reviews ───────────────────────────────────────
+// SponsorForge access requests. Defaults to the pending queue; ?status=all|approved|rejected.
+router.get('/sponsorforge/reviews', ...guard, async (req, res) => {
+  try {
+    const status = req.query.status || 'pending'
+    let q = adminSupabase
+      .from('sponsorforge_reviews')
+      .select('id, user_id, role, status, submitted_at, reviewed_at, admin_notes')
+      .order('submitted_at', { ascending: false, nullsFirst: false })
+    if (status !== 'all') q = q.eq('status', status)
+
+    const { data: reviews, error } = await q
+    if (error) throw error
+
+    const uids = [...new Set((reviews ?? []).map(r => r.user_id))]
+    const { data: profiles } = uids.length
+      ? await adminSupabase.from('profiles').select('id, name, email').in('id', uids)
+      : { data: [] }
+    const pMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+
+    res.json({
+      reviews: (reviews ?? []).map(r => ({
+        ...r,
+        name:  pMap[r.user_id]?.name  ?? 'User',
+        email: pMap[r.user_id]?.email ?? null,
+      })),
+    })
+  } catch (err) {
+    log.error({ err }, 'GET /admin/sponsorforge/reviews threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/admin/sponsorforge/reviews/:id ──────────────────────────────────
+// Body: { action: 'approve' | 'reject', notes?, force? }
+// approve → unlock SponsorForge (sponsorforge_profiles.is_locked = false) + notify.
+// reject  → record admin_notes + notify; fighter can resubmit.
+router.post('/sponsorforge/reviews/:id', ...guard, async (req, res) => {
+  try {
+    const sb = adminSupabase
+    const { action, notes, force } = req.body
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "approve" or "reject".' })
+    }
+    if (action === 'reject' && !(notes && String(notes).trim())) {
+      return res.status(400).json({ error: 'A note is required when rejecting so the fighter knows what to fix.' })
+    }
+
+    const { data: review } = await sb
+      .from('sponsorforge_reviews').select('id, user_id, role, status')
+      .eq('id', req.params.id).maybeSingle()
+    if (!review) return res.status(404).json({ error: 'Review not found.' })
+    if (review.status !== 'pending' && !force) {
+      return res.status(409).json({ error: `Review is "${review.status}". Pass force to override.` })
+    }
+
+    const now = new Date().toISOString()
+    const newStatus = action === 'approve' ? 'approved' : 'rejected'
+
+    const { error: upErr } = await sb.from('sponsorforge_reviews').update({
+      status: newStatus, reviewed_at: now, reviewed_by: req.user.id,
+      admin_notes: notes ? String(notes).trim() : null, updated_at: now,
+    }).eq('id', review.id)
+    if (upErr) throw upErr
+
+    if (action === 'approve') {
+      // Unlock SponsorForge for this user.
+      await sb.from('sponsorforge_profiles').upsert(
+        { user_id: review.user_id, is_locked: false, updated_at: now },
+        { onConflict: 'user_id' },
+      )
+    }
+
+    // Notify the fighter of the decision.
+    sb.from('notifications').insert({
+      recipient_id: review.user_id,
+      type:  action === 'approve' ? 'sponsorforge.approved' : 'sponsorforge.rejected',
+      title: action === 'approve' ? 'SponsorForge unlocked' : 'SponsorForge review needs changes',
+      body:  action === 'approve'
+        ? 'Your access is approved — you can now see sponsor matches.'
+        : (notes ? String(notes).trim() : 'Please review the feedback and resubmit.'),
+      action_url: `${process.env.CLIENT_URL || ''}/dashboard/fighter`,
+      related_type: 'sponsorforge_review', related_id: review.id,
+    }).then(() => {}).catch(() => {})
+
+    log.info({ id: review.id, action, by: req.user.id }, 'SponsorForge review decided')
+    res.json({ ok: true, status: newStatus })
+  } catch (err) {
+    log.error({ err }, 'POST /admin/sponsorforge/reviews/:id threw')
     res.status(500).json({ error: err.message })
   }
 })

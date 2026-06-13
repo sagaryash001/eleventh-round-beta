@@ -46,6 +46,7 @@ export interface AdminModule {
   content_body:   string | null
   metadata:       any
   is_required:    boolean
+  required_for_sponsorforge: boolean
   audience:       string
   avg_completion: number
   enrolled_count: number
@@ -106,6 +107,7 @@ export interface ModuleCreateInput {
   order_num?: number; is_published?: boolean; estimated_mins?: number | null
   content_url?: string | null; module_type?: string; content_body?: string | null
   metadata?: Record<string, unknown>; is_required?: boolean; audience?: string; status?: string
+  required_for_sponsorforge?: boolean
 }
 export const createModule = (data: ModuleCreateInput) =>
   apiPost<{ ok: boolean; module: AdminModule }>('/api/admin/modules', data)
@@ -169,3 +171,22 @@ export const adminLockConversation = (id: string, status: 'open' | 'archived' | 
 
 export const sendTestEmail = (to?: string) =>
   apiPost<{ ok: boolean; sent_to?: string; error?: string }>('/api/admin/email/test', to ? { to } : {})
+
+// ── SponsorForge access reviews ───────────────────────────────────────────────
+export interface SFReview {
+  id:           string
+  user_id:      string
+  name:         string
+  email:        string | null
+  role:         string
+  status:       'draft' | 'pending' | 'approved' | 'rejected'
+  submitted_at: string | null
+  reviewed_at:  string | null
+  admin_notes:  string | null
+}
+
+export const getSponsorForgeReviews = (status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending') =>
+  apiGet<{ reviews: SFReview[] }>(`/api/admin/sponsorforge/reviews?status=${status}`)
+
+export const decideSponsorForgeReview = (id: string, action: 'approve' | 'reject', notes?: string) =>
+  apiPost<{ ok: boolean; status: string }>(`/api/admin/sponsorforge/reviews/${id}`, { action, notes })

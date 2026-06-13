@@ -14,6 +14,13 @@ interface ApiState<T> {
 // switching dashboard zones reuses already-fetched data instead of re-loading.
 const cache = new Map<string, unknown>()
 
+/** Drop all cached API responses. Called on logout so the next user never
+ *  sees the previous user's cached data. Does NOT touch public caches
+ *  (cart, intro flag) which live in localStorage, not here. */
+export function clearApiCache() {
+  cache.clear()
+}
+
 /**
  * Fetches an API endpoint using the current user's auth token.
  *

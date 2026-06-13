@@ -19,6 +19,18 @@
 //   → Array<{ fighter_id, score, breakdown, reasons }> sorted desc
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Tier label for user-facing match display ──────────────────────────────────
+// Admins see the exact 0–100 score; everyone else sees only a coarse tier so the
+// internal scoring formula isn't exposed. `hasData=false` when the fighter has
+// no readiness/profile signal yet.
+export function scoreTier(score, hasData = true) {
+  if (!hasData || score == null)  return { tier: 'no_data',    label: 'Not Enough Data' }
+  if (score >= 75)                return { tier: 'strong',     label: 'Strong Match' }
+  if (score >= 55)                return { tier: 'good',       label: 'Good Match' }
+  if (score >= 30)                return { tier: 'needs_info', label: 'Needs Info' }
+  return { tier: 'no_data', label: 'Not Enough Data' }
+}
+
 // ── Score one fighter against one opportunity ─────────────────────────────────
 // readinessScore: readiness_scores.overall (0-100), or null if not yet computed
 export function computeMatchScore(opp, fp, socials = [], readinessScore = null) {

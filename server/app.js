@@ -21,6 +21,9 @@ import conversationRoutes   from './routes/conversations.js'
 import notificationRoutes   from './routes/notifications.js'
 import contractRoutes          from './routes/contracts.js'
 import obligationRoutes        from './routes/obligations.js'
+import eventRoutes             from './routes/events.js'
+import calendlyRoutes          from './routes/calendly.js'
+import calendlyWebhookRoutes   from './routes/calendly-webhook.js'
 import paymentRoutes           from './routes/sponsorship-payments.js'
 import stripeWebhookRoutes     from './routes/stripe-webhook.js'
 import stripeRoutes            from './routes/stripe.js'
@@ -60,10 +63,14 @@ app.use(cors({
   credentials: true,
 }))
 
-// ── Stripe webhook MUST come before express.json() — it needs raw body ──────
+// ── Webhooks MUST come before express.json() — they need the raw body ───────
 app.use('/api/stripe/webhook',
   express.raw({ type: 'application/json' }),
   stripeWebhookRoutes,
+)
+app.use('/api/calendly/webhook',
+  express.raw({ type: 'application/json' }),
+  calendlyWebhookRoutes,
 )
 
 // ── JSON parsing for everything else ────────────────────────────────────────
@@ -91,6 +98,8 @@ app.use('/api/conversations', conversationRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/contracts',    contractRoutes)
 app.use('/api/obligations',  obligationRoutes)
+app.use('/api/events',       eventRoutes)
+app.use('/api/calendly',     calendlyRoutes)
 app.use('/api/payments',     paymentRoutes)
 app.use('/api/stripe',       stripeRoutes)
 app.use('/api/onboarding',  onboardingRoutes)

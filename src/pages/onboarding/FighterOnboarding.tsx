@@ -114,8 +114,10 @@ interface Form {
 }
 
 export default function FighterOnboarding() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, logout } = useAuth()
   const navigate = useNavigate()
+
+  const signOut = async () => { await logout(); navigate('/login', { replace: true }) }
   const [step, setStep] = useState<Step>('profile')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -218,6 +220,10 @@ export default function FighterOnboarding() {
             <p className="font-condensed text-[11px] tracking-[0.3em] uppercase text-gray-3 mt-2">
               Fighter Setup — Step {idx + 1} of {STEPS.length - 1}
             </p>
+            <button onClick={signOut}
+              className="font-condensed text-[10px] tracking-[0.2em] uppercase text-gray-3 hover:text-blood-glow transition-colors mt-3 bg-transparent border-0 cursor-pointer">
+              Not you? Sign out
+            </button>
           </div>
 
           {step !== 'done' && (

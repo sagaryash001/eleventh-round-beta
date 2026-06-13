@@ -34,6 +34,7 @@ async function send<T = any>(method: string, path: string, body?: unknown): Prom
   return json as T
 }
 
-export const apiPost  = <T = any>(path: string, body?: unknown) => send<T>('POST', path, body)
-export const apiPatch = <T = any>(path: string, body?: unknown) => send<T>('PATCH', path, body)
-export const apiPut   = <T = any>(path: string, body?: unknown) => send<T>('PUT', path, body)
+export const apiPost   = <T = any>(path: string, body?: unknown) => send<T>('POST', path, body)
+export const apiPatch  = <T = any>(path: string, body?: unknown) => send<T>('PATCH', path, body)
+export const apiPut    = <T = any>(path: string, body?: unknown) => send<T>('PUT', path, body)
+export const apiDelete = <T = any>(path: string, body?: unknown) => send<T>('DELETE', path, body)

@@ -379,37 +379,169 @@ router.post('/modules/:id/complete', ...guard, async (req, res) => {
   }
 })
 
+// SponsorForge unlock thresholds.
+const SF_READINESS_THRESHOLD = 70   // readiness_scores.overall
+const SF_PROFILE_THRESHOLD   = 75   // profile completeness %
+
+// Compute the five SponsorForge requirements for a fighter from live data.
+async function computeSponsorForgeState(sb, uid, userName) {
+  const [
+    { data: fp },
+    { data: socials },
+    { data: rs },
+    { data: sfProfile },
+    { data: reqMods },
+    { data: progressRows },
+    { data: review },
+  ] = await Promise.all([
+    sb.from('fighter_profiles').select('*').eq('user_id', uid).maybeSingle(),
+    sb.from('social_accounts').select('platform, handle, follower_count').eq('user_id', uid),
+    sb.from('readiness_scores').select('overall').eq('user_id', uid).maybeSingle(),
+    sb.from('sponsorforge_profiles').select('eligibility_score, is_locked').eq('user_id', uid).maybeSingle(),
+    sb.from('education_modules').select('id, name').eq('status', 'published').eq('required_for_sponsorforge', true),
+    sb.from('module_progress').select('module_id, status').eq('user_id', uid),
+    sb.from('sponsorforge_reviews').select('status, admin_notes, submitted_at, reviewed_at').eq('user_id', uid).maybeSingle(),
+  ])
+
+  const comp       = computeProfileCompletion(fp, userName, socials)
+  const profileOk  = comp.overall >= SF_PROFILE_THRESHOLD
+
+  const progressMap   = Object.fromEntries((progressRows ?? []).map(p => [p.module_id, p.status]))
+  const requiredMods  = reqMods ?? []
+  const modsCompleted = requiredMods.filter(m => progressMap[m.id] === 'completed').length
+  const modulesOk     = requiredMods.length === 0 || modsCompleted === requiredMods.length
+
+  const readiness   = rs?.overall ?? 0
+  const readinessOk = readiness >= SF_READINESS_THRESHOLD
+
+  const reviewStatus = review?.status ?? 'not_started'
+  const approved = reviewStatus === 'approved'
+  const pending  = reviewStatus === 'pending'
+  const rejected = reviewStatus === 'rejected'
+
+  const requirementsMet = profileOk && modulesOk && readinessOk
+  const canSubmit       = requirementsMet && !pending && !approved
+
+  return {
+    profileOk, profilePct: comp.overall,
+    modulesOk, requiredTotal: requiredMods.length, modsCompleted,
+    readiness, readinessOk,
+    reviewStatus, approved, pending, rejected,
+    adminNotes: rejected ? (review?.admin_notes ?? null) : null,
+    requirementsMet, canSubmit,
+    eligibilityScore: sfProfile?.eligibility_score ?? 0,
+    locked: !approved,
+  }
+}
+
 // ── GET /api/fighter/sponsorforge ─────────────────────────────────────────────
+// Returns the exact 5-item unlock checklist with per-item status.
 router.get('/sponsorforge', ...guard, async (req, res) => {
   try {
-    const uid = req.user.id
-    const [{ data, error }, { data: rs }] = await Promise.all([
-      adminSupabase.from('sponsorforge_profiles').select('*').eq('user_id', uid).maybeSingle(),
-      adminSupabase.from('readiness_scores').select('conduct').eq('user_id', uid).maybeSingle(),
-    ])
-    if (error) throw error
+    const s = await computeSponsorForgeState(adminSupabase, req.user.id, req.user.name)
 
-    const sf           = data ?? { eligibility_score: 0, is_locked: true, sponsor_profile_complete: false, brand_readiness: 0, pipeline_stage: 0, obligation_record_pct: 0 }
-    const conductScore = rs?.conduct ?? 0
-
-    const requirements = [
-      { name: 'Sponsor Profile',       badge: sf.sponsor_profile_complete ? 'Complete' : 'Incomplete', type: sf.sponsor_profile_complete ? 'green' : 'red' },
-      { name: 'Brand Readiness Score', badge: `${sf.brand_readiness} / 100`,                           type: sf.brand_readiness >= 80 ? 'green' : 'yellow' },
-      { name: 'Pipeline Stage',        badge: `Stage 4+`,                                              type: sf.pipeline_stage >= 80 ? 'green' : 'red' },
-      { name: 'Obligation Record',     badge: `${sf.obligation_record_pct}%`,                          type: sf.obligation_record_pct >= 90 ? 'green' : 'yellow' },
+    const checklist = [
+      {
+        id: 'profile', label: 'Complete fighter profile',
+        status: s.profileOk ? 'complete' : 'incomplete',
+        detail: s.profileOk ? 'Profile is sponsor-ready' : `Profile ${s.profilePct}% — reach ${SF_PROFILE_THRESHOLD}%`,
+        action: s.profileOk ? null : 'continue_profile', action_label: 'Continue Profile',
+      },
+      {
+        id: 'modules', label: 'Complete required SponsorForge modules',
+        status: s.modulesOk ? 'complete' : 'incomplete',
+        detail: s.requiredTotal === 0
+          ? 'No required modules assigned yet'
+          : `${s.modsCompleted}/${s.requiredTotal} required modules complete`,
+        action: s.modulesOk ? null : 'continue_modules', action_label: 'Continue Modules',
+      },
+      {
+        id: 'readiness', label: 'Reach Sponsor Readiness score',
+        status: s.readinessOk ? 'complete' : 'incomplete',
+        detail: `Readiness ${s.readiness}/100 — need ${SF_READINESS_THRESHOLD}+`,
+        action: s.readinessOk ? null : 'view_readiness', action_label: 'View Readiness',
+      },
+      {
+        id: 'submit', label: 'Submit for SponsorForge review',
+        status: s.approved ? 'complete' : s.pending ? 'pending' : s.rejected ? 'rejected' : 'incomplete',
+        detail: s.pending ? 'Submitted — awaiting admin review'
+              : s.approved ? 'Submitted'
+              : s.rejected ? 'Returned — review feedback and resubmit'
+              : s.requirementsMet ? 'Ready to submit' : 'Complete the steps above first',
+        action: s.canSubmit ? 'submit_review' : null,
+        action_label: s.rejected ? 'Resubmit for Review' : 'Submit for Review',
+      },
+      {
+        id: 'approval', label: 'Admin approval',
+        status: s.approved ? 'complete' : s.pending ? 'pending' : s.rejected ? 'rejected' : 'incomplete',
+        detail: s.approved ? 'Approved — SponsorForge unlocked'
+              : s.pending ? "Pending — we'll notify you when it's approved"
+              : s.rejected ? 'Not approved — see feedback below'
+              : 'Awaiting your submission',
+        action: s.rejected ? 'view_feedback' : null, action_label: 'View Admin Feedback',
+      },
     ]
 
-    const eligibility_progress = [
-      { label: 'Brand',       value: sf.brand_readiness },
-      { label: 'Pipeline',    value: sf.pipeline_stage },
-      { label: 'Conduct',     value: conductScore },
-      { label: 'Obligations', value: sf.obligation_record_pct },
-      { label: 'Profile',     value: sf.sponsor_profile_complete ? 100 : 20 },
-    ]
-
-    res.json({ eligibility_score: sf.eligibility_score, is_locked: sf.is_locked, requirements, eligibility_progress })
+    res.json({
+      locked:          s.locked,
+      is_locked:       s.locked,            // back-compat with older callers
+      status:          s.reviewStatus,      // not_started | draft | pending | approved | rejected
+      can_submit:      s.canSubmit,
+      requirements_met: s.requirementsMet,
+      admin_notes:     s.adminNotes,
+      threshold:       SF_READINESS_THRESHOLD,
+      readiness_score: s.readiness,
+      profile_pct:     s.profilePct,
+      eligibility_score: s.eligibilityScore, // back-compat
+      required_modules: { total: s.requiredTotal, completed: s.modsCompleted },
+      checklist,
+    })
   } catch (err) {
     log.error({ err }, '/fighter/sponsorforge threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/fighter/sponsorforge/submit ─────────────────────────────────────
+// Fighter submits for admin review. Only allowed when requirements 1–3 are met
+// and there is no pending/approved review. Reused row supports resubmit.
+router.post('/sponsorforge/submit', ...guard, async (req, res) => {
+  try {
+    const sb  = adminSupabase
+    const uid = req.user.id
+    const s   = await computeSponsorForgeState(sb, uid, req.user.name)
+
+    if (s.pending)  return res.status(409).json({ error: 'Your SponsorForge review is already pending.' })
+    if (s.approved) return res.status(409).json({ error: 'SponsorForge is already unlocked for your account.' })
+
+    if (!s.requirementsMet) {
+      const unmet = []
+      if (!s.profileOk)   unmet.push('profile')
+      if (!s.modulesOk)   unmet.push('modules')
+      if (!s.readinessOk) unmet.push('readiness')
+      return res.status(400).json({ error: 'Complete all requirements before submitting.', unmet })
+    }
+
+    const now = new Date().toISOString()
+    const { error } = await sb.from('sponsorforge_reviews').upsert({
+      user_id: uid, role: 'fighter', status: 'pending',
+      submitted_at: now, reviewed_at: null, reviewed_by: null, admin_notes: null, updated_at: now,
+    }, { onConflict: 'user_id' })
+    if (error) throw error
+
+    // Confirmation to the fighter (admins pick this up from the review queue).
+    sb.from('notifications').insert({
+      recipient_id: uid, type: 'sponsorforge.submitted',
+      title: 'SponsorForge review submitted',
+      body:  "We'll notify you when it's approved.",
+      action_url: `${process.env.CLIENT_URL || ''}/dashboard/fighter`,
+      related_type: 'sponsorforge_review', related_id: null,
+    }).then(() => {}).catch(() => {})
+
+    log.info({ uid }, 'fighter submitted SponsorForge review')
+    res.json({ ok: true, status: 'pending' })
+  } catch (err) {
+    log.error({ err }, 'POST /fighter/sponsorforge/submit threw')
     res.status(500).json({ error: err.message })
   }
 })

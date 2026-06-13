@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import { clearApiCache } from './useApi'
 
 export type UserRole = 'fighter' | 'manager' | 'admin' | 'sponsor'
 
@@ -59,32 +60,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token,   setToken]   = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Tracks the session we currently consider "active". Bumped on every auth
+  // event AND on logout, so a deferred profile fetch can detect that the
+  // session it was started for is no longer current and bail — this prevents
+  // a late fetch from re-signing-in a user who just logged out.
+  const sessionGen = useRef(0)
+
   useEffect(() => {
     if (!supabase) { setLoading(false); return }
 
     let cancelled = false
 
+    // Watchdog: never let a hung getSession() strand the app on the blank
+    // PageFallback. After 8s, resolve loading regardless (guards then send
+    // an unauthenticated user to /login rather than spinning forever).
+    const watchdog = setTimeout(() => { if (!cancelled) setLoading(false) }, 8000)
+
     supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled) return
+      const gen = ++sessionGen.current
       if (data.session?.user) {
         const profile = await fetchProfile(data.session.user.id)
-        if (profile && !cancelled) {
+        if (profile && !cancelled && gen === sessionGen.current) {
           setUser(profile)
           setToken(data.session.access_token)
         }
       }
       if (!cancelled) setLoading(false)
-    })
+    }).catch(() => { if (!cancelled) setLoading(false) })
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Any auth transition invalidates in-flight deferred fetches.
+      const gen = ++sessionGen.current
       if (event === 'SIGNED_OUT' || !session) {
         setUser(null)
         setToken(null)
+        setLoading(false)
         return
       }
+      // Defer the Supabase call (sync calls inside this callback can deadlock),
+      // then only apply if this is still the current session.
       setTimeout(async () => {
+        if (cancelled || gen !== sessionGen.current) return
         const profile = await fetchProfile(session.user.id)
-        if (profile) {
+        if (profile && !cancelled && gen === sessionGen.current) {
           setUser(profile)
           setToken(session.access_token)
         }
@@ -93,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       cancelled = true
+      clearTimeout(watchdog)
       sub.subscription.unsubscribe()
     }
   }, [])
@@ -142,8 +162,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    // Invalidate any deferred profile fetch so it can't re-sign-us-in.
+    sessionGen.current++
     setUser(null)
     setToken(null)
+    setLoading(false)
+    // Drop user-specific cached API data (keeps public localStorage caches).
+    clearApiCache()
+    // signOut exactly once; never let a network hang block the redirect —
+    // user is already null so route guards have already sent us to /login.
     if (supabase) await supabase.auth.signOut().catch(() => {})
   }, [])
 

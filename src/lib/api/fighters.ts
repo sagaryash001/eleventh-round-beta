@@ -1,5 +1,34 @@
 // Typed wrappers for the fighter API (server/routes/fighter.js)
-import { apiGet, apiPatch } from './client'
+import { apiGet, apiPatch, apiPost } from './client'
+
+// ── SponsorForge access (unlock checklist + review) ──────────────────────────
+export type SFItemStatus = 'complete' | 'incomplete' | 'pending' | 'rejected'
+export interface SFChecklistItem {
+  id: 'profile' | 'modules' | 'readiness' | 'submit' | 'approval'
+  label: string
+  status: SFItemStatus
+  detail: string
+  action: 'continue_profile' | 'continue_modules' | 'view_readiness' | 'submit_review' | 'view_feedback' | null
+  action_label: string
+}
+export interface SponsorForgeStatus {
+  locked: boolean
+  status: 'not_started' | 'draft' | 'pending' | 'approved' | 'rejected'
+  can_submit: boolean
+  requirements_met: boolean
+  admin_notes: string | null
+  threshold: number
+  readiness_score: number
+  profile_pct: number
+  required_modules: { total: number; completed: number }
+  checklist: SFChecklistItem[]
+}
+
+export const getSponsorForge = () =>
+  apiGet<SponsorForgeStatus>('/api/fighter/sponsorforge')
+
+export const submitSponsorForge = () =>
+  apiPost<{ ok: boolean; status: string }>('/api/fighter/sponsorforge/submit')
 
 export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'x' | 'facebook' | 'twitch'
 

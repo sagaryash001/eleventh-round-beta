@@ -29,7 +29,7 @@ const MODULE_TYPES = [
 const BLANK_MODULE = {
   name: '', description: '', category: '', order_num: '100', is_published: false,
   estimated_mins: '', module_type: 'lesson', content_url: '', content_body: '',
-  is_required: false, audience: 'all_fighters', status: 'draft',
+  is_required: false, required_for_sponsorforge: false, audience: 'all_fighters', status: 'draft',
 }
 
 type EduChecklistItem = { id: string; text: string; required: boolean }
@@ -132,6 +132,7 @@ function ModuleEditor({ initial, onSave, onCancel }: {
       content_url:    initial.content_url    ?? '',
       content_body:   initial.content_body   ?? '',
       is_required:    initial.is_required    ?? false,
+      required_for_sponsorforge: initial.required_for_sponsorforge ?? false,
       audience:       initial.audience       ?? 'all_fighters',
       status:         initial.status         ?? 'draft',
     } : {}),
@@ -170,6 +171,7 @@ function ModuleEditor({ initial, onSave, onCancel }: {
         content_body:   form.content_body.trim() || null,
         metadata:       { checklist_items: needsList ? checklistItems : [] },
         is_required:    form.is_required,
+        required_for_sponsorforge: form.required_for_sponsorforge,
         audience:       form.audience,
         status:         form.status,
       })
@@ -232,6 +234,12 @@ function ModuleEditor({ initial, onSave, onCancel }: {
         <input type="checkbox" checked={form.is_required} onChange={e => sf('is_required')(e.target.checked)}
           className="w-4 h-4 accent-red-700 cursor-pointer" />
         <span className="font-condensed text-[11px] text-gray-2 uppercase tracking-widest">Required for all fighters</span>
+      </label>
+
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" checked={form.required_for_sponsorforge} onChange={e => sf('required_for_sponsorforge')(e.target.checked)}
+          className="w-4 h-4 accent-red-700 cursor-pointer" />
+        <span className="font-condensed text-[11px] text-gray-2 uppercase tracking-widest">Required for SponsorForge unlock</span>
       </label>
 
       {err && <p className="font-condensed text-[12px] text-blood-glow">{err}</p>}
