@@ -1,12 +1,12 @@
 # Graph Report - C:\Users\athar\eleventh-round-beta  (2026-06-13)
 
 ## Corpus Check
-- 136 files · ~5,372,874 words
+- 137 files · ~5,379,891 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 725 nodes · 979 edges · 94 communities detected
-- Extraction: 68% EXTRACTED · 32% INFERRED · 0% AMBIGUOUS · INFERRED: 310 edges (avg confidence: 0.8)
+- 752 nodes · 1025 edges · 94 communities detected
+- Extraction: 69% EXTRACTED · 31% INFERRED · 0% AMBIGUOUS · INFERRED: 320 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -106,9 +106,9 @@
 - [[_COMMUNITY_Community 93|Community 93]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `apiGet()` - 53 edges
-2. `apiPost()` - 44 edges
-3. `load()` - 29 edges
+1. `apiGet()` - 55 edges
+2. `apiPost()` - 46 edges
+3. `load()` - 31 edges
 4. `apiPatch()` - 28 edges
 5. `Eleventh Round — Sponsor ↔ Fighter Marketplace` - 22 edges
 6. `ctaButton()` - 19 edges
@@ -118,58 +118,58 @@
 10. `getProfile()` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `load()` --calls--> `getNotifications()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\components\Navbar.tsx → C:\Users\athar\eleventh-round-beta\src\lib\api\notifications.ts
+- `load()` --calls--> `getNotifications()`  [INFERRED]
+  C:\Users\athar\eleventh-round-beta\src\components\NotificationBell.tsx → C:\Users\athar\eleventh-round-beta\src\lib\api\notifications.ts
 - `getMyApplications()` --calls--> `apiGet()`  [INFERRED]
   C:\Users\athar\eleventh-round-beta\src\lib\api\applications.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
 - `inviteFighter()` --calls--> `apiPost()`  [INFERRED]
   C:\Users\athar\eleventh-round-beta\src\lib\api\applications.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
 - `getCalendlyStatus()` --calls--> `apiGet()`  [INFERRED]
   C:\Users\athar\eleventh-round-beta\src\lib\api\calendly.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts
-- `apiGet()` --calls--> `getContracts()`  [INFERRED]
-  C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts
-- `apiGet()` --calls--> `getContractObligations()`  [INFERRED]
-  C:\Users\athar\eleventh-round-beta\src\lib\api\client.ts → C:\Users\athar\eleventh-round-beta\src\lib\api\contracts.ts
 
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (49): adminLockConversation(), decideSponsorForgeReview(), getAdminContracts(), getAdminConversationList(), getAdminDashboard(), getAdminModules(), getAdminPackages(), getAdminUsers() (+41 more)
+Cohesion: 0.04
+Nodes (55): updateAdminUser(), updateModule(), verifySponsor(), handleStatus(), apiPatch(), buildEpPayload(), epToForm(), fromArr() (+47 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (58): 0. TL;DR for stakeholders, 10.1 Channels per event type, 10.2 Worker, 10. Notifications fan-out, 11.1 v1: Postgres-native, 11.2 v2 (when listings > ~50k), 11. Search & discovery, 12.1 What stays (+50 more)
+Nodes (67): 0. TL;DR for stakeholders, 10.1 Channels per event type, 10.2 Worker, 10. Notifications fan-out, 11.1 v1: Postgres-native, 11.2 v2 (when listings > ~50k), 11. Search & discovery, 12.1 What stays (+59 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
-Nodes (41): createModule(), updateModule(), disconnectCalendly(), getCalendlyConnectUrl(), getCalendlyStatus(), syncCalendly(), handleStatus(), load() (+33 more)
+Nodes (51): adminLockConversation(), decideSponsorForgeReview(), getAdminContracts(), getAdminConversationList(), getAdminDashboard(), getAdminModules(), getAdminPackages(), getAdminUsers() (+43 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.04
-Nodes (29): apiFetch(), apiUrl(), acceptWithContract(), compute(), dismiss(), move(), openConversation(), acceptAndCreateContract() (+21 more)
+Nodes (27): apiFetch(), apiUrl(), acceptWithContract(), compute(), dismiss(), move(), openConversation(), acceptAndCreateContract() (+19 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
-Nodes (34): createPackage(), sendTestEmail(), updatePackage(), handleTestEmail(), saveEdit(), submit(), toggleActive(), apiPost() (+26 more)
+Nodes (36): createModule(), apiDelete(), apiPost(), apiPut(), authHeader(), send(), acceptContract(), addContractObligation() (+28 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.06
-Nodes (37): updateAdminUser(), verifySponsor(), apiDelete(), apiPatch(), apiPut(), authHeader(), send(), updateContract() (+29 more)
+Cohesion: 0.07
+Nodes (34): cancelCalendlyMeeting(), createSchedulingLink(), disconnectCalendly(), getCalendlyConnectUrl(), getCalendlyEventTypes(), getCalendlyStatus(), syncCalendly(), addManual() (+26 more)
 
 ### Community 6 - "Community 6"
+Cohesion: 0.1
+Nodes (25): activeConnection(), calendlyApi(), canCancelEvents(), canCreateLinks(), cfg(), createWebhookSubscription(), getValidAccessToken(), hasAnyScope() (+17 more)
+
+### Community 7 - "Community 7"
 Cohesion: 0.23
 Nodes (27): ctaButton(), emailHtml(), esc(), send(), sendEmail(), sendVerificationEmail(), sendWelcomeEmail(), smtpTransport() (+19 more)
 
-### Community 7 - "Community 7"
+### Community 8 - "Community 8"
 Cohesion: 0.06
 Nodes (32): 4.10 Migrations strategy, 4.1 Profile-extension tables, 4.2 Marketplace tables, 4.3 Obligations & deliverables, 4.4 Messaging, 4.5 Payments, 4.6 Notifications, 4.7 Reviews & reputation (+24 more)
 
-### Community 8 - "Community 8"
+### Community 9 - "Community 9"
 Cohesion: 0.07
 Nodes (28): Admin Dashboard, Backend, Backend setup, code:bash (npm install), code:block2 (src/), code:bash (# 1. Copy the example env and fill in the keys you have), code:bash (curl http://localhost:3001/api/health), code:block5 (server/) (+20 more)
-
-### Community 9 - "Community 9"
-Cohesion: 0.12
-Nodes (19): calendlyLocation(), cfg(), createWebhookSubscription(), getValidAccessToken(), isConfigured(), upsertEvent(), verifySignature(), webhookUrl() (+11 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.09
@@ -177,15 +177,15 @@ Nodes (12): optionalAuth(), requireAdmin(), requireAuth(), computeProfileComplet
 
 ### Community 11 - "Community 11"
 Cohesion: 0.1
-Nodes (9): handleCta(), handleMarkAllRead(), load(), scrollTo(), handleMarkAllRead(), load(), getNotifications(), markAllNotificationsRead() (+1 more)
+Nodes (8): handleCta(), handleMarkAllRead(), load(), scrollTo(), handleMarkAllRead(), load(), markAllNotificationsRead(), markNotificationRead()
 
 ### Community 12 - "Community 12"
 Cohesion: 0.15
-Nodes (9): buildEpPayload(), epToForm(), fromArr(), openEdit(), parseTags(), saveEdit(), setFeatured(), submit() (+1 more)
+Nodes (12): Brand & Style, Buttons, Cards, Colors, Components, Elevation & Depth, Input Fields, Layout & Spacing (+4 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.15
-Nodes (12): Brand & Style, Buttons, Cards, Colors, Components, Elevation & Depth, Input Fields, Layout & Spacing (+4 more)
+Cohesion: 0.23
+Nodes (5): gatherVisibleEvents(), loadObligationCtx(), participantUserIds(), relationToEvent(), rosterFighterIds()
 
 ### Community 14 - "Community 14"
 Cohesion: 0.18
@@ -196,16 +196,16 @@ Cohesion: 0.23
 Nodes (6): createOpportunity(), publishOpportunity(), updateOpportunity(), buildPayload(), publish(), save()
 
 ### Community 16 - "Community 16"
-Cohesion: 0.24
-Nodes (4): loadObligationCtx(), participantUserIds(), relationToEvent(), rosterFighterIds()
+Cohesion: 0.2
+Nodes (2): dayKey(), sameDay()
 
 ### Community 17 - "Community 17"
-Cohesion: 0.18
-Nodes (11): 5.1 Cross-cutting middleware, 5.2 Validation, 5.3 State machines (the part most teams get wrong), 5. API surface (REST under `/api`), Application, code:block2 (# Phase 1), code:block3 (applied ──┬─► under_review ──┬─► shortlisted ──► accepted ──), code:block4 (draft ──► pending_fighter ──► pending_sponsor ──► active ──┬) (+3 more)
+Cohesion: 0.2
+Nodes (7): createPackage(), sendTestEmail(), updatePackage(), handleTestEmail(), saveEdit(), submit(), toggleActive()
 
 ### Community 18 - "Community 18"
-Cohesion: 0.22
-Nodes (9): 7.1 Profile-extension tables, 7.2 Opportunities, 7.3 Applications, contracts, messages — the sensitive ones, 7.4 Notifications, audit_log, outbox, 7.5 Storage buckets to create, 7. Row Level Security policies, code:sql (-- sponsor_profiles), code:sql ("public reads published opps"             SELECT  USING (sta) (+1 more)
+Cohesion: 0.18
+Nodes (11): 5.1 Cross-cutting middleware, 5.2 Validation, 5.3 State machines (the part most teams get wrong), 5. API surface (REST under `/api`), Application, code:block2 (# Phase 1), code:block3 (applied ──┬─► under_review ──┬─► shortlisted ──► accepted ──), code:block4 (draft ──► pending_fighter ──► pending_sponsor ──► active ──┬) (+3 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.29
@@ -634,17 +634,17 @@ Nodes (0):
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `apiPost()` connect `Community 4` to `Community 0`, `Community 2`, `Community 3`, `Community 5`, `Community 11`, `Community 12`, `Community 14`, `Community 15`?**
-  _High betweenness centrality (0.098) - this node is a cross-community bridge._
-- **Why does `apiGet()` connect `Community 0` to `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 11`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
-- **Why does `update()` connect `Community 9` to `Community 2`, `Community 6`?**
-  _High betweenness centrality (0.086) - this node is a cross-community bridge._
-- **Are the 51 inferred relationships involving `apiGet()` (e.g. with `getAdminUsers()` and `getPendingSponsors()`) actually correct?**
-  _`apiGet()` has 51 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 42 inferred relationships involving `apiPost()` (e.g. with `createModule()` and `createPackage()`) actually correct?**
-  _`apiPost()` has 42 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 27 inferred relationships involving `load()` (e.g. with `cycleStatus()` and `doComplete()`) actually correct?**
-  _`load()` has 27 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `apiPost()` connect `Community 4` to `Community 0`, `Community 2`, `Community 3`, `Community 5`, `Community 11`, `Community 14`, `Community 15`, `Community 17`?**
+  _High betweenness centrality (0.097) - this node is a cross-community bridge._
+- **Why does `update()` connect `Community 6` to `Community 4`, `Community 7`?**
+  _High betweenness centrality (0.092) - this node is a cross-community bridge._
+- **Why does `apiGet()` connect `Community 2` to `Community 0`, `Community 3`, `Community 4`, `Community 5`?**
+  _High betweenness centrality (0.085) - this node is a cross-community bridge._
+- **Are the 53 inferred relationships involving `apiGet()` (e.g. with `getAdminUsers()` and `getPendingSponsors()`) actually correct?**
+  _`apiGet()` has 53 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 44 inferred relationships involving `apiPost()` (e.g. with `createModule()` and `createPackage()`) actually correct?**
+  _`apiPost()` has 44 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 29 inferred relationships involving `load()` (e.g. with `createLink()` and `cancelMeeting()`) actually correct?**
+  _`load()` has 29 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `apiPatch()` (e.g. with `updateAdminUser()` and `verifySponsor()`) actually correct?**
   _`apiPatch()` has 26 INFERRED edges - model-reasoned connections that need verification._

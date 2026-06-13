@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  getEvents, getEvent, createEvent, getEventTemplates,
+  getEvent, createEvent, getEventTemplates,
   addObligation, addObligationsFromTemplate, updateObligation, completeObligation,
   type CalEvent, type EventObligation, type ObTemplate, type EventType, type ObStatus,
+  type CalendarFeedItem,
 } from '../../lib/api/events'
 import {
-  getCalendlyStatus, getCalendlyConnectUrl, syncCalendly, disconnectCalendly,
-  type CalendlyStatus,
+  getCalendlyStatus, getCalendlyConnectUrl, getCalendlyEventTypes, syncCalendly, disconnectCalendly,
+  createSchedulingLink, cancelCalendlyMeeting,
+  type CalendlyStatus, type CalendlyEventType,
 } from '../../lib/api/calendly'
+import { CalendarMonthView, CalendarAgendaView, calendlyStatusText } from './Calendar'
 
 const TYPE_LABEL: Record<EventType, string> = {
   fight: 'Fight', promotion_event: 'Promotion Event', media_event: 'Media Event',
@@ -56,10 +60,22 @@ function AddEventForm({ assignable, canLinkFighters, onClose, onCreated }: {
     name: '', event_type: 'fight' as EventType, event_date: '', location: '',
     opponent: '', promotion_name: '', weight_class: '', external_url: '', notes: '',
     visibility: 'manager_visible' as const, fighter_id: '',
+    calendly_event_type_uri: '', calendly_scheduling_url: '',
   })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
+  const [calTypes, setCalTypes] = useState<CalendlyEventType[]>([])
   const set = (k: string) => (v: string) => setF(p => ({ ...p, [k]: v }))
+
+  // Offer to attach one of the user's Calendly event types as a scheduling link.
+  // 409 (not connected) is expected and silently yields no options.
+  useEffect(() => {
+    getCalendlyEventTypes().then(d => setCalTypes((d.event_types ?? []).filter(t => t.active))).catch(() => {})
+  }, [])
+  const pickCalType = (uri: string) => {
+    const t = calTypes.find(x => x.uri === uri)
+    setF(p => ({ ...p, calendly_event_type_uri: uri, calendly_scheduling_url: t?.scheduling_url ?? '' }))
+  }
 
   const submit = async () => {
     if (!f.name.trim()) { setErr('Event name is required.'); return }
@@ -74,6 +90,8 @@ function AddEventForm({ assignable, canLinkFighters, onClose, onCreated }: {
         external_url: f.external_url.trim() || null, notes: f.notes.trim() || null,
         visibility: f.visibility,
         fighter_ids: canLinkFighters && f.fighter_id ? [f.fighter_id] : undefined,
+        calendly_event_type_uri: f.calendly_event_type_uri || null,
+        calendly_scheduling_url: f.calendly_scheduling_url || null,
       })
       onCreated(); onClose()
     } catch (e: any) { setErr(e.message ?? 'Could not create event.'); setSaving(false) }
@@ -127,6 +145,18 @@ function AddEventForm({ assignable, canLinkFighters, onClose, onCreated }: {
             <label className={labelCls}>External URL</label>
             <input className={inputCls} value={f.external_url} onChange={e => set('external_url')(e.target.value)} placeholder="Optional — event page" />
           </div>
+          {calTypes.length > 0 && (
+            <div>
+              <label className={labelCls}>Attach Calendly Scheduling Link</label>
+              <select className={inputCls} value={f.calendly_event_type_uri} onChange={e => pickCalType(e.target.value)}>
+                <option value="">None</option>
+                {calTypes.map(t => <option key={t.uri} value={t.uri}>{t.name}{t.duration ? ` · ${t.duration} min` : ''}</option>)}
+              </select>
+              {f.calendly_scheduling_url && (
+                <p className="font-condensed text-[10px] text-gray-3 mt-1">Booking link attached — invitees can self-schedule.</p>
+              )}
+            </div>
+          )}
           <div>
             <label className={labelCls}>Notes</label>
             <textarea className={`${inputCls} resize-none`} rows={2} value={f.notes} onChange={e => set('notes')(e.target.value)} />
@@ -159,12 +189,53 @@ function EventDetail({ eventId, assignable, onClose, onChanged }: {
   const [busy, setBusy]           = useState(false)
   const [err, setErr]             = useState('')
 
+  // Calendly write state
+  const [cal, setCal]             = useState<CalendlyStatus | null>(null)
+  const [calTypes, setCalTypes]   = useState<CalendlyEventType[]>([])
+  const [linkType, setLinkType]   = useState('')
+  const [showLink, setShowLink]   = useState(false)
+  const [copied, setCopied]       = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [calMsg, setCalMsg]       = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
   const load = useCallback(() => {
     getEvent(eventId).then(d => { setEv(d.event); setObs(d.obligations); setLoading(false) }).catch(() => setLoading(false))
   }, [eventId])
-  useEffect(() => { load(); getEventTemplates().then(t => setTemplates(t.templates)).catch(() => {}) }, [load])
+  useEffect(() => {
+    load()
+    getEventTemplates().then(t => setTemplates(t.templates)).catch(() => {})
+    getCalendlyStatus().then(setCal).catch(() => setCal(null))
+    getCalendlyEventTypes().then(d => setCalTypes((d.event_types ?? []).filter(t => t.active))).catch(() => {})
+  }, [load])
 
   const canEdit = !!ev?.can_edit
+
+  // ── Calendly write actions ──────────────────────────────────────────────────
+  const createLink = async () => {
+    if (!linkType) { setCalMsg({ type: 'err', text: 'Choose a Calendly event type first.' }); return }
+    setBusy(true); setCalMsg(null)
+    try {
+      await createSchedulingLink({ event_id: eventId, calendly_event_type_uri: linkType, single_use: false })
+      setCalMsg({ type: 'ok', text: 'Booking link created.' }); setShowLink(false); setLinkType(''); load(); onChanged()
+    } catch (e: any) { setCalMsg({ type: 'err', text: e?.message ?? 'This Calendly account does not allow this action.' }) }
+    finally { setBusy(false) }
+  }
+  const copyLink = async () => {
+    const url = safeHttpUrl(ev?.calendly_scheduling_url)
+    if (!url) return
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1800) }
+    catch { setCalMsg({ type: 'err', text: 'Could not copy — select and copy the link manually.' }) }
+  }
+  const cancelMeeting = async () => {
+    if (!ev?.calendly_synced_event_id) return
+    setBusy(true); setCalMsg(null)
+    try {
+      await cancelCalendlyMeeting(ev.calendly_synced_event_id, cancelReason.trim() || undefined)
+      setCalMsg({ type: 'ok', text: 'Calendly meeting cancelled.' }); setCancelOpen(false); load(); onChanged()
+    } catch (e: any) { setCalMsg({ type: 'err', text: e?.message ?? 'This Calendly account does not allow this action.' }) }
+    finally { setBusy(false) }
+  }
 
   const cycleStatus = async (ob: EventObligation) => {
     const next = OB_NEXT[ob.status] as ObStatus
@@ -230,6 +301,91 @@ function EventDetail({ eventId, assignable, onClose, onChanged }: {
                 <a href={safeHttpUrl(ev.external_url)!} target="_blank" rel="noopener noreferrer"
                   className="font-condensed text-[11px] text-blood-glow hover:underline no-underline inline-block">Event page →</a>
               )}
+              {/* ── Calendly: booking-link management (app events) / cancel (synced) ── */}
+              {(() => {
+                const bookingUrl = safeHttpUrl(ev.calendly_scheduling_url)
+                const isSynced   = ev.source === 'calendly'
+                const connected  = !!cal?.connected
+                const meetingCancelled = ev.calendly_meeting_status === 'canceled' || ev.status === 'cancelled'
+
+                // Synced Calendly meeting → cancel control.
+                if (isSynced) {
+                  if (!ev.calendly_synced_event_id) return null
+                  return (
+                    <div className="border border-charcoal-3 p-3 space-y-2" style={{ background: '#0d0d10', borderLeft: '2px solid #00a2c0' }}>
+                      <div className="font-condensed text-[10px] uppercase tracking-[0.25em] text-gray-3">Calendly meeting</div>
+                      {meetingCancelled ? (
+                        <div className="font-condensed text-[12px]" style={{ color: '#7a4a4a' }}>This meeting is cancelled.</div>
+                      ) : !canEdit ? (
+                        <div className="font-condensed text-[11px] text-gray-3">You can view this synced meeting but not cancel it.</div>
+                      ) : cal && cal.can_cancel_events === false ? (
+                        <div className="font-condensed text-[11px] text-gray-3">This Calendly account does not allow cancelling meetings.</div>
+                      ) : !cancelOpen ? (
+                        <button onClick={() => { setCancelOpen(true); setCalMsg(null) }} className="btn-ghost text-[10px] py-1.5 px-3"
+                          style={{ borderColor: '#7a4a4a', color: '#c08a8a' }}>Cancel Calendly meeting</button>
+                      ) : (
+                        <div className="space-y-2">
+                          <input className={inputCls} placeholder="Reason (optional)" value={cancelReason} onChange={e => setCancelReason(e.target.value)} />
+                          <div className="flex gap-2">
+                            <button onClick={cancelMeeting} disabled={busy} className="btn-primary text-[10px] py-1.5 px-3 disabled:opacity-50">{busy ? 'Cancelling…' : 'Confirm Cancel'}</button>
+                            <button onClick={() => setCancelOpen(false)} className="btn-ghost text-[10px] py-1.5 px-3">Keep meeting</button>
+                          </div>
+                        </div>
+                      )}
+                      {calMsg && <p className={`font-condensed text-[11px] ${calMsg.type === 'ok' ? 'text-green-400' : 'text-blood-glow'}`}>{calMsg.text}</p>}
+                    </div>
+                  )
+                }
+
+                // App event → booking-link creation / display.
+                return (
+                  <div className="border border-charcoal-3 p-3 space-y-2" style={{ background: '#0d0d10', borderLeft: '2px solid #00a2c0' }}>
+                    <div className="font-condensed text-[10px] uppercase tracking-[0.25em] text-gray-3">Calendly booking link</div>
+
+                    {bookingUrl && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a href={bookingUrl} target="_blank" rel="noopener noreferrer"
+                          className="font-condensed text-[11px] no-underline px-3 py-1.5 border inline-block"
+                          style={{ borderColor: '#00a2c0', color: '#00a2c0' }}>Open booking link →</a>
+                        <button onClick={copyLink} className="btn-ghost text-[10px] py-1.5 px-3">{copied ? 'Copied ✓' : 'Copy booking link'}</button>
+                        {canEdit && connected && cal?.can_create_scheduling_links !== false && (
+                          <button onClick={() => { setShowLink(s => !s); setCalMsg(null) }} className="btn-ghost text-[10px] py-1.5 px-3">Replace booking link</button>
+                        )}
+                      </div>
+                    )}
+
+                    {!bookingUrl && !connected && (
+                      <div className="font-condensed text-[11px] text-gray-3">Calendly connected for sync. Connect Calendly to create a booking link.</div>
+                    )}
+                    {!bookingUrl && connected && cal?.can_create_scheduling_links === false && (
+                      <div className="font-condensed text-[11px] text-gray-3">This Calendly account does not allow creating booking links.</div>
+                    )}
+
+                    {canEdit && connected && cal?.can_create_scheduling_links !== false && (!bookingUrl || showLink) && (
+                      <div className="space-y-2">
+                        {calTypes.length === 0 ? (
+                          <div className="font-condensed text-[11px] text-gray-3">No active Calendly event types found on your account.</div>
+                        ) : (
+                          <>
+                            <select className={inputCls} value={linkType} onChange={e => setLinkType(e.target.value)}>
+                              <option value="">Select Calendly event type…</option>
+                              {calTypes.map(t => <option key={t.uri} value={t.uri}>{t.name}{t.duration ? ` · ${t.duration} min` : ''}</option>)}
+                            </select>
+                            <button onClick={createLink} disabled={busy || !linkType} className="btn-primary text-[10px] py-1.5 px-4 disabled:opacity-40">
+                              {busy ? 'Creating…' : 'Create booking link'}
+                            </button>
+                            <p className="font-condensed text-[10px] text-gray-3">Calendly creates the link — invitees still choose a time slot.</p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {!canEdit && !bookingUrl && (
+                      <div className="font-condensed text-[11px] text-gray-3">Only the event owner/manager can add a booking link.</div>
+                    )}
+                    {calMsg && <p className={`font-condensed text-[11px] ${calMsg.type === 'ok' ? 'text-green-400' : 'text-blood-glow'}`}>{calMsg.text}</p>}
+                  </div>
+                )
+              })()}
               {ev.notes && <p className="font-body text-[13px] text-gray-1 leading-relaxed">{ev.notes}</p>}
 
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -378,15 +534,14 @@ function CalendlyBar({ onSynced }: { onSynced: () => void }) {
     finally { setBusy(false) }
   }
 
+  const calLine = calendlyStatusText(status)
   return (
-    <div className="dash-card" style={{ borderLeft: `2px solid ${status.connected ? '#00c060' : '#4a4846'}` }}>
+    <div className="dash-card" style={{ borderLeft: `2px solid ${status.connected ? (status.auto_sync ? '#00c060' : '#00a2c0') : '#4a4846'}` }}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="dash-label" style={{ marginBottom: 2 }}>Calendly</div>
-          <div className="font-condensed text-[12px]" style={{ color: status.connected ? '#00c060' : '#7a7672' }}>
-            {status.connected
-              ? `Connected · ${status.synced_count ?? 0} synced${status.last_synced_at ? ` · last sync ${new Date(status.last_synced_at).toLocaleDateString()}` : ''}`
-              : 'Connect Calendly to sync your scheduled meetings into Event Calendar.'}
+          <div className="font-condensed text-[12px]" style={{ color: calLine.color }}>
+            {calLine.text}{status.connected ? ` · ${status.synced_count ?? 0} synced` : ''}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -405,97 +560,60 @@ function CalendlyBar({ onSynced }: { onSynced: () => void }) {
   )
 }
 
-// ── Main calendar (list grouped by date) ──────────────────────────────────────
-export default function EventCalendar({ assignable = [], canLinkFighters = false }: {
-  assignable?: Assignable[]; canLinkFighters?: boolean
+// ── Main calendar — Month + Agenda views over the unified feed ────────────────
+export default function EventCalendar({ assignable = [], canLinkFighters = false, label = 'Event Calendar' }: {
+  assignable?: Assignable[]; canLinkFighters?: boolean; label?: string
 }) {
-  const [events, setEvents]   = useState<CalEvent[]>([])
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  const [view, setView]       = useState<'month' | 'agenda'>('month')
   const [showAdd, setShowAdd] = useState(false)
   const [openId, setOpenId]   = useState<string | null>(null)
+  const [refreshKey, bump]    = useState(0)
 
-  const load = useCallback(() => {
-    getEvents().then(d => { setEvents(d.events ?? []); setLoading(false) }).catch(() => setLoading(false))
-  }, [])
-  useEffect(() => { load() }, [load])
+  // A change anywhere (create / sync / obligation toggle) re-pulls the feed.
+  const refresh = useCallback(() => bump(k => k + 1), [])
 
-  const now = Date.now()
-  const upcoming = events.filter(e => new Date(e.event_date).getTime() >= now - 86400000 && e.status !== 'cancelled')
-  const past     = events.filter(e => new Date(e.event_date).getTime() < now - 86400000 || e.status === 'cancelled')
+  // Feed item → behaviour: event/obligation open the event detail modal;
+  // a contract deadline routes to the contract page.
+  const onOpenItem = useCallback((it: CalendarFeedItem) => {
+    if (it.event_id) setOpenId(it.event_id)
+    else if (it.contract_id) navigate(`/contracts/${it.contract_id}`)
+  }, [navigate])
 
-  const EventCard = ({ e }: { e: CalEvent }) => {
-    const du = daysUntil(e.event_date)
-    return (
-      <button onClick={() => setOpenId(e.id)} className="dash-card text-left w-full hover:border-blood transition-colors"
-        style={{ borderLeft: `2px solid ${STATUS_COLOR[e.status] ?? '#222226'}` }}>
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="min-w-0">
-            <div className="font-condensed text-[9px] font-bold uppercase tracking-[0.3em] text-gray-3 mb-0.5 flex items-center gap-2">
-              {TYPE_LABEL[e.event_type]}
-              {e.source === 'calendly' && <span style={{ color: '#00a2c0' }}>· Calendly</span>}
-            </div>
-            <div className="font-condensed font-bold text-[14px] text-off-white truncate">{e.name}</div>
-            <div className="font-condensed text-[11px] text-gray-3 mt-0.5">
-              {fmtDate(e.event_date)} · {fmtTime(e.event_date)}{e.location ? ` · ${e.location}` : ''}
-            </div>
-            {(e.opponent || e.promotion_name) && (
-              <div className="font-condensed text-[11px] text-gray-3">{[e.opponent && `vs ${e.opponent}`, e.promotion_name].filter(Boolean).join(' · ')}</div>
-            )}
-          </div>
-          <div className="text-right flex-shrink-0">
-            <div className="font-display text-off-white" style={{ fontSize: 20, lineHeight: 1 }}>
-              {du >= 0 ? du : '—'}<span className="font-condensed text-[9px] text-gray-3 ml-1 uppercase tracking-widest">{du >= 0 ? 'days' : 'past'}</span>
-            </div>
-            {(e.obligation_total ?? 0) > 0 && (
-              <div className="font-condensed text-[10px] mt-1" style={{ color: (e.obligation_overdue ?? 0) > 0 ? '#c00000' : '#7a7672' }}>
-                {e.obligation_done}/{e.obligation_total} done{(e.obligation_overdue ?? 0) > 0 ? ` · ${e.obligation_overdue} overdue` : ''}
-              </div>
-            )}
-          </div>
-        </div>
-      </button>
-    )
-  }
+  const TabBtn = ({ id, children }: { id: 'month' | 'agenda'; children: React.ReactNode }) => (
+    <button onClick={() => setView(id)}
+      className="font-condensed text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 border transition-colors"
+      style={{
+        borderColor: view === id ? '#C41E3A' : '#222226',
+        color: view === id ? '#f0ece4' : '#7a7672',
+        background: view === id ? 'rgba(196,30,58,0.12)' : 'transparent',
+      }}>
+      {children}
+    </button>
+  )
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <div className="dash-label" style={{ marginBottom: 2 }}>Event Calendar</div>
-          <div className="dash-sub" style={{ marginTop: 0 }}>Fights, media, weigh-ins, camps & sponsor activations</div>
+          <div className="dash-label" style={{ marginBottom: 2 }}>{label}</div>
+          <div className="dash-sub" style={{ marginTop: 0 }}>Fights, media, weigh-ins, camps, sponsor activations &amp; meetings</div>
         </div>
-        <button onClick={() => setShowAdd(true)} className="btn-primary text-[10px] py-2 px-5">+ Add Event</button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <TabBtn id="month">Month</TabBtn>
+          <TabBtn id="agenda">Agenda</TabBtn>
+          <button onClick={() => setShowAdd(true)} className="btn-primary text-[10px] py-2 px-5">+ Add Event</button>
+        </div>
       </div>
 
-      <CalendlyBar onSynced={load} />
+      <CalendlyBar onSynced={refresh} />
 
-      {loading ? (
-        <div className="dash-card"><div className="dash-sub">Loading events…</div></div>
-      ) : events.length === 0 ? (
-        <div className="dash-card text-center py-12">
-          <div className="font-display text-off-white uppercase mb-2" style={{ fontSize: 22 }}>No upcoming events yet</div>
-          <p className="font-condensed text-[13px] text-gray-3 mb-5">Add your next fight, promotion, media day, or sponsor activation.</p>
-          <button onClick={() => setShowAdd(true)} className="btn-primary">+ Add Your First Event</button>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {upcoming.length > 0 && (
-            <div className="space-y-2">
-              <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Upcoming</div>
-              {upcoming.map(e => <EventCard key={e.id} e={e} />)}
-            </div>
-          )}
-          {past.length > 0 && (
-            <div className="space-y-2">
-              <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Past & Cancelled</div>
-              {past.map(e => <EventCard key={e.id} e={e} />)}
-            </div>
-          )}
-        </div>
-      )}
+      {view === 'month'
+        ? <CalendarMonthView onOpenItem={onOpenItem} refreshKey={refreshKey} />
+        : <CalendarAgendaView onOpenItem={onOpenItem} refreshKey={refreshKey} />}
 
-      {showAdd && <AddEventForm assignable={assignable} canLinkFighters={canLinkFighters} onClose={() => setShowAdd(false)} onCreated={load} />}
-      {openId && <EventDetail eventId={openId} assignable={assignable} onClose={() => setOpenId(null)} onChanged={load} />}
+      {showAdd && <AddEventForm assignable={assignable} canLinkFighters={canLinkFighters} onClose={() => setShowAdd(false)} onCreated={refresh} />}
+      {openId && <EventDetail eventId={openId} assignable={assignable} onClose={() => setOpenId(null)} onChanged={refresh} />}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import NotificationBell from '../../components/NotificationBell'
 import EventCalendar from '../../components/events/EventCalendar'
+import { CommandCalendarCard, CommandCalendarPanel } from '../../components/events/Calendar'
 import { useApi } from '../../hooks/useApi'
 import { getContracts, type Contract } from '../../lib/api/contracts'
 import { getSponsorForge, submitSponsorForge, type SponsorForgeStatus, type SFChecklistItem, type SFItemStatus } from '../../lib/api/fighters'
@@ -426,8 +427,8 @@ function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
           )}
         </div>
 
-        {/* Row 2: Full-width Recent Activity */}
-        <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
+        {/* Row 2: Recent Activity (cols 1–2) + Calendar summary card (col 3) */}
+        <div className="dash-card" style={{ gridColumn: '1 / 3' }}>
           <div className="dash-label">Recent Activity</div>
           {feedRows.length === 0 ? (
             <p className="dash-sub py-3">
@@ -444,7 +445,11 @@ function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
             </ul>
           )}
         </div>
+        <CommandCalendarCard onOpen={() => onNavigate('events')} />
       </div>
+
+      {/* Full-width calendar panel — mini month + upcoming agenda */}
+      <CommandCalendarPanel onOpen={() => onNavigate('events')} onOpenItem={() => onNavigate('events')} />
 
       {/* ── Secondary sections ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>

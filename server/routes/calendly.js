@@ -135,6 +135,53 @@ async function activeConnection(uid) {
   return data
 }
 
+// ── Scope / capability detection ──────────────────────────────────────────────
+// The stored token scope (when Calendly returns one) is a space/comma-separated
+// string. Calendly does NOT always populate it, so capability flags are OPTIMISTIC
+// when the scope is unknown — the write routes still handle a 403 cleanly. This
+// avoids hiding a button that would actually work, while never crashing.
+function scopeList(conn) {
+  return (conn?.scope || '').split(/[\s,]+/).filter(Boolean)
+}
+function hasAnyScope(conn, ...needed) {
+  const list = scopeList(conn)
+  if (!list.length) return null              // unknown
+  return needed.some(n => list.includes(n))
+}
+function canCreateLinks(conn) { const h = hasAnyScope(conn, 'scheduling_links:write', 'shares:write'); return h === null ? true : h }
+function canCancelEvents(conn) { const h = hasAnyScope(conn, 'scheduled_events:write'); return h === null ? true : h }
+
+// POST helper returning a structured result so callers can map Calendly's
+// plan/scope failures (402/403) to a clean user-facing message.
+async function calendlyPost(token, urlOrPath, body) {
+  const url = urlOrPath.startsWith('http') ? urlOrPath : `${API_BASE}${urlOrPath}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
+  })
+  let json = null
+  const text = await res.text().catch(() => '')
+  try { json = text ? JSON.parse(text) : null } catch { /* non-JSON */ }
+  return { ok: res.ok, status: res.status, json, text }
+}
+
+// Can the requesting user manage this app event? (creator / owner / manager /
+// promoter / admin, or a manager of the roster fighter who owns it.) Self-
+// contained here to avoid a circular import with routes/events.js.
+async function canManageEvent(user, ev) {
+  if (!ev) return false
+  if (user.role === 'admin') return true
+  if ([ev.created_by, ev.owner_id, ev.manager_id, ev.promoter_id].includes(user.id)) return true
+  if (user.role === 'manager' && ev.owner_id) {
+    const { data } = await adminSupabase
+      .from('manager_fighters').select('fighter_id')
+      .eq('manager_id', user.id).eq('status', 'active')
+    if ((data ?? []).some(r => r.fighter_id === ev.owner_id)) return true
+  }
+  return false
+}
+
 // ── GET /api/calendly/status ──────────────────────────────────────────────────
 // Never returns tokens — only connection metadata.
 router.get('/status', requireAuth, async (req, res) => {
@@ -151,6 +198,13 @@ router.get('/status', requireAuth, async (req, res) => {
       scheduling_url: conn.scheduling_url ?? null,
       synced_count:   count ?? 0,
       last_synced_at: conn.last_synced_at ?? null,
+      // webhook_uri present → Calendly pushes new/cancelled bookings live.
+      auto_sync:           !!conn.webhook_uri,   // kept for back-compat
+      manual_sync_enabled: true,
+      auto_sync_active:    !!conn.webhook_uri,
+      can_create_scheduling_links: canCreateLinks(conn),
+      can_cancel_events:           canCancelEvents(conn),
+      scopes: scopeList(conn),
     })
   } catch (err) {
     log.error({ err }, 'GET /calendly/status threw')
@@ -315,73 +369,220 @@ function calendlyLocation(loc) {
   return loc.location || loc.type || (loc.join_url ? 'Video call' : null)
 }
 
-// ── POST /api/calendly/sync ───────────────────────────────────────────────────
-// Pulls upcoming scheduled events into Event Calendar (idempotent upsert).
-router.post('/sync', requireAuth, async (req, res) => {
-  try {
-    const sb   = adminSupabase
-    const uid  = req.user.id
-    const conn = await activeConnection(uid)
-    if (!conn) return res.status(409).json({ error: 'Calendly is not connected.' })
-    if (!conn.calendly_user_uri) return res.status(409).json({ error: 'Calendly account info unavailable — reconnect.' })
+// ── Core sync routine (shared by POST /sync and maybeAutoSync) ────────────────
+// Pulls active + canceled scheduled events into Event Calendar (idempotent upsert
+// keyed on calendly_event_uri). Throws on hard failure; callers decide how loud.
+async function runSyncForUser(uid) {
+  const sb   = adminSupabase
+  const conn = await activeConnection(uid)
+  if (!conn) { const e = new Error('Calendly is not connected.'); e.code = 409; throw e }
+  if (!conn.calendly_user_uri) { const e = new Error('Calendly account info unavailable — reconnect.'); e.code = 409; throw e }
 
-    const token = await getValidAccessToken(conn)
-    const minStart = new Date(Date.now() - 24 * 3600_000).toISOString()
+  const token = await getValidAccessToken(conn)
+  const minStart = new Date(Date.now() - 24 * 3600_000).toISOString()
 
-    // Active + canceled (so cancellations reflect on re-sync).
-    const [active, canceled] = await Promise.all([
-      calendlyApi(token, `/scheduled_events?user=${encodeURIComponent(conn.calendly_user_uri)}&status=active&min_start_time=${minStart}&count=50&sort=start_time:asc`).catch(() => ({ collection: [] })),
-      calendlyApi(token, `/scheduled_events?user=${encodeURIComponent(conn.calendly_user_uri)}&status=canceled&min_start_time=${minStart}&count=50&sort=start_time:asc`).catch(() => ({ collection: [] })),
-    ])
+  // Active + canceled (so cancellations reflect on re-sync).
+  const [active, canceled] = await Promise.all([
+    calendlyApi(token, `/scheduled_events?user=${encodeURIComponent(conn.calendly_user_uri)}&status=active&min_start_time=${minStart}&count=50&sort=start_time:asc`).catch(() => ({ collection: [] })),
+    calendlyApi(token, `/scheduled_events?user=${encodeURIComponent(conn.calendly_user_uri)}&status=canceled&min_start_time=${minStart}&count=50&sort=start_time:asc`).catch(() => ({ collection: [] })),
+  ])
 
-    let imported = 0, updated = 0, canceledCount = 0
-    const now = new Date().toISOString()
+  let imported = 0, updated = 0, canceledCount = 0
+  const now = new Date().toISOString()
 
-    const upsertEvent = async (ce, status) => {
-      const { data: existing } = await sb.from('calendly_synced_events')
-        .select('id, event_id').eq('user_id', uid).eq('calendly_event_uri', ce.uri).maybeSingle()
+  const upsertEvent = async (ce, status) => {
+    const { data: existing } = await sb.from('calendly_synced_events')
+      .select('id, event_id').eq('user_id', uid).eq('calendly_event_uri', ce.uri).maybeSingle()
 
-      const evStatus = status === 'canceled' ? 'cancelled' : 'planned'
-      const eventFields = {
-        name:        ce.name || 'Calendly Meeting',
-        event_type:  'other',
-        event_date:  ce.start_time,
-        location:    calendlyLocation(ce.location),
-        external_url: (ce.location && ce.location.join_url) ? ce.location.join_url : (conn.scheduling_url ?? null),
-        status:      evStatus,
-        source:      'calendly',
-        owner_id:    uid,
-        created_by:  uid,
-        updated_at:  now,
-      }
-
-      if (existing?.event_id) {
-        await sb.from('events').update(eventFields).eq('id', existing.event_id)
-        await sb.from('calendly_synced_events').update({
-          status, start_time: ce.start_time, end_time: ce.end_time, name: ce.name,
-          location: calendlyLocation(ce.location), raw_payload: ce, updated_at: now,
-        }).eq('id', existing.id)
-        if (status === 'canceled') canceledCount++; else updated++
-      } else {
-        const { data: ev } = await sb.from('events').insert(eventFields).select('id').maybeSingle()
-        await sb.from('calendly_synced_events').upsert({
-          user_id: uid, event_id: ev?.id ?? null, calendly_event_uri: ce.uri,
-          status, start_time: ce.start_time, end_time: ce.end_time, name: ce.name,
-          location: calendlyLocation(ce.location), raw_payload: ce,
-        }, { onConflict: 'user_id,calendly_event_uri' })
-        if (status === 'canceled') canceledCount++; else imported++
-      }
+    const evStatus = status === 'canceled' ? 'cancelled' : 'planned'
+    const eventFields = {
+      name:        ce.name || 'Calendly Meeting',
+      event_type:  'other',
+      event_date:  ce.start_time,
+      location:    calendlyLocation(ce.location),
+      external_url: (ce.location && ce.location.join_url) ? ce.location.join_url : (conn.scheduling_url ?? null),
+      status:      evStatus,
+      source:      'calendly',
+      owner_id:    uid,
+      created_by:  uid,
+      updated_at:  now,
     }
 
-    for (const ce of (active?.collection ?? []))   await upsertEvent(ce, 'active')
-    for (const ce of (canceled?.collection ?? [])) await upsertEvent(ce, 'canceled')
+    if (existing?.event_id) {
+      await sb.from('events').update(eventFields).eq('id', existing.event_id)
+      await sb.from('calendly_synced_events').update({
+        status, start_time: ce.start_time, end_time: ce.end_time, name: ce.name,
+        location: calendlyLocation(ce.location), raw_payload: ce, updated_at: now,
+      }).eq('id', existing.id)
+      if (status === 'canceled') canceledCount++; else updated++
+    } else {
+      const { data: ev } = await sb.from('events').insert(eventFields).select('id').maybeSingle()
+      await sb.from('calendly_synced_events').upsert({
+        user_id: uid, event_id: ev?.id ?? null, calendly_event_uri: ce.uri,
+        status, start_time: ce.start_time, end_time: ce.end_time, name: ce.name,
+        location: calendlyLocation(ce.location), raw_payload: ce,
+      }, { onConflict: 'user_id,calendly_event_uri' })
+      if (status === 'canceled') canceledCount++; else imported++
+    }
+  }
 
-    await sb.from('calendly_connections').update({ last_synced_at: now, updated_at: now }).eq('id', conn.id)
+  for (const ce of (active?.collection ?? []))   await upsertEvent(ce, 'active')
+  for (const ce of (canceled?.collection ?? [])) await upsertEvent(ce, 'canceled')
 
-    log.info({ uid, imported, updated, canceledCount }, 'Calendly sync complete')
-    res.json({ ok: true, imported, updated, canceled: canceledCount })
+  await sb.from('calendly_connections').update({ last_synced_at: now, updated_at: now }).eq('id', conn.id)
+
+  log.info({ uid, imported, updated, canceledCount }, 'Calendly sync complete')
+  return { imported, updated, canceled: canceledCount }
+}
+
+// Best-effort background sync used by the calendar-feed endpoint so Calendly
+// "feels automatic" without spamming the API: only runs when connected AND the
+// last sync is older than `maxAgeMs` (default 8 min). Never throws — a failure
+// here must never break a dashboard load (manual "Sync Calendly" is the fallback).
+// Returns true if a sync actually ran.
+export async function maybeAutoSync(uid, maxAgeMs = 8 * 60_000) {
+  try {
+    const conn = await activeConnection(uid)
+    if (!conn || !conn.calendly_user_uri) return false
+    const last = conn.last_synced_at ? new Date(conn.last_synced_at).getTime() : 0
+    if (last && (Date.now() - last) < maxAgeMs) return false   // still fresh
+    await runSyncForUser(uid)
+    return true
   } catch (err) {
+    log.warn({ err, uid }, 'Calendly auto-sync failed (non-fatal)')
+    return false
+  }
+}
+
+// ── POST /api/calendly/sync ───────────────────────────────────────────────────
+// Manual sync — always forces a fresh pull regardless of freshness window.
+router.post('/sync', requireAuth, async (req, res) => {
+  try {
+    const r = await runSyncForUser(req.user.id)
+    res.json({ ok: true, ...r })
+  } catch (err) {
+    if (err.code === 409) return res.status(409).json({ error: err.message })
     log.error({ err }, 'POST /calendly/sync threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/calendly/scheduling-links ───────────────────────────────────────
+// Create a Calendly scheduling link for one of the connected user's event types
+// and attach the resulting booking URL to an app event. Uses the requester's own
+// Calendly token (server-side). Requires scheduling_links:write on the account.
+router.post('/scheduling-links', requireAuth, async (req, res) => {
+  try {
+    const sb  = adminSupabase
+    const uid = req.user.id
+    const { event_id, calendly_event_type_uri, max_event_count, single_use } = req.body || {}
+
+    if (!event_id || !calendly_event_type_uri) {
+      return res.status(400).json({ error: 'event_id and calendly_event_type_uri are required.' })
+    }
+
+    // Permission: the requester must be able to manage the target app event.
+    const { data: ev } = await sb.from('events').select('*').eq('id', event_id).maybeSingle()
+    if (!ev) return res.status(404).json({ error: 'Event not found.' })
+    if (!(await canManageEvent(req.user, ev))) {
+      return res.status(403).json({ error: 'You cannot create a booking link for this event.' })
+    }
+
+    const conn = await activeConnection(uid)
+    if (!conn) return res.status(409).json({ error: 'Calendly is not connected.' })
+
+    // Verify the event type belongs to this account (never trust a raw URI alone).
+    const token = await getValidAccessToken(conn)
+    let owned = true
+    try {
+      const list = await calendlyApi(token, `/event_types?user=${encodeURIComponent(conn.calendly_user_uri)}&count=100`)
+      owned = (list?.collection ?? []).some(t => t.uri === calendly_event_type_uri)
+    } catch { owned = true /* don't block on listing failure; create still authorizes */ }
+    if (!owned) return res.status(400).json({ error: 'That event type is not on your Calendly account.' })
+
+    // Calendly /scheduling_links: owner = event type URI, owner_type = "EventType".
+    // single_use → max_event_count 1; otherwise honour a provided count (1–1000).
+    const count = single_use ? 1 : Math.min(Math.max(parseInt(max_event_count, 10) || 1, 1), 1000)
+    const r = await calendlyPost(token, '/scheduling_links', {
+      max_event_count: count,
+      owner: calendly_event_type_uri,
+      owner_type: 'EventType',
+    })
+
+    if (!r.ok) {
+      // 402 (plan) / 403 (scope) → clean, actionable message; never a stack/dump.
+      if (r.status === 402 || r.status === 403) {
+        return res.status(403).json({ error: 'Calendly could not create a booking link for this account. Check Calendly permissions or plan.' })
+      }
+      log.warn({ status: r.status, body: (r.text || '').slice(0, 300) }, 'scheduling_links create failed')
+      return res.status(502).json({ error: 'Calendly could not create a booking link right now.' })
+    }
+
+    const bookingUrl = r.json?.resource?.booking_url ?? null
+    if (!bookingUrl) return res.status(502).json({ error: 'Calendly returned no booking link.' })
+
+    await sb.from('events').update({
+      calendly_scheduling_url: bookingUrl,
+      calendly_event_type_uri: calendly_event_type_uri,
+      updated_at: new Date().toISOString(),
+    }).eq('id', ev.id)
+
+    log.info({ uid, event_id, count }, 'Calendly scheduling link created')
+    res.status(201).json({ ok: true, booking_url: bookingUrl })
+  } catch (err) {
+    log.error({ err }, 'POST /calendly/scheduling-links threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/calendly/events/:syncedEventId/cancel ───────────────────────────
+// Cancel a synced Calendly meeting. Cancellation is performed with the token of
+// the account that OWNS the meeting (the connected user_id on the synced row),
+// using the STORED calendly_event_uri — never a URI from the request body.
+// Requires scheduled_events:write on that account.
+router.post('/events/:syncedEventId/cancel', requireAuth, async (req, res) => {
+  try {
+    const sb     = adminSupabase
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.slice(0, 500) : undefined
+
+    const { data: synced } = await sb.from('calendly_synced_events').select('*').eq('id', req.params.syncedEventId).maybeSingle()
+    if (!synced) return res.status(404).json({ error: 'Calendly meeting not found.' })
+    if (!synced.calendly_event_uri) return res.status(409).json({ error: 'This meeting has no Calendly reference to cancel.' })
+
+    const { data: ev } = synced.event_id
+      ? await sb.from('events').select('*').eq('id', synced.event_id).maybeSingle()
+      : { data: null }
+
+    // Permission: the synced event's own user, or a manager/owner of the app event.
+    const isOwner = synced.user_id === req.user.id
+    if (!isOwner && !(await canManageEvent(req.user, ev))) {
+      return res.status(403).json({ error: 'You cannot cancel this Calendly meeting.' })
+    }
+    if (synced.status === 'canceled') return res.json({ ok: true, already: true })
+
+    // Cancel via the meeting OWNER's Calendly token.
+    const conn = await activeConnection(synced.user_id)
+    if (!conn) return res.status(409).json({ error: 'The Calendly account for this meeting is no longer connected.' })
+    const token = await getValidAccessToken(conn)
+
+    const r = await calendlyPost(token, `${synced.calendly_event_uri}/cancellation`, reason ? { reason } : {})
+    if (!r.ok) {
+      if (r.status === 402 || r.status === 403) {
+        return res.status(403).json({ error: 'This Calendly account does not allow this action. Check Calendly permissions or plan.' })
+      }
+      if (r.status === 404) return res.status(404).json({ error: 'This meeting was not found on Calendly (it may already be cancelled).' })
+      log.warn({ status: r.status, body: (r.text || '').slice(0, 300) }, 'Calendly cancellation failed')
+      return res.status(502).json({ error: 'Calendly could not cancel this meeting right now.' })
+    }
+
+    const now = new Date().toISOString()
+    await sb.from('calendly_synced_events').update({ status: 'canceled', raw_payload: { ...(synced.raw_payload || {}), cancelled_via: 'app', reason: reason ?? null }, updated_at: now }).eq('id', synced.id)
+    if (synced.event_id) await sb.from('events').update({ status: 'cancelled', updated_at: now }).eq('id', synced.event_id)
+
+    log.info({ by: req.user.id, syncedEventId: synced.id }, 'Calendly meeting cancelled from app')
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'POST /calendly/events/:syncedEventId/cancel threw')
     res.status(500).json({ error: err.message })
   }
 })

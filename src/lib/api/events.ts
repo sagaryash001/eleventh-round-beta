@@ -30,6 +30,10 @@ export interface CalEvent {
   promoter_id: string | null
   created_by: string
   source?: 'manual' | 'calendly'
+  calendly_scheduling_url?: string | null
+  calendly_event_type_uri?: string | null
+  calendly_synced_event_id?: string | null
+  calendly_meeting_status?: string | null
   participants?: EventParticipant[]
   obligation_total?: number
   obligation_done?: number
@@ -76,6 +80,47 @@ export interface NewEvent {
   external_url?: string | null
   notes?: string | null
   fighter_ids?: string[]
+  calendly_scheduling_url?: string | null
+  calendly_event_type_uri?: string | null
+}
+
+// ── Unified calendar feed (server/routes/events.js → /calendar-feed) ──────────
+export type FeedItemType = 'event' | 'calendly' | 'obligation' | 'deadline'
+export type FeedSource   = 'manual' | 'calendly' | 'contract' | 'sponsorforge'
+
+export interface CalendarFeedItem {
+  id: string
+  type: FeedItemType
+  source: FeedSource
+  title: string
+  start: string | null
+  end: string | null
+  date: string
+  status: string
+  badge: string
+  event_id: string | null
+  obligation_id: string | null
+  contract_id: string | null
+  visibility: string
+  can_edit: boolean
+  metadata: Record<string, any>
+}
+
+export interface CalendarFeed {
+  items: CalendarFeedItem[]
+  range: { from: string; to: string }
+}
+
+export const getCalendarFeed = (params?: {
+  from?: string; to?: string; include_past?: boolean; type?: string
+}) => {
+  const q = new URLSearchParams()
+  if (params?.from) q.set('from', params.from)
+  if (params?.to) q.set('to', params.to)
+  if (params?.include_past) q.set('include_past', '1')
+  if (params?.type && params.type !== 'all') q.set('type', params.type)
+  const qs = q.toString()
+  return apiGet<CalendarFeed>(`/api/events/calendar-feed${qs ? `?${qs}` : ''}`)
 }
 
 export const getEvents = () =>

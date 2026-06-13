@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import NotificationBell from '../../components/NotificationBell'
 import EventCalendar from '../../components/events/EventCalendar'
+import { CommandCalendarCard, CommandCalendarPanel } from '../../components/events/Calendar'
 import { useApi } from '../../hooks/useApi'
 import {
   getManagerRoster, inviteFighter, createPendingFighter,
@@ -27,13 +28,14 @@ const ZONES = [
 function ManagerEventsZone() {
   const { user } = useAuth()
   const { data: rosterData } = useApi<any>('/api/manager/roster')
+  const isPromotion = (user as any)?.account_type === 'promotion'
   const assignable = [
     ...(user ? [{ id: user.id, name: `${user.name} (me)` }] : []),
     ...((rosterData?.roster ?? [])
       .filter((r: any) => r.status === 'active' && r.fighter?.id)
       .map((r: any) => ({ id: r.fighter.id as string, name: r.fighter.name as string }))),
   ]
-  return <EventCalendar assignable={assignable} canLinkFighters />
+  return <EventCalendar assignable={assignable} canLinkFighters label={isPromotion ? 'Promotion Calendar' : 'Event Calendar'} />
 }
 
 // ── Status maps ───────────────────────────────────────────────────────────────
@@ -256,8 +258,8 @@ function ManagerCommandCenter({ onNavigate }: { onNavigate: (zone: string) => vo
           )}
         </ClickablePanel>
 
-        {/* Row 2: Full-width Recent Activity */}
-        <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
+        {/* Row 2: Recent Activity (cols 1–2) + Calendar summary card (col 3) */}
+        <div className="dash-card" style={{ gridColumn: '1 / 3' }}>
           <div className="dash-label">Recent Activity</div>
           {feedRows.length === 0 ? (
             <p className="dash-sub py-3">No roster activity yet. Invite fighters to begin.</p>
@@ -272,7 +274,11 @@ function ManagerCommandCenter({ onNavigate }: { onNavigate: (zone: string) => vo
             </ul>
           )}
         </div>
+        <CommandCalendarCard onOpen={() => onNavigate('events')} />
       </div>
+
+      {/* Full-width calendar panel — roster events, meetings, obligations & deadlines */}
+      <CommandCalendarPanel onOpen={() => onNavigate('events')} onOpenItem={() => onNavigate('events')} />
 
       {/* ── Secondary sections ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>

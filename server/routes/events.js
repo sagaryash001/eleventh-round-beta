@@ -15,6 +15,7 @@ import { Router } from 'express'
 import { adminSupabase } from '../db/supabase.js'
 import { requireAuth } from '../middleware/auth.js'
 import { childLogger } from '../lib/logger.js'
+import { maybeAutoSync } from './calendly.js'
 
 const router = Router()
 const log    = childLogger('events')
@@ -45,6 +46,10 @@ const OBLIGATION_TEMPLATES = {
 }
 
 const EVENT_TYPES   = ['fight','promotion_event','media_event','weigh_in','camp','sponsor_activation','other']
+const EVENT_BADGE   = {
+  fight: 'Fight', promotion_event: 'Promotion', media_event: 'Media', weigh_in: 'Weigh-in',
+  camp: 'Camp', sponsor_activation: 'Sponsor', other: 'Event',
+}
 const EVENT_STATUS  = ['planned','active','completed','cancelled']
 const EVENT_VIS     = ['private','manager_visible','promoter_visible','public']
 const OB_STATUS     = ['not_started','in_progress','completed','overdue','skipped']
@@ -118,39 +123,45 @@ function withDerivedStatus(ob) {
   return ob
 }
 
+// Gather every event row the user may see (admin = all; otherwise events they
+// created/own/manage/promote, are a participant in, or — for managers — that
+// belong to a roster fighter). Shared by GET / and GET /calendar-feed.
+async function gatherVisibleEvents(user) {
+  const sb  = adminSupabase
+  const uid = user.id
+  if (user.role === 'admin') {
+    const { data } = await sb.from('events').select('*').order('event_date', { ascending: true })
+    return data ?? []
+  }
+  const ids = new Set()
+  const { data: direct } = await sb.from('events').select('id')
+    .or(`created_by.eq.${uid},owner_id.eq.${uid},manager_id.eq.${uid},promoter_id.eq.${uid}`)
+  ;(direct ?? []).forEach(e => ids.add(e.id))
+  const { data: parts } = await sb.from('event_participants').select('event_id').eq('user_id', uid)
+  ;(parts ?? []).forEach(p => ids.add(p.event_id))
+
+  if (user.role === 'manager') {
+    const fids = await rosterFighterIds(uid)
+    if (fids.length) {
+      const [{ data: re }, { data: oe }] = await Promise.all([
+        sb.from('event_participants').select('event_id').in('user_id', fids),
+        sb.from('events').select('id').in('owner_id', fids),
+      ])
+      ;(re ?? []).forEach(p => ids.add(p.event_id))
+      ;(oe ?? []).forEach(e => ids.add(e.id))
+    }
+  }
+  if (!ids.size) return []
+  const { data } = await sb.from('events').select('*').in('id', [...ids]).order('event_date', { ascending: true })
+  return data ?? []
+}
+
 // ── GET /api/events — events visible to the current user ──────────────────────
 router.get('/', requireAuth, async (req, res) => {
   try {
     const sb = adminSupabase
-    const uid = req.user.id
-
-    let events
-    if (req.user.role === 'admin') {
-      const { data } = await sb.from('events').select('*').order('event_date', { ascending: true })
-      events = data ?? []
-    } else {
-      const ids = new Set()
-      const { data: direct } = await sb.from('events').select('id')
-        .or(`created_by.eq.${uid},owner_id.eq.${uid},manager_id.eq.${uid},promoter_id.eq.${uid}`)
-      ;(direct ?? []).forEach(e => ids.add(e.id))
-      const { data: parts } = await sb.from('event_participants').select('event_id').eq('user_id', uid)
-      ;(parts ?? []).forEach(p => ids.add(p.event_id))
-
-      if (req.user.role === 'manager') {
-        const fids = await rosterFighterIds(uid)
-        if (fids.length) {
-          const [{ data: re }, { data: oe }] = await Promise.all([
-            sb.from('event_participants').select('event_id').in('user_id', fids),
-            sb.from('events').select('id').in('owner_id', fids),
-          ])
-          ;(re ?? []).forEach(p => ids.add(p.event_id))
-          ;(oe ?? []).forEach(e => ids.add(e.id))
-        }
-      }
-      if (!ids.size) return res.json({ events: [] })
-      const { data } = await sb.from('events').select('*').in('id', [...ids]).order('event_date', { ascending: true })
-      events = data ?? []
-    }
+    const events = await gatherVisibleEvents(req.user)
+    if (!events.length) return res.json({ events: [] })
 
     // Attach participant names + obligation counts.
     const eventIds = events.map(e => e.id)
@@ -196,6 +207,141 @@ router.get('/templates', requireAuth, (req, res) => {
   })
 })
 
+// ── GET /api/events/calendar-feed — unified, normalized calendar items ────────
+// Aggregates app events, Calendly meetings, event obligation due-dates, and
+// contract/sponsor deadlines into one role-filtered feed. Used by the Command
+// Center cards/panels and the Event Calendar month/list views so each surface
+// renders the SAME data instead of stitching it client-side.
+//
+//   query: from, to (ISO), include_past=1, type=event|calendly|obligation|deadline
+//
+// MUST be declared before GET /:id so the literal path isn't captured as an id.
+router.get('/calendar-feed', requireAuth, async (req, res) => {
+  try {
+    const sb   = adminSupabase
+    const uid  = req.user.id
+    const user = req.user
+
+    // Best-effort Calendly refresh (freshness-gated). Fire-and-forget so a slow or
+    // failing Calendly API never blocks/breaks the feed — fresh rows land next load,
+    // and manual "Sync Calendly" always forces an immediate pull.
+    maybeAutoSync(uid).catch(() => {})
+
+    const now  = new Date()
+    const from = req.query.from ? new Date(req.query.from) : new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const to   = req.query.to   ? new Date(req.query.to)   : new Date(now.getFullYear(), now.getMonth() + 2, 0)
+    const includePast = req.query.include_past === '1' || req.query.include_past === 'true'
+    const typeFilter  = typeof req.query.type === 'string' && req.query.type !== 'all' ? req.query.type : null
+
+    const items = []
+
+    // 1. Events (manual + calendly) + their obligation due-dates.
+    const events    = await gatherVisibleEvents(user)
+    const eventById = Object.fromEntries(events.map(e => [e.id, e]))
+    const rels      = {}
+    for (const e of events) rels[e.id] = await relationToEvent(user, e)
+
+    for (const e of events) {
+      const rel = rels[e.id]
+      if (!rel) continue
+      items.push({
+        id: `event:${e.id}`,
+        type: e.source === 'calendly' ? 'calendly' : 'event',
+        source: e.source === 'calendly' ? 'calendly' : 'manual',
+        title: e.name,
+        start: e.event_date, end: null, date: e.event_date,
+        status: e.status,
+        badge: e.source === 'calendly' ? 'Calendly' : (EVENT_BADGE[e.event_type] ?? 'Event'),
+        event_id: e.id, obligation_id: null, contract_id: null,
+        visibility: e.visibility,
+        can_edit: canEditEvent(rel),
+        metadata: {
+          event_type: e.event_type, location: e.location, opponent: e.opponent,
+          promotion_name: e.promotion_name,
+          scheduling_url: e.calendly_scheduling_url ?? null, external_url: e.external_url ?? null,
+        },
+      })
+    }
+
+    const evIds = events.map(e => e.id)
+    if (evIds.length) {
+      const { data: obs } = await sb.from('event_obligations').select('*').in('event_id', evIds)
+      for (const raw of (obs ?? [])) {
+        const ob  = withDerivedStatus(raw)
+        const rel = rels[ob.event_id]
+        if (!rel || !obligationVisible(ob, rel, uid) || !ob.due_date) continue
+        const ev = eventById[ob.event_id]
+        items.push({
+          id: `obligation:${ob.id}`,
+          type: 'obligation', source: 'manual',
+          title: ob.title,
+          start: ob.due_date, end: null, date: ob.due_date,
+          status: ob.status,
+          badge: ob.status === 'overdue' ? 'Overdue' : 'Due',
+          event_id: ob.event_id, obligation_id: ob.id, contract_id: null,
+          visibility: ob.visibility,
+          can_edit: rel === 'full' || ob.assigned_to_user_id === uid,
+          metadata: { category: ob.category, event_name: ev?.name ?? null, proof_required: ob.proof_required },
+        })
+      }
+    }
+
+    // 2. Contract / sponsor deadlines from the contract-bound `obligations` table.
+    //    Owner-scoped (a fighter's own); managers also see roster fighters'.
+    //    Promoters/sponsors only ever see their own owner_id rows (no leak of
+    //    private fighter obligations). Admin sees all dated obligations.
+    let deadlineRows = []
+    try {
+      if (user.role === 'admin') {
+        const { data } = await sb.from('obligations')
+          .select('id,title,due_date,status,category,owner_id,contract_id').not('due_date', 'is', null)
+        deadlineRows = data ?? []
+      } else {
+        const ownerIds = user.role === 'manager'
+          ? [...new Set([uid, ...(await rosterFighterIds(uid))])]
+          : [uid]
+        const { data } = await sb.from('obligations')
+          .select('id,title,due_date,status,category,owner_id,contract_id')
+          .in('owner_id', ownerIds).not('due_date', 'is', null)
+        deadlineRows = data ?? []
+      }
+    } catch (e) { log.warn({ err: e }, 'contract obligations feed query failed (skipping deadlines)') }
+
+    for (const d of deadlineRows) {
+      const overdue = !['completed', 'canceled'].includes(d.status) && new Date(d.due_date).getTime() < Date.now()
+      items.push({
+        id: `deadline:${d.id}`,
+        type: 'deadline', source: 'contract',
+        title: d.title,
+        start: d.due_date, end: null, date: d.due_date,
+        status: overdue ? 'overdue' : d.status,
+        badge: overdue ? 'Overdue' : 'Deadline',
+        event_id: null, obligation_id: d.id, contract_id: d.contract_id ?? null,
+        visibility: 'private', can_edit: false,
+        metadata: { category: d.category },
+      })
+    }
+
+    // Range / past / type filtering, then chronological sort.
+    const fromT = from.getTime(), toT = to.getTime()
+    let out = items.filter(it => {
+      const t = new Date(it.date).getTime()
+      return !Number.isNaN(t) && t >= fromT && t <= toT
+    })
+    if (!includePast) {
+      const dayAgo = Date.now() - 86400000
+      out = out.filter(it => new Date(it.date).getTime() >= dayAgo || it.status === 'overdue')
+    }
+    if (typeFilter) out = out.filter(it => it.type === typeFilter)
+    out.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+    res.json({ items: out, range: { from: from.toISOString(), to: to.toISOString() } })
+  } catch (err) {
+    log.error({ err }, 'GET /events/calendar-feed threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/events — create an event ────────────────────────────────────────
 router.post('/', requireAuth, async (req, res) => {
   try {
@@ -235,6 +381,8 @@ router.post('/', requireAuth, async (req, res) => {
       notes: b.notes?.trim() || null,
       visibility,
       external_url: safeHttpUrl(b.external_url),
+      calendly_scheduling_url: safeHttpUrl(b.calendly_scheduling_url),
+      calendly_event_type_uri: safeHttpUrl(b.calendly_event_type_uri),
       owner_id: ownerId,
       manager_id: managerId,
       promoter_id: promoterId,
@@ -289,8 +437,19 @@ router.get('/:id', requireAuth, async (req, res) => {
       .filter(o => obligationVisible(o, rel, req.user.id))
       .map(o => ({ ...o, assigned_to_name: o.assigned_to_user_id ? (nameMap[o.assigned_to_user_id] ?? 'User') : null }))
 
+    // For Calendly-synced events, surface the synced-row id + status so the UI can
+    // offer "Cancel Calendly meeting" (the cancel route is keyed on that id).
+    let calendlySyncedId = null, calendlyStatus = null
+    if (ev.source === 'calendly') {
+      const { data: sync } = await sb.from('calendly_synced_events')
+        .select('id, status').eq('event_id', ev.id).maybeSingle()
+      calendlySyncedId = sync?.id ?? null
+      calendlyStatus   = sync?.status ?? null
+    }
+
     res.json({
-      event:        { ...ev, can_edit: canEditEvent(rel), relation: rel },
+      event:        { ...ev, can_edit: canEditEvent(rel), relation: rel,
+                      calendly_synced_event_id: calendlySyncedId, calendly_meeting_status: calendlyStatus },
       participants: (parts ?? []).map(p => ({ ...p, name: nameMap[p.user_id] ?? 'User' })),
       obligations:  visibleObs,
     })
@@ -315,6 +474,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
       if (b[k] !== undefined) updates[k] = typeof b[k] === 'string' ? (b[k].trim() || null) : b[k]
     }
     if (b.external_url !== undefined) updates.external_url = safeHttpUrl(b.external_url)
+    if (b.calendly_scheduling_url !== undefined) updates.calendly_scheduling_url = safeHttpUrl(b.calendly_scheduling_url)
+    if (b.calendly_event_type_uri !== undefined) updates.calendly_event_type_uri = safeHttpUrl(b.calendly_event_type_uri)
     if (b.event_date) updates.event_date = b.event_date
     if (EVENT_TYPES.includes(b.event_type))  updates.event_type = b.event_type
     if (EVENT_STATUS.includes(b.status))     updates.status = b.status
