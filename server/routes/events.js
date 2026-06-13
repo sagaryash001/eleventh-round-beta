@@ -353,6 +353,39 @@ router.get('/calendar-feed', requireAuth, async (req, res) => {
   }
 })
 
+// ── GET /api/events/linkable-fighters — fighters the user may link to an event ─
+// The verified sponsor↔fighter relationship pass: a sponsor may only link
+// fighters they have a real connection with (a contract, or an accepted/
+// shortlisted application). Managers link roster fighters; fighters link self.
+// MUST be declared before GET /:id.
+async function linkableFighterIds(user) {
+  const sb = adminSupabase, uid = user.id
+  const ids = new Set()
+  if (user.role === 'fighter') { ids.add(uid); return ids }
+  if (user.role === 'manager') { (await rosterFighterIds(uid)).forEach(f => ids.add(f)); return ids }
+  if (user.role === 'sponsor') {
+    const [{ data: cts }, { data: apps }] = await Promise.all([
+      sb.from('contracts').select('fighter_id').eq('sponsor_id', uid),
+      sb.from('applications').select('fighter_id, status').eq('sponsor_id', uid).in('status', ['accepted', 'shortlisted']),
+    ])
+    ;(cts ?? []).forEach(c => c.fighter_id && ids.add(c.fighter_id))
+    ;(apps ?? []).forEach(a => a.fighter_id && ids.add(a.fighter_id))
+  }
+  return ids
+}
+
+router.get('/linkable-fighters', requireAuth, async (req, res) => {
+  try {
+    const ids = await linkableFighterIds(req.user)
+    if (!ids.size) return res.json({ fighters: [] })
+    const { data: profs } = await adminSupabase.from('profiles').select('id, name').in('id', [...ids])
+    res.json({ fighters: (profs ?? []).map(p => ({ id: p.id, name: p.name ?? 'Fighter' })) })
+  } catch (err) {
+    log.error({ err }, 'GET /events/linkable-fighters threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/events — create an event ────────────────────────────────────────
 router.post('/', requireAuth, async (req, res) => {
   try {
@@ -453,6 +486,12 @@ router.post('/guided-create', requireAuth, async (req, res) => {
     if (role === 'manager' && !isPromotion && fighterIds.length) {
       const roster = await rosterFighterIds(uid)
       fighterIds = fighterIds.filter(f => roster.includes(f))
+    }
+    // Sponsors may only link fighters they have a verified relationship with
+    // (contract or accepted/shortlisted application) — never arbitrary fighters.
+    if (role === 'sponsor' && fighterIds.length) {
+      const allowed = await linkableFighterIds(req.user)
+      fighterIds = fighterIds.filter(f => allowed.has(f))
     }
     fighterIds = [...new Set(fighterIds)]
 

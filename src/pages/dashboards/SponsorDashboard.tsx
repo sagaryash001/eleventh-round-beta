@@ -8,6 +8,8 @@ import Campaigns      from './sponsor/Campaigns'
 import TalentPipeline from './sponsor/TalentPipeline'
 import Contracts      from './sponsor/Contracts'
 import CompanyBilling from './sponsor/CompanyBilling'
+import EventCalendar  from '../../components/events/EventCalendar'
+import { getLinkableFighters } from '../../lib/api/events'
 
 const ZONES = [
   { id: 'overview',   label: 'Overview'         },
@@ -15,7 +17,16 @@ const ZONES = [
   { id: 'pipeline',   label: 'Talent Pipeline'   },
   { id: 'contracts',  label: 'Contracts'         },
   { id: 'company',    label: 'Company & Billing' },
+  { id: 'events',     label: 'Event Calendar'    },
 ]
+
+// Sponsor Event Calendar — links only fighters the sponsor has a verified
+// relationship with (contract / accepted application), resolved server-side.
+function SponsorEventsZone() {
+  const [assignable, setAssignable] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => { getLinkableFighters().then(d => setAssignable(d.fighters ?? [])).catch(() => {}) }, [])
+  return <EventCalendar assignable={assignable} canLinkFighters label="Event Calendar" />
+}
 
 export default function SponsorDashboard() {
   const { token, user, logout } = useAuth()
@@ -119,6 +130,7 @@ export default function SponsorDashboard() {
         {zone === 'pipeline'  && <TalentPipeline sp={sp} />}
         {zone === 'contracts' && <Contracts />}
         {zone === 'company'   && <CompanyBilling sp={sp} onUpdate={u => setSp(p => p ? { ...p, ...u } : p)} />}
+        {zone === 'events'    && <SponsorEventsZone />}
       </main>
     </div>
   )

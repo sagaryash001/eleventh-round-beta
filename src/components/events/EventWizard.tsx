@@ -21,7 +21,8 @@ interface Assignable { id: string; name: string }
 
 // Wizard type keys → stored event_type ('meeting' has no dedicated column, so it
 // is stored as 'other' with a meeting purpose in notes).
-const TYPE_OPTS: { key: string; label: string; stored: EventType }[] = [
+type TypeOpt = { key: string; label: string; stored: EventType }
+const DEFAULT_TYPE_OPTS: TypeOpt[] = [
   { key: 'fight',              label: 'Fight',             stored: 'fight' },
   { key: 'promotion_event',    label: 'Promotion Event',   stored: 'promotion_event' },
   { key: 'media_event',        label: 'Media Day',         stored: 'media_event' },
@@ -30,6 +31,16 @@ const TYPE_OPTS: { key: string; label: string; stored: EventType }[] = [
   { key: 'camp',               label: 'Training Camp',     stored: 'camp' },
   { key: 'meeting',            label: 'Meeting',           stored: 'other' },
   { key: 'other',              label: 'Other',             stored: 'other' },
+]
+// Sponsor-facing scheduling vocabulary (mapped onto existing event types).
+const SPONSOR_TYPE_OPTS: TypeOpt[] = [
+  { key: 'sponsor_activation', label: 'Sponsor Activation',  stored: 'sponsor_activation' },
+  { key: 'content_deliverable',label: 'Content Deliverable', stored: 'sponsor_activation' },
+  { key: 'fighter_appearance', label: 'Fighter Appearance',  stored: 'sponsor_activation' },
+  { key: 'media_event',        label: 'Media Day',           stored: 'media_event' },
+  { key: 'meeting',            label: 'Meeting',             stored: 'other' },
+  { key: 'campaign_deadline',  label: 'Campaign Deadline',   stored: 'sponsor_activation' },
+  { key: 'other',              label: 'Other',               stored: 'other' },
 ]
 
 const inputCls = 'w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none focus:border-blood'
@@ -43,6 +54,13 @@ function toLocalInput(d: Date) {
 // Recommended templates from type + answers (pre-selected, user can change).
 function recommend(typeKey: string, ans: Record<string, any>): Set<string> {
   const s = new Set<string>()
+  // Sponsor scheduling types.
+  if (['sponsor_activation', 'content_deliverable', 'fighter_appearance', 'campaign_deadline'].includes(typeKey)) {
+    s.add('sponsor_content')
+    if (ans.tied_to_contract) s.add('contract_signed')
+    if (typeKey === 'sponsor_activation' || typeKey === 'campaign_deadline') s.add('post_event_recap')
+    return s
+  }
   if (typeKey === 'fight') {
     s.add('weigh_in'); s.add('fight_week'); s.add('post_event_recap')
     if (ans.needs_medicals)      s.add('medicals')
@@ -100,13 +118,15 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
   assignable?: Assignable[]; canLinkFighters?: boolean; role?: string
   onClose: () => void; onCreated: () => void
 }) {
+  const sponsor  = role === 'sponsor'
+  const typeOpts = sponsor ? SPONSOR_TYPE_OPTS : DEFAULT_TYPE_OPTS
   const [step, setStep]       = useState(1)
-  const [typeKey, setTypeKey] = useState('fight')
+  const [typeKey, setTypeKey] = useState(sponsor ? 'sponsor_activation' : 'fight')
   const [det, setDet] = useState({
     name: '', event_date: '', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
     location: '', external_url: '', opponent: '', promotion_name: '', weight_class: '', notes: '',
   })
-  const [ans, setAns]         = useState<Record<string, any>>({ needs_medicals: true, needs_travel: true })
+  const [ans, setAns]         = useState<Record<string, any>>({ needs_medicals: true, needs_travel: true, proof_required: true })
   const [fighterId, setFighterId] = useState('')
   const [templates, setTemplates] = useState<ObTemplate[]>([])
   const [selected, setSelected]   = useState<Set<string>>(new Set())
@@ -166,7 +186,7 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
   const submit = async () => {
     setSaving(true); setErr('')
     try {
-      const stored = TYPE_OPTS.find(t => t.key === typeKey)?.stored ?? 'other'
+      const stored = typeOpts.find(t => t.key === typeKey)?.stored ?? 'other'
       const dueOverrides: Record<string, string> = {}
       for (const k of selected) if (due[k]) dueOverrides[k] = new Date(due[k]).toISOString()
       const payload: GuidedCreatePayload = {
@@ -224,9 +244,9 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
           {/* Step 1 — type */}
           {step === 1 && (
             <div>
-              <div className="font-condensed text-[13px] text-gray-1 mb-3">What are you preparing for?</div>
+              <div className="font-condensed text-[13px] text-gray-1 mb-3">{sponsor ? 'What are you scheduling?' : 'What are you preparing for?'}</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {TYPE_OPTS.map(t => (
+                {typeOpts.map(t => (
                   <button key={t.key} type="button" onClick={() => { setTypeKey(t.key); setTplInit(false) }}
                     className="font-condensed text-[12px] px-3 py-3 border text-left transition-colors"
                     style={{
@@ -286,7 +306,7 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
                   <YesNo label="Weigh-in required?"           value={!!ans.weigh_in_req} onChange={setA('weigh_in_req')} />
                 </>
               )}
-              {typeKey === 'sponsor_activation' && (
+              {!sponsor && typeKey === 'sponsor_activation' && (
                 <>
                   <Field label="Sponsor / Brand" value={det.promotion_name} onChange={setD('promotion_name')} placeholder="Brand name" />
                   <div>
@@ -296,6 +316,22 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
                     </select>
                   </div>
                   <YesNo label="Proof required?" value={ans.proof_required !== false} onChange={setA('proof_required')} />
+                </>
+              )}
+              {sponsor && ['sponsor_activation', 'content_deliverable', 'fighter_appearance', 'campaign_deadline'].includes(typeKey) && (
+                <>
+                  <Field label="Brand / Campaign" value={det.promotion_name} onChange={setD('promotion_name')} placeholder="Brand or campaign name" />
+                  <div>
+                    <label className={labelCls}>Deliverable type</label>
+                    <select className={inputCls} value={ans.deliverable ?? 'instagram_post'} onChange={e => setA('deliverable')(e.target.value)}>
+                      {[['instagram_post', 'Instagram post'], ['story', 'Story'], ['reel_video', 'Reel / video'],
+                        ['appearance', 'In-person appearance'], ['booth', 'Booth activation'], ['logo', 'Logo placement'],
+                        ['interview', 'Interview / media'], ['other', 'Other']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <YesNo label="Proof required?"               value={ans.proof_required !== false} onChange={setA('proof_required')} />
+                  <YesNo label="Tied to a contract?"           value={!!ans.tied_to_contract}       onChange={setA('tied_to_contract')} />
+                  <YesNo label="Does the fighter need to confirm?" value={ans.fighter_approval !== false} onChange={setA('fighter_approval')} />
                 </>
               )}
               {typeKey === 'media_event' && (
@@ -400,7 +436,7 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
                 <div className="font-condensed text-[10px] uppercase tracking-[0.25em] text-gray-3 mb-1">Event</div>
                 <div className="font-condensed text-[13px] text-off-white font-bold">{det.name || '—'}</div>
                 <div className="font-condensed text-[11px] text-gray-3">
-                  {TYPE_OPTS.find(t => t.key === typeKey)?.label}
+                  {typeOpts.find(t => t.key === typeKey)?.label}
                   {det.event_date ? ` · ${new Date(det.event_date).toLocaleString()}` : ''}
                   {det.location ? ` · ${det.location}` : ''}
                 </div>
@@ -434,7 +470,7 @@ export default function EventWizard({ assignable = [], canLinkFighters = false, 
           <button onClick={step === 1 ? onClose : back} className="btn-ghost text-[11px] py-2 px-4">{step === 1 ? 'Cancel' : '← Back'}</button>
           {step < 7
             ? <button onClick={next} className="btn-primary text-[11px] py-2 px-5">Next →</button>
-            : <button onClick={submit} disabled={saving} className="btn-primary text-[11px] py-2 px-5 disabled:opacity-50">{saving ? 'Creating…' : 'Create Event Calendar Plan'}</button>}
+            : <button onClick={submit} disabled={saving} className="btn-primary text-[11px] py-2 px-5 disabled:opacity-50">{saving ? 'Creating…' : (sponsor ? 'Create Sponsor Calendar Plan' : 'Create Event Calendar Plan')}</button>}
         </div>
       </div>
     </div>

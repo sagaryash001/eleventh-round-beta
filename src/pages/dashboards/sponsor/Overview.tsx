@@ -7,6 +7,7 @@ import { getMyOpportunities } from '../../../lib/api/opportunities'
 import { DashSkeleton, ApiError } from '../DashWidgets'
 import { FunnelBar } from '../admin/AdminCharts'
 import { ReadinessRing, MiniBar, ClickablePanel } from '../shared/CommandLayout'
+import { CommandCalendarPanel } from '../../../components/events/Calendar'
 import type { SponsorProfile } from '../../../lib/api/sponsors'
 
 export default function Overview({ sp, onNavigate }: { sp: SponsorProfile; onNavigate?: (zone: string) => void }) {
@@ -180,6 +181,13 @@ export default function Overview({ sp, onNavigate }: { sp: SponsorProfile; onNav
           )}
         </div>
       </div>
+
+      {/* ── Event Command — compact tactical agenda (no month grid) ── */}
+      <CommandCalendarPanel
+        onOpen={() => onNavigate?.('events')}
+        onAdd={() => onNavigate?.('events')}
+        onOpenItem={() => onNavigate?.('events')}
+        addLabel="Add Sponsor Activation" />
 
       {/* ── Row 3: Campaign Performance + Talent Pipeline ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1.6fr 1fr' }}>

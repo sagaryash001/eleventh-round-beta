@@ -397,8 +397,8 @@ function countdownLabel(date: string) {
   return { n: String(days), u: days === 1 ? 'day' : 'days' }
 }
 
-export function CommandCalendarPanel({ onOpen, onAdd, onOpenItem }: {
-  onOpen: () => void; onAdd?: () => void; onOpenItem?: (it: CalendarFeedItem) => void
+export function CommandCalendarPanel({ onOpen, onAdd, onOpenItem, addLabel = '+ Add Fight/Event' }: {
+  onOpen: () => void; onAdd?: () => void; onOpenItem?: (it: CalendarFeedItem) => void; addLabel?: string
 }) {
   const from = useMemo(() => new Date(Date.now() - 86400000).toISOString(), [])
   const to   = useMemo(() => addMonths(new Date(), 4).toISOString(), [])
@@ -423,7 +423,7 @@ export function CommandCalendarPanel({ onOpen, onAdd, onOpenItem }: {
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="dash-label" style={{ marginBottom: 0 }}>Event Command</div>
         <div className="flex items-center gap-3">
-          {onAdd && <button onClick={onAdd} className="btn-primary text-[10px] py-1.5 px-3">+ Add Fight/Event</button>}
+          {onAdd && <button onClick={onAdd} className="btn-primary text-[10px] py-1.5 px-3">{addLabel}</button>}
           <button onClick={onOpen} className="font-condensed text-[10px] text-blood-glow hover:underline">Open Event Calendar →</button>
         </div>
       </div>
@@ -435,7 +435,7 @@ export function CommandCalendarPanel({ onOpen, onAdd, onOpenItem }: {
       ) : events.length === 0 && nextObligations.length === 0 ? (
         <div className="text-center py-6">
           <div className="font-condensed text-[13px] text-gray-2 mb-3">No events scheduled yet.</div>
-          {onAdd && <button onClick={onAdd} className="btn-primary text-[10px] py-2 px-5">Add Fight/Event</button>}
+          {onAdd && <button onClick={onAdd} className="btn-primary text-[10px] py-2 px-5">{addLabel.replace(/^\+\s*/, '')}</button>}
         </div>
       ) : (
         <div className="grid gap-3 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1.3fr)]">

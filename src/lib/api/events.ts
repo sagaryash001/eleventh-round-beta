@@ -178,6 +178,11 @@ export interface GuidedCreatePayload {
 export const guidedCreateEvent = (data: GuidedCreatePayload) =>
   apiPost<{ ok: boolean; event: CalEvent; obligations: EventObligation[] }>('/api/events/guided-create', data)
 
+// Fighters the current user may link to an event (verified relationship per role:
+// sponsor → contract/accepted application; manager → roster; fighter → self).
+export const getLinkableFighters = () =>
+  apiGet<{ fighters: { id: string; name: string }[] }>('/api/events/linkable-fighters')
+
 export const confirmEvent = (id: string) =>
   apiPost<{ ok: boolean; status: string }>(`/api/events/${id}/confirm`)
 
