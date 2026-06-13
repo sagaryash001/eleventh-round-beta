@@ -241,9 +241,20 @@ router.get('/calendar-feed', requireAuth, async (req, res) => {
     const rels      = {}
     for (const e of events) rels[e.id] = await relationToEvent(user, e)
 
+    // The viewer's own participation status per event (controls pending/declined).
+    const evIds0 = events.map(e => e.id)
+    const myPart = {}
+    if (evIds0.length) {
+      const { data: mp } = await sb.from('event_participants')
+        .select('event_id, role, status').eq('user_id', uid).in('event_id', evIds0)
+      for (const r of (mp ?? [])) { if (r.role === 'fighter' || !(r.event_id in myPart)) myPart[r.event_id] = r.status }
+    }
+
     for (const e of events) {
       const rel = rels[e.id]
       if (!rel) continue
+      // A fighter who declined their own participation shouldn't see it on their calendar.
+      if (myPart[e.id] === 'declined') continue
       items.push({
         id: `event:${e.id}`,
         type: e.source === 'calendly' ? 'calendly' : 'event',
@@ -257,7 +268,7 @@ router.get('/calendar-feed', requireAuth, async (req, res) => {
         can_edit: canEditEvent(rel),
         metadata: {
           event_type: e.event_type, location: e.location, opponent: e.opponent,
-          promotion_name: e.promotion_name,
+          promotion_name: e.promotion_name, participant_status: myPart[e.id] ?? null,
           scheduling_url: e.calendly_scheduling_url ?? null, external_url: e.external_url ?? null,
         },
       })
@@ -390,16 +401,20 @@ router.post('/', requireAuth, async (req, res) => {
     }).select().maybeSingle()
     if (error) throw error
 
-    // Participants: linked fighters + manager/promoter.
+    // Participants: linked fighters + manager/promoter. A fighter linked by
+    // someone else starts 'pending' (must confirm); the creator's own row is
+    // 'confirmed'.
     const partRows = []
-    for (const fid of [...new Set(fighterIds)]) partRows.push({ event_id: ev.id, user_id: fid, role: 'fighter' })
-    if (managerId)  partRows.push({ event_id: ev.id, user_id: managerId,  role: 'manager' })
-    if (promoterId) partRows.push({ event_id: ev.id, user_id: promoterId, role: 'promoter' })
+    for (const fid of [...new Set(fighterIds)]) {
+      partRows.push({ event_id: ev.id, user_id: fid, role: 'fighter', status: fid === uid ? 'confirmed' : 'pending' })
+    }
+    if (managerId)  partRows.push({ event_id: ev.id, user_id: managerId,  role: 'manager',  status: 'confirmed' })
+    if (promoterId) partRows.push({ event_id: ev.id, user_id: promoterId, role: 'promoter', status: 'confirmed' })
     if (partRows.length) await sb.from('event_participants').upsert(partRows, { onConflict: 'event_id,user_id,role' })
 
-    // Notify linked fighters (other than the creator).
+    // Notify linked fighters (other than the creator) that they have something to confirm.
     for (const fid of fighterIds) {
-      if (fid !== uid) notify(fid, 'event.created', `New event: ${ev.name}`, 'You were added to an event calendar.', ev.id)
+      if (fid !== uid) notify(fid, 'event.created', `New event: ${ev.name}`, 'You were added to an event — confirm or decline it.', ev.id)
     }
 
     log.info({ id: ev.id, by: uid, type }, 'event created')
@@ -408,6 +423,137 @@ router.post('/', requireAuth, async (req, res) => {
     log.error({ err }, 'POST /events threw')
     res.status(500).json({ error: err.message })
   }
+})
+
+// ── POST /api/events/guided-create — wizard-driven event + obligation plan ────
+// One transaction-like call: create the event, link participants (with pending
+// confirmation for fighters added by someone else), and generate the selected
+// obligation templates with due-date / visibility overrides. Permissions and
+// safe creation are enforced server-side — the wizard only proposes.
+router.post('/guided-create', requireAuth, async (req, res) => {
+  try {
+    const sb   = adminSupabase
+    const uid  = req.user.id
+    const role = req.user.role
+    const isPromotion = role === 'manager' && req.user.account_type === 'promotion'
+    const p = req.body || {}
+    const d = p.details || {}
+
+    if (!d.name || !String(d.name).trim()) return res.status(400).json({ error: 'Event name is required.' })
+    if (!d.event_date) return res.status(400).json({ error: 'Event date is required.' })
+
+    const type       = EVENT_TYPES.includes(p.event_type) ? p.event_type : 'fight'
+    const visibility = EVENT_VIS.includes(d.visibility) ? d.visibility : 'manager_visible'
+
+    // Resolve linked fighters. Fighters own their own; managers may only link
+    // roster fighters; promotions/sponsors may link provided fighters (gated by
+    // the fighter's own pending confirmation before it shows as active to them).
+    let fighterIds = Array.isArray(p.participants?.fighter_ids) ? p.participants.fighter_ids.filter(Boolean) : []
+    if (role === 'fighter') fighterIds = [uid]
+    if (role === 'manager' && !isPromotion && fighterIds.length) {
+      const roster = await rosterFighterIds(uid)
+      fighterIds = fighterIds.filter(f => roster.includes(f))
+    }
+    fighterIds = [...new Set(fighterIds)]
+
+    const ownerId    = role === 'fighter' ? uid : (fighterIds[0] ?? (role === 'manager' && !isPromotion ? uid : null))
+    const managerId  = (role === 'manager' && !isPromotion) ? uid : (p.participants?.manager_id ?? null)
+    const promoterId = isPromotion ? uid : (p.participants?.promoter_id ?? null)
+    const sponsorId  = role === 'sponsor' ? uid : (p.participants?.sponsor_id ?? null)
+
+    const { data: ev, error } = await sb.from('events').insert({
+      name: String(d.name).trim(),
+      event_type: type,
+      event_date: d.event_date,
+      timezone: d.timezone ?? null,
+      location: d.location?.trim() || null,
+      opponent: d.opponent?.trim() || null,
+      promotion_name: d.promotion_name?.trim() || null,
+      weight_class: d.weight_class?.trim() || null,
+      status: 'planned',
+      notes: d.notes?.trim() || null,
+      visibility,
+      external_url: safeHttpUrl(d.external_url),
+      calendly_scheduling_url: safeHttpUrl(p.calendly_scheduling_url),
+      calendly_event_type_uri: safeHttpUrl(p.calendly_event_type_uri),
+      owner_id: ownerId,
+      manager_id: managerId,
+      promoter_id: promoterId,
+      created_by: uid,
+    }).select().maybeSingle()
+    if (error) throw error
+
+    // Participants (+ confirmation status).
+    const partRows = []
+    for (const fid of fighterIds) partRows.push({ event_id: ev.id, user_id: fid, role: 'fighter', status: fid === uid ? 'confirmed' : 'pending' })
+    if (managerId)  partRows.push({ event_id: ev.id, user_id: managerId,  role: 'manager',  status: 'confirmed' })
+    if (promoterId) partRows.push({ event_id: ev.id, user_id: promoterId, role: 'promoter', status: 'confirmed' })
+    if (sponsorId)  partRows.push({ event_id: ev.id, user_id: sponsorId,  role: 'sponsor',  status: 'confirmed' })
+    if (partRows.length) await sb.from('event_participants').upsert(partRows, { onConflict: 'event_id,user_id,role' })
+
+    // Obligations from selected templates (deduped) with due-date / visibility overrides.
+    const assignedTo = ownerId ?? uid
+    const keys = [...new Set((Array.isArray(p.selected_templates) ? p.selected_templates : []).filter(k => OBLIGATION_TEMPLATES[k]))]
+    const dueOverrides = p.due_date_overrides || {}
+    const visOverrides = p.visibility_overrides || {}
+    const obRows = keys.map(k => {
+      const row = fromTemplate(k, ev, assignedTo, uid)
+      if (!row) return null
+      if (dueOverrides[k]) { const t = new Date(dueOverrides[k]); if (!Number.isNaN(t.getTime())) row.due_date = t.toISOString() }
+      if (visOverrides[k] && OB_VIS.includes(visOverrides[k])) row.visibility = visOverrides[k]
+      return row
+    }).filter(Boolean)
+
+    let obligations = []
+    if (obRows.length) {
+      const { data: obs, error: obErr } = await sb.from('event_obligations').insert(obRows).select()
+      if (obErr) { log.warn({ err: obErr }, 'guided-create obligation insert failed (event still created)') }
+      else obligations = obs ?? []
+    }
+
+    // Notifications: linked fighters (confirm prompt) + obligation assignees.
+    for (const fid of fighterIds) {
+      if (fid !== uid) notify(fid, 'event.created', `New event: ${ev.name}`, 'You were added to an event — confirm or decline it.', ev.id)
+    }
+    for (const ob of obligations) {
+      if (ob.assigned_to_user_id && ob.assigned_to_user_id !== uid) {
+        notify(ob.assigned_to_user_id, 'obligation.assigned', `New task: ${ob.title}`,
+          ob.due_date ? `Due ${new Date(ob.due_date).toLocaleDateString()}` : null, ev.id)
+      }
+    }
+
+    log.info({ id: ev.id, by: uid, type, obligations: obligations.length }, 'guided event created')
+    res.status(201).json({ ok: true, event: ev, obligations })
+  } catch (err) {
+    log.error({ err }, 'POST /events/guided-create threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/events/:id/confirm | /decline — fighter confirms participation ──
+// Only the linked fighter may set their OWN participation status; a manager or
+// promoter cannot confirm/decline on the fighter's behalf.
+async function setParticipation(req, res, status) {
+  const sb = adminSupabase
+  const { data: part } = await sb.from('event_participants')
+    .select('id').eq('event_id', req.params.id).eq('user_id', req.user.id).eq('role', 'fighter').maybeSingle()
+  if (!part) return res.status(403).json({ error: 'Only the linked fighter can respond to this event.' })
+  await sb.from('event_participants').update({ status }).eq('id', part.id)
+  const { data: ev } = await sb.from('events').select('id, name, created_by').eq('id', req.params.id).maybeSingle()
+  if (ev && ev.created_by !== req.user.id) {
+    notify(ev.created_by, status === 'confirmed' ? 'event.confirmed' : 'event.declined',
+      `${status === 'confirmed' ? 'Confirmed' : 'Declined'}: ${ev.name}`,
+      `${req.user.name ?? 'A fighter'} ${status} this event.`, ev.id)
+  }
+  res.json({ ok: true, status })
+}
+router.post('/:id/confirm', requireAuth, async (req, res) => {
+  try { await setParticipation(req, res, 'confirmed') }
+  catch (err) { log.error({ err }, 'POST /events/:id/confirm threw'); res.status(500).json({ error: err.message }) }
+})
+router.post('/:id/decline', requireAuth, async (req, res) => {
+  try { await setParticipation(req, res, 'declined') }
+  catch (err) { log.error({ err }, 'POST /events/:id/decline threw'); res.status(500).json({ error: err.message }) }
 })
 
 // ── GET /api/events/:id — detail with visibility-filtered obligations ─────────
@@ -421,9 +567,10 @@ router.get('/:id', requireAuth, async (req, res) => {
     if (!rel) return res.status(403).json({ error: 'You do not have access to this event.' })
 
     const [{ data: parts }, { data: obs }] = await Promise.all([
-      sb.from('event_participants').select('user_id, role').eq('event_id', ev.id),
+      sb.from('event_participants').select('user_id, role, status').eq('event_id', ev.id),
       sb.from('event_obligations').select('*').eq('event_id', ev.id).order('due_date', { ascending: true, nullsFirst: false }),
     ])
+    const myPart = (parts ?? []).find(p => p.user_id === req.user.id && p.role === 'fighter')
 
     const ids = [...new Set([
       ...(parts ?? []).map(p => p.user_id),
@@ -449,7 +596,8 @@ router.get('/:id', requireAuth, async (req, res) => {
 
     res.json({
       event:        { ...ev, can_edit: canEditEvent(rel), relation: rel,
-                      calendly_synced_event_id: calendlySyncedId, calendly_meeting_status: calendlyStatus },
+                      calendly_synced_event_id: calendlySyncedId, calendly_meeting_status: calendlyStatus,
+                      my_participant_status: myPart?.status ?? null },
       participants: (parts ?? []).map(p => ({ ...p, name: nameMap[p.user_id] ?? 'User' })),
       obligations:  visibleObs,
     })

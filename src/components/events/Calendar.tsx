@@ -386,51 +386,106 @@ export function CommandCalendarCard({ onOpen }: { onOpen: () => void }) {
   )
 }
 
-// ── Command Center full-width panel (mini month + agenda) ─────────────────────
-export function CommandCalendarPanel({ onOpen, onOpenItem }: {
-  onOpen: () => void; onOpenItem?: (it: CalendarFeedItem) => void
-}) {
-  const [month, setMonth] = useState(() => monthStart(new Date()))
-  const [selected, setSelected] = useState<string | null>(dayKey(new Date()))
-  const from = useMemo(() => { const d = monthStart(month); d.setDate(-7); return d.toISOString() }, [month])
-  const to   = useMemo(() => { const d = monthEnd(month);   d.setDate(d.getDate() + 7); return d.toISOString() }, [month])
-  const { items, loading, error } = useCalendarFeed({ from, to, includePast: true })
+// ── Command Center "Event Command" — compact tactical agenda (NO month grid) ──
+// The heavy month grid lives only in the Event Calendar zone. Here we surface a
+// next-event countdown, due-this-week, next meeting, the next obligations, a
+// short upcoming timeline, and any pending confirmations.
+function countdownLabel(date: string) {
+  const days = Math.ceil((new Date(date).getTime() - Date.now()) / 86400000)
+  if (days < 0)  return { n: '—', u: 'past' }
+  if (days === 0) return { n: 'Today', u: '' }
+  return { n: String(days), u: days === 1 ? 'day' : 'days' }
+}
 
-  const dayAgo = Date.now() - 86400000
-  const agenda = items
-    .filter(it => !isCancelled(it) && (new Date(it.date).getTime() >= dayAgo || it.status === 'overdue'))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 6)
+export function CommandCalendarPanel({ onOpen, onAdd, onOpenItem }: {
+  onOpen: () => void; onAdd?: () => void; onOpenItem?: (it: CalendarFeedItem) => void
+}) {
+  const from = useMemo(() => new Date(Date.now() - 86400000).toISOString(), [])
+  const to   = useMemo(() => addMonths(new Date(), 4).toISOString(), [])
+  const { items, loading, error } = useCalendarFeed({ from, to })
+
+  const live = items.filter(it => !isCancelled(it) && it.metadata?.participant_status !== 'declined')
+  const events    = live.filter(it => it.type === 'event' || it.type === 'calendly')
+  const nextEvent = events[0] ?? null
+  const nextMeeting = live.find(it => it.type === 'calendly') ?? null
+  const weekEnd = Date.now() + 7 * 86400000
+  const dueThisWeek = live.filter(it =>
+    (it.type === 'obligation' || it.type === 'deadline') && it.status !== 'completed' &&
+    new Date(it.date).getTime() <= weekEnd)
+  const nextObligations = live
+    .filter(it => (it.type === 'obligation' || it.type === 'deadline') && it.status !== 'completed')
+    .slice(0, 3)
+  const pending = live.filter(it => it.type === 'event' && it.metadata?.participant_status === 'pending').length
+  const timeline = events.slice(0, 5)
 
   return (
     <div className="dash-card">
-      <div className="flex items-center justify-between mb-3">
-        <div className="dash-label" style={{ marginBottom: 0 }}>Calendar</div>
-        <button onClick={onOpen} className="font-condensed text-[10px] text-blood-glow hover:underline">Open Event Calendar →</button>
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div className="dash-label" style={{ marginBottom: 0 }}>Event Command</div>
+        <div className="flex items-center gap-3">
+          {onAdd && <button onClick={onAdd} className="btn-primary text-[10px] py-1.5 px-3">+ Add Fight/Event</button>}
+          <button onClick={onOpen} className="font-condensed text-[10px] text-blood-glow hover:underline">Open Event Calendar →</button>
+        </div>
       </div>
+
       {error ? (
         <div className="font-condensed text-[12px] text-gray-3">Calendar unavailable right now.</div>
+      ) : loading ? (
+        <div className="font-condensed text-[12px] text-gray-3 py-3">Loading…</div>
+      ) : events.length === 0 && nextObligations.length === 0 ? (
+        <div className="text-center py-6">
+          <div className="font-condensed text-[13px] text-gray-2 mb-3">No events scheduled yet.</div>
+          {onAdd && <button onClick={onAdd} className="btn-primary text-[10px] py-2 px-5">Add Fight/Event</button>}
+        </div>
       ) : (
-        // Agenda first on mobile (order-1), month grid under it; side-by-side on md+.
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr' }}>
-          <div className="grid gap-4 md:[grid-template-columns:minmax(0,1.2fr)_minmax(0,1fr)]">
-            <div className="order-2 md:order-1">
-              <MiniMonth month={month} items={items} selected={selected}
-                onSelectDay={setSelected}
-                onPrev={() => setMonth(m => addMonths(m, -1))}
-                onNext={() => setMonth(m => addMonths(m, 1))} />
+        <div className="grid gap-3 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1.3fr)]">
+          {/* Left: countdown + counters + next meeting */}
+          <div className="space-y-2.5">
+            {pending > 0 && (
+              <button onClick={onOpen} className="w-full text-left border px-3 py-1.5" style={{ borderColor: 'rgba(201,168,44,0.4)', background: 'rgba(201,168,44,0.08)' }}>
+                <span className="font-condensed text-[11px]" style={{ color: '#c9a82c' }}>{pending} event{pending > 1 ? 's' : ''} pending confirmation</span>
+              </button>
+            )}
+            <div className="border border-charcoal-3 p-3" style={{ borderLeft: `2px solid ${nextEvent ? '#C41E3A' : '#222226'}` }}>
+              <div className="font-condensed text-[9px] uppercase tracking-[0.25em] text-gray-3">Next Fight / Event</div>
+              {nextEvent ? (
+                <>
+                  <div className="flex items-end gap-2 mt-1">
+                    <span className="font-display text-off-white" style={{ fontSize: 26, lineHeight: 1 }}>{countdownLabel(nextEvent.date).n}</span>
+                    <span className="font-condensed text-[10px] uppercase tracking-widest text-gray-3 mb-0.5">{countdownLabel(nextEvent.date).u}</span>
+                  </div>
+                  <div className="font-condensed font-bold text-[12px] text-off-white truncate mt-1">{nextEvent.title}</div>
+                  <div className="font-condensed text-[10.5px] text-gray-3">{fmtDate(nextEvent.date)} · {fmtTime(nextEvent.date)}</div>
+                </>
+              ) : <div className="font-condensed text-[12px] text-gray-3 mt-1">No upcoming events.</div>}
             </div>
-            <div className="order-1 md:order-2">
-              <div className="font-condensed text-[10px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-1">Upcoming</div>
-              {loading ? (
-                <div className="font-condensed text-[11px] text-gray-3 py-3">Loading…</div>
-              ) : agenda.length === 0 ? (
-                <div className="font-condensed text-[12px] text-gray-3 py-3">
-                  No upcoming events yet. Add your next fight, promotion, media day, sponsor activation, or meeting.
-                </div>
-              ) : (
-                <div>{agenda.map(it => <FeedItemRow key={it.id} item={it} onClick={onOpenItem} showDate />)}</div>
-              )}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="border border-charcoal-3 p-2.5">
+                <div className="font-display" style={{ fontSize: 20, lineHeight: 1, color: dueThisWeek.length > 0 ? '#c9a82c' : '#f0ece4' }}>{dueThisWeek.length}</div>
+                <div className="font-condensed text-[9px] uppercase tracking-widest text-gray-3 mt-0.5">Due This Week</div>
+              </div>
+              <button onClick={() => nextMeeting && onOpenItem?.(nextMeeting)} className="border border-charcoal-3 p-2.5 text-left" style={{ cursor: nextMeeting ? 'pointer' : 'default' }}>
+                <div className="font-condensed text-[9px] uppercase tracking-widest text-gray-3">Next Meeting</div>
+                {nextMeeting ? (
+                  <div className="font-condensed text-[11px] mt-0.5" style={{ color: '#00a2c0' }}>{fmtDate(nextMeeting.date)} · {fmtTime(nextMeeting.date)}</div>
+                ) : <div className="font-condensed text-[11px] text-gray-3 mt-0.5">None synced</div>}
+              </button>
+            </div>
+          </div>
+
+          {/* Right: next obligations + upcoming timeline */}
+          <div className="space-y-3">
+            <div>
+              <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-1">Next Obligations</div>
+              {nextObligations.length === 0
+                ? <div className="font-condensed text-[11px] text-gray-3">Nothing due — you're clear.</div>
+                : nextObligations.map(it => <FeedItemRow key={it.id} item={it} onClick={onOpenItem} showDate />)}
+            </div>
+            <div>
+              <div className="font-condensed text-[9px] font-bold tracking-[0.3em] uppercase text-gray-3 mb-1">Upcoming Timeline</div>
+              {timeline.length === 0
+                ? <div className="font-condensed text-[11px] text-gray-3">No upcoming events.</div>
+                : timeline.map(it => <FeedItemRow key={it.id} item={it} onClick={onOpenItem} showDate />)}
             </div>
           </div>
         </div>

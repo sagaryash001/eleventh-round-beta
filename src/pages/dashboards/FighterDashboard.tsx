@@ -448,8 +448,8 @@ function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
         <CommandCalendarCard onOpen={() => onNavigate('events')} />
       </div>
 
-      {/* Full-width calendar panel — mini month + upcoming agenda */}
-      <CommandCalendarPanel onOpen={() => onNavigate('events')} onOpenItem={() => onNavigate('events')} />
+      {/* Full-width Event Command panel — compact tactical agenda (no month grid) */}
+      <CommandCalendarPanel onOpen={() => onNavigate('events')} onAdd={() => onNavigate('events')} onOpenItem={() => onNavigate('events')} />
 
       {/* ── Secondary sections ── */}
       <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>

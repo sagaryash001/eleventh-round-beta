@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
+import EventWizard from './EventWizard'
 import {
-  getEvent, createEvent, getEventTemplates,
+  getEvent, createEvent, getEventTemplates, confirmEvent, declineEvent,
   addObligation, addObligationsFromTemplate, updateObligation, completeObligation,
   type CalEvent, type EventObligation, type ObTemplate, type EventType, type ObStatus,
   type CalendarFeedItem,
@@ -236,6 +238,12 @@ function EventDetail({ eventId, assignable, onClose, onChanged }: {
     } catch (e: any) { setCalMsg({ type: 'err', text: e?.message ?? 'This Calendly account does not allow this action.' }) }
     finally { setBusy(false) }
   }
+  const respond = async (action: 'confirm' | 'decline') => {
+    setBusy(true); setErr('')
+    try { await (action === 'confirm' ? confirmEvent(eventId) : declineEvent(eventId)); load(); onChanged() }
+    catch (e: any) { setErr(e?.message ?? 'Could not update your response.') }
+    finally { setBusy(false) }
+  }
 
   const cycleStatus = async (ob: EventObligation) => {
     const next = OB_NEXT[ob.status] as ObStatus
@@ -297,6 +305,22 @@ function EventDetail({ eventId, assignable, onClose, onChanged }: {
             </div>
 
             <div className="p-6 space-y-4">
+              {/* Fighter confirmation banner — only the linked fighter sees this. */}
+              {ev.my_participant_status === 'pending' && (
+                <div className="border p-3 flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: 'rgba(201,168,44,0.4)', background: 'rgba(201,168,44,0.08)' }}>
+                  <span className="font-condensed text-[12px]" style={{ color: '#c9a82c' }}>This event is pending your confirmation.</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => respond('confirm')} disabled={busy} className="btn-primary text-[10px] py-1.5 px-3 disabled:opacity-50">Confirm</button>
+                    <button onClick={() => respond('decline')} disabled={busy} className="btn-ghost text-[10px] py-1.5 px-3">Decline</button>
+                  </div>
+                </div>
+              )}
+              {ev.my_participant_status === 'declined' && (
+                <div className="border p-3" style={{ borderColor: '#3a2a2a', background: 'rgba(122,74,74,0.08)' }}>
+                  <span className="font-condensed text-[12px]" style={{ color: '#c08a8a' }}>You declined this event.</span>
+                  <button onClick={() => respond('confirm')} disabled={busy} className="btn-ghost text-[10px] py-1.5 px-3 ml-3">Confirm instead</button>
+                </div>
+              )}
               {safeHttpUrl(ev.external_url) && (
                 <a href={safeHttpUrl(ev.external_url)!} target="_blank" rel="noopener noreferrer"
                   className="font-condensed text-[11px] text-blood-glow hover:underline no-underline inline-block">Event page →</a>
@@ -565,8 +589,9 @@ export default function EventCalendar({ assignable = [], canLinkFighters = false
   assignable?: Assignable[]; canLinkFighters?: boolean; label?: string
 }) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [view, setView]       = useState<'month' | 'agenda'>('month')
-  const [showAdd, setShowAdd] = useState(false)
+  const [addMode, setAddMode] = useState<null | 'guided' | 'quick'>(null)
   const [openId, setOpenId]   = useState<string | null>(null)
   const [refreshKey, bump]    = useState(0)
 
@@ -602,7 +627,8 @@ export default function EventCalendar({ assignable = [], canLinkFighters = false
         <div className="flex items-center gap-2 flex-wrap">
           <TabBtn id="month">Month</TabBtn>
           <TabBtn id="agenda">Agenda</TabBtn>
-          <button onClick={() => setShowAdd(true)} className="btn-primary text-[10px] py-2 px-5">+ Add Event</button>
+          <button onClick={() => setAddMode('quick')} className="btn-ghost text-[10px] py-2 px-3">Quick Add</button>
+          <button onClick={() => setAddMode('guided')} className="btn-primary text-[10px] py-2 px-5">+ Add Fight/Event</button>
         </div>
       </div>
 
@@ -612,7 +638,13 @@ export default function EventCalendar({ assignable = [], canLinkFighters = false
         ? <CalendarMonthView onOpenItem={onOpenItem} refreshKey={refreshKey} />
         : <CalendarAgendaView onOpenItem={onOpenItem} refreshKey={refreshKey} />}
 
-      {showAdd && <AddEventForm assignable={assignable} canLinkFighters={canLinkFighters} onClose={() => setShowAdd(false)} onCreated={refresh} />}
+      {addMode === 'guided' && (
+        <EventWizard assignable={assignable} canLinkFighters={canLinkFighters} role={user?.role}
+          onClose={() => setAddMode(null)} onCreated={refresh} />
+      )}
+      {addMode === 'quick' && (
+        <AddEventForm assignable={assignable} canLinkFighters={canLinkFighters} onClose={() => setAddMode(null)} onCreated={refresh} />
+      )}
       {openId && <EventDetail eventId={openId} assignable={assignable} onClose={() => setOpenId(null)} onChanged={refresh} />}
     </div>
   )

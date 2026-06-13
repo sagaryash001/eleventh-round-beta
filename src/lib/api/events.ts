@@ -9,7 +9,7 @@ export type EventVisibility = 'private' | 'manager_visible' | 'promoter_visible'
 export type ObStatus = 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'skipped'
 export type ObVisibility = 'private' | 'manager_visible' | 'promoter_visible' | 'sponsor_visible'
 
-export interface EventParticipant { user_id: string; role: string; name: string }
+export interface EventParticipant { user_id: string; role: string; name: string; status?: 'pending' | 'confirmed' | 'declined' }
 
 export interface CalEvent {
   id: string
@@ -34,6 +34,7 @@ export interface CalEvent {
   calendly_event_type_uri?: string | null
   calendly_synced_event_id?: string | null
   calendly_meeting_status?: string | null
+  my_participant_status?: 'pending' | 'confirmed' | 'declined' | null
   participants?: EventParticipant[]
   obligation_total?: number
   obligation_done?: number
@@ -155,3 +156,30 @@ export const updateObligation = (oid: string, data: Partial<EventObligation>) =>
 
 export const completeObligation = (oid: string, proof_url?: string) =>
   apiPost<{ ok: boolean }>(`/api/events/obligations/${oid}/complete`, proof_url ? { proof_url } : {})
+
+// ── Guided event setup (wizard) + confirmation ────────────────────────────────
+export interface GuidedCreatePayload {
+  event_type: EventType
+  details: {
+    name: string; event_date: string; timezone?: string | null; location?: string | null
+    external_url?: string | null; notes?: string | null
+    opponent?: string | null; promotion_name?: string | null; weight_class?: string | null
+    visibility?: EventVisibility
+  }
+  answers?: Record<string, any>
+  participants?: { fighter_ids?: string[]; manager_id?: string | null; promoter_id?: string | null; sponsor_id?: string | null }
+  selected_templates?: string[]
+  due_date_overrides?: Record<string, string>
+  visibility_overrides?: Record<string, ObVisibility>
+  calendly_event_type_uri?: string | null
+  calendly_scheduling_url?: string | null
+}
+
+export const guidedCreateEvent = (data: GuidedCreatePayload) =>
+  apiPost<{ ok: boolean; event: CalEvent; obligations: EventObligation[] }>('/api/events/guided-create', data)
+
+export const confirmEvent = (id: string) =>
+  apiPost<{ ok: boolean; status: string }>(`/api/events/${id}/confirm`)
+
+export const declineEvent = (id: string) =>
+  apiPost<{ ok: boolean; status: string }>(`/api/events/${id}/decline`)
