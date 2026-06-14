@@ -66,6 +66,84 @@ function computeProfileCompletion(fp, userName, socials) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Recompute + persist a fighter's readiness_scores from LIVE data.
+//
+// This is the single source of truth for readiness AFTER onboarding. The
+// onboarding baseline (server/routes/onboarding.js) seeds the row with education
+// and sponsor contributions hard-coded to 0 and never recomputes — so without
+// this, completing education modules or editing the profile never moves the
+// "Sponsor Readiness score" that gates SponsorForge. Every write that affects an
+// input (module completion, profile/socials edits) and the key reads
+// (overview / sponsorforge) flow through here so the score actually rises.
+//
+// Best-effort: never throws (callers treat it as fire-and-forget).
+async function recomputeReadiness(sb, uid, userName) {
+  try {
+    const [{ data: fp }, { data: socials }, { data: mods }, { data: obs }, { data: existing }] = await Promise.all([
+      sb.from('fighter_profiles').select('*').eq('user_id', uid).maybeSingle(),
+      sb.from('social_accounts').select('platform, handle, follower_count').eq('user_id', uid),
+      sb.from('module_progress').select('completion_pct').eq('user_id', uid),
+      sb.from('obligations').select('status').eq('owner_id', uid),
+      sb.from('readiness_scores').select('overall, trend').eq('user_id', uid).maybeSingle(),
+    ])
+
+    const comp = computeProfileCompletion(fp, userName, socials)
+
+    // Education = average module completion across the fighter's tracked modules.
+    const eduScore = mods?.length
+      ? Math.round(mods.reduce((s, m) => s + (m.completion_pct ?? 0), 0) / mods.length)
+      : 0
+
+    // Obligations = % completed of those that exist; neutral 50 when none.
+    const totalObs = obs?.length ?? 0
+    const doneObs  = (obs ?? []).filter(o => o.status === 'completed').length
+    const obligationScore = totalObs ? Math.round((doneObs / totalObs) * 100) : 50
+
+    const profileScore = comp.overall            // 0-100
+    const socialScore  = comp.social_proof_pct   // 0-100
+    const sponsorScore = comp.sponsorship_pct    // 0-100 (interests + headshot)
+
+    // Same weight model as the onboarding baseline, but with REAL education +
+    // sponsor values instead of the hard-coded zeros.
+    const overall = Math.max(0, Math.min(100, Math.round(
+      profileScore    * 0.40 +
+      socialScore     * 0.20 +
+      eduScore        * 0.15 +
+      sponsorScore    * 0.15 +
+      obligationScore * 0.10
+    )))
+
+    // Radar sub-scores (kept consistent with the onboarding shape).
+    const brand    = Math.round((profileScore * 0.5 + socialScore * 0.5) * 0.6)
+    const conduct  = 80                          // baseline trust
+    const sponsor  = sponsorScore
+    const media    = socialScore
+    const pipeline = Math.round((profileScore + eduScore) / 2)
+    const finance  = 0
+
+    // Append to the trend sparkline (newest-last, cap 12), parsing defensively.
+    let trend = []
+    try { trend = Array.isArray(existing?.trend) ? existing.trend : JSON.parse(existing?.trend ?? '[]') } catch { trend = [] }
+    if (!Array.isArray(trend)) trend = []
+    if (trend[trend.length - 1] !== overall) trend.push(overall)
+    trend = trend.slice(-12)
+
+    await sb.from('readiness_scores').upsert({
+      user_id: uid,
+      overall, brand, finance, conduct, sponsor, media, pipeline,
+      trend,
+      computed_at: new Date().toISOString(),
+      updated_at:  new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+
+    return overall
+  } catch (err) {
+    log.warn({ err, uid }, 'recomputeReadiness failed (non-fatal)')
+    return null
+  }
+}
+
 function requireFighter(req, res, next) {
   if (req.user?.role !== 'fighter') return res.status(403).json({ error: 'Fighter access required.' })
   next()
@@ -78,6 +156,10 @@ router.get('/overview', ...guard, async (req, res) => {
   try {
     const sb = adminSupabase
     const uid = req.user.id
+
+    // Lazy backfill: keep the readiness score fresh (it's otherwise only written
+    // at onboarding). This corrects already-stuck users on next dashboard load.
+    await recomputeReadiness(sb, uid, req.user.name)
 
     const [{ data: rs }, { data: pipe }, { data: obs }, { data: mods }] = await Promise.all([
       sb.from('readiness_scores').select('*').eq('user_id', uid).maybeSingle(),
@@ -349,6 +431,9 @@ router.patch('/modules/:id/progress', ...guard, async (req, res) => {
       .select().maybeSingle()
     if (error) throw error
 
+    // Module progress feeds the education portion of readiness.
+    recomputeReadiness(adminSupabase, uid, req.user.name).catch(() => {})
+
     res.json({ ok: true, progress: data })
   } catch (err) {
     log.error({ err }, 'PATCH /fighter/modules/:id/progress threw')
@@ -372,6 +457,9 @@ router.post('/modules/:id/complete', ...guard, async (req, res) => {
       .update({ completion_pct: 100 }).eq('user_id', uid).eq('stage_number', 5)
       .then(() => {}).catch(() => {})
 
+    // Completing a module raises readiness (education is 15% of the score).
+    recomputeReadiness(adminSupabase, uid, req.user.name).catch(() => {})
+
     res.json({ ok: true, progress: data })
   } catch (err) {
     log.error({ err }, 'POST /fighter/modules/:id/complete threw')
@@ -385,6 +473,10 @@ const SF_PROFILE_THRESHOLD   = 75   // profile completeness %
 
 // Compute the five SponsorForge requirements for a fighter from live data.
 async function computeSponsorForgeState(sb, uid, userName) {
+  // Recompute readiness first so the "Reach Sponsor Readiness score" gate reflects
+  // completed education / latest profile rather than the frozen onboarding baseline.
+  await recomputeReadiness(sb, uid, userName)
+
   const [
     { data: fp },
     { data: socials },
@@ -673,6 +765,9 @@ router.patch('/profile', ...guard, async (req, res) => {
       await adminSupabase.from('profiles').update({ name: req.body.name }).eq('id', uid)
     }
 
+    // Profile fields drive most of readiness (profile + sponsorship sub-scores).
+    recomputeReadiness(adminSupabase, uid, req.body.name ?? req.user.name).catch(() => {})
+
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'PATCH /fighter/profile threw')
@@ -717,6 +812,9 @@ router.patch('/socials', ...guard, async (req, res) => {
         .eq('user_id', uid)
         .in('platform', toDelete)
     }
+
+    // Social / media reach feeds readiness (media + social_proof sub-scores).
+    recomputeReadiness(adminSupabase, uid, req.user.name).catch(() => {})
 
     res.json({ ok: true })
   } catch (err) {

@@ -353,6 +353,10 @@ function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
   const sponsorPct      = profileData?.completion?.sponsorship_pct ?? 0
   const socialPct       = profileData?.completion?.social_proof_pct ?? 0
   const eduPct          = modsData?.overall_pct ?? 0
+  // The actual Sponsor Readiness score (gates SponsorForge at 70) — recomputed
+  // server-side from profile + media + education + sponsorship, so it moves as
+  // the fighter completes modules.
+  const readinessPct    = overviewData?.readiness ?? 0
 
   // Panel 3: Actions Due
   const missingProfile = missingReq.length
@@ -390,7 +394,7 @@ function CommandCenter({ onNavigate }: { onNavigate: (zone: string) => void }) {
         <ClickablePanel onClick={() => onNavigate('sponsorships')} ariaLabel="Go to Sponsorships">
           <div className="dash-label">Sponsor Readiness</div>
           <div className="flex gap-5 items-center mt-1 flex-wrap">
-            <CommandRing pct={overallPct} />
+            <CommandRing pct={readinessPct} />
             <div className="grid grid-cols-2 gap-2 flex-1 min-w-0" style={{ minWidth: 140 }}>
               <MiniBar label="Profile"     pct={corePct}     />
               <MiniBar label="Media"       pct={socialPct}   />
