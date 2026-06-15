@@ -566,8 +566,11 @@ function MessagingTab() {
 }
 
 // ── Zone export ───────────────────────────────────────────────────────────────
-export default function MarketplaceOps() {
-  const [sub, setSub] = useState('mkt-overview')
+export default function MarketplaceOps({ initialTab }: { initialTab?: string }) {
+  // Deep-link target (e.g. from the Command Center action queue → Contracts/Obligations).
+  const [sub, setSub] = useState(
+    TABS.some(t => t.id === initialTab) ? (initialTab as string) : 'mkt-overview',
+  )
   return (
     <div>
       <SubNav tabs={TABS} active={sub} onChange={setSub} />

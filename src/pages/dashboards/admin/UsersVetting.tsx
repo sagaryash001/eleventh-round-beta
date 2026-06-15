@@ -400,8 +400,11 @@ function SuspendedTab() {
 }
 
 // ── Zone export ───────────────────────────────────────────────────────────────
-export default function UsersVetting() {
-  const [sub, setSub] = useState('users')
+export default function UsersVetting({ initialTab }: { initialTab?: string }) {
+  // Deep-link target (e.g. from the Command Center action queue → Sponsor Vetting).
+  const [sub, setSub] = useState(
+    TABS.some(t => t.id === initialTab) ? (initialTab as string) : 'users',
+  )
   return (
     <div>
       <SubNav tabs={TABS} active={sub} onChange={setSub} />

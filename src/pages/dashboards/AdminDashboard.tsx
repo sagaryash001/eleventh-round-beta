@@ -20,8 +20,16 @@ const ZONES = [
 
 export default function AdminDashboard() {
   const [zone, setZone]  = useState('command')
+  // Deep-link sub-tab target when navigating between zones (e.g. the Command
+  // Center action queue's "Review" → Users & Vetting → Sponsor Vetting).
+  const [zoneTab, setZoneTab] = useState<string | undefined>(undefined)
   const { user, logout } = useAuth()
   const navigate         = useNavigate()
+
+  // Programmatic navigation from Command Center widgets/queue (carries a sub-tab).
+  const goToZone = (z: string, subTab?: string) => { setZone(z); setZoneTab(subTab) }
+  // Manual top-nav click — clears any pending deep-link so the zone opens normally.
+  const selectZone = (z: string) => { setZone(z); setZoneTab(undefined) }
 
   return (
     <div className="min-h-screen bg-black flex flex-col" style={{ fontFamily: "'Barlow',sans-serif" }}>
@@ -69,7 +77,7 @@ export default function AdminDashboard() {
       <div className="bg-near-black border-b border-charcoal-3 px-4 flex overflow-x-auto flex-shrink-0 sticky top-[57px] z-20"
         style={{ scrollbarWidth: 'none' }}>
         {ZONES.map(z => (
-          <button key={z.id} onClick={() => setZone(z.id)}
+          <button key={z.id} onClick={() => selectZone(z.id)}
             className="font-condensed text-[10px] font-bold tracking-[0.18em] uppercase px-5 py-3.5 cursor-pointer border-0 bg-transparent whitespace-nowrap transition-all duration-150"
             style={{
               color:        zone === z.id ? '#f0ece4' : '#4a4846',
@@ -83,9 +91,9 @@ export default function AdminDashboard() {
 
       {/* ── Zone content ── */}
       <main className="flex-1 overflow-y-auto p-6 bg-black">
-        {zone === 'command'     && <CommandCenter onNavigate={setZone} />}
-        {zone === 'users'       && <UsersVetting />}
-        {zone === 'marketplace' && <MarketplaceOps />}
+        {zone === 'command'     && <CommandCenter onNavigate={goToZone} />}
+        {zone === 'users'       && <UsersVetting initialTab={zoneTab} />}
+        {zone === 'marketplace' && <MarketplaceOps initialTab={zoneTab} />}
         {zone === 'education'   && <Education />}
         {zone === 'content'     && <Content />}
         {zone === 'billing'     && <BillingSystem />}

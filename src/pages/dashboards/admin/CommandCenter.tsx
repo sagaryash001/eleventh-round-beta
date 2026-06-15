@@ -243,7 +243,7 @@ function CCOverview({ navigate }: { navigate?: Navigate }) {
 }
 
 // ── Action Queue ──────────────────────────────────────────────────────────────
-function ActionQueue() {
+function ActionQueue({ navigate }: { navigate?: Navigate }) {
   const [metrics, setMetrics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const { data: ovData }      = useApi<any>('/api/admin/overview')
@@ -259,15 +259,19 @@ function ActionQueue() {
   const m       = metrics ?? {}
   const pendVet = ovData?.pending_vetting ?? 0
 
-  const items: { cat: string; text: string; urgency: 'red' | 'yellow'; hint: string }[] = []
+  type Item = {
+    cat: string; text: string; urgency: 'red' | 'yellow'; hint: string
+    zone: string; subTab: string
+  }
+  const items: Item[] = []
   if ((m.overdue_obligations ?? 0) > 0)
-    items.push({ cat: 'Obligations', text: `${m.overdue_obligations} obligation${m.overdue_obligations > 1 ? 's' : ''} overdue`, urgency: 'red', hint: 'Marketplace Ops → Obligations' })
+    items.push({ cat: 'Obligations', text: `${m.overdue_obligations} obligation${m.overdue_obligations > 1 ? 's' : ''} overdue`, urgency: 'red', hint: 'Marketplace Ops → Obligations', zone: 'marketplace', subTab: 'obligations' })
   if (pendVet > 0)
-    items.push({ cat: 'Vetting', text: `${pendVet} sponsor${pendVet > 1 ? 's' : ''} awaiting vetting`, urgency: 'yellow', hint: 'Users & Vetting → Sponsor Vetting' })
+    items.push({ cat: 'Vetting', text: `${pendVet} sponsor${pendVet > 1 ? 's' : ''} awaiting vetting`, urgency: 'yellow', hint: 'Users & Vetting → Sponsor Vetting', zone: 'users', subTab: 'vetting' })
   if ((m.proofs_pending_review ?? 0) > 0)
-    items.push({ cat: 'Proofs', text: `${m.proofs_pending_review} proof${m.proofs_pending_review > 1 ? 's' : ''} pending review`, urgency: 'yellow', hint: 'Marketplace Ops → Obligations' })
+    items.push({ cat: 'Proofs', text: `${m.proofs_pending_review} proof${m.proofs_pending_review > 1 ? 's' : ''} pending review`, urgency: 'yellow', hint: 'Marketplace Ops → Obligations', zone: 'marketplace', subTab: 'obligations' })
   if ((m.disputed_contracts ?? 0) > 0)
-    items.push({ cat: 'Contracts', text: `${m.disputed_contracts} contract${m.disputed_contracts > 1 ? 's' : ''} in dispute`, urgency: 'red', hint: 'Marketplace Ops → Contracts' })
+    items.push({ cat: 'Contracts', text: `${m.disputed_contracts} contract${m.disputed_contracts > 1 ? 's' : ''} in dispute`, urgency: 'red', hint: 'Marketplace Ops → Contracts', zone: 'marketplace', subTab: 'contracts' })
 
   if (items.length === 0) return (
     <EmptyState icon="✓" title="Queue Clear" body="No pending actions require attention." />
@@ -283,9 +287,14 @@ function ActionQueue() {
             <div className="font-condensed text-[13px] text-off-white">{item.text}</div>
             <div className="font-condensed text-[10px] text-gray-3 mt-0.5">→ {item.hint}</div>
           </div>
-          <span className={`badge ${item.urgency === 'red' ? 'badge-red' : 'badge-yellow'} flex-shrink-0`}>
-            {item.urgency === 'red' ? 'Urgent' : 'Review'}
-          </span>
+          <button
+            type="button"
+            onClick={() => navigate?.(item.zone, item.subTab)}
+            aria-label={`Go to ${item.hint}`}
+            className={`badge ${item.urgency === 'red' ? 'badge-red' : 'badge-yellow'} flex-shrink-0 cursor-pointer border-0 hover:brightness-125 transition-all`}
+          >
+            {item.urgency === 'red' ? 'Resolve →' : 'Review →'}
+          </button>
         </div>
       ))}
     </div>
@@ -356,17 +365,19 @@ function CCHealth() {
 }
 
 // ── Zone export ───────────────────────────────────────────────────────────────
-export default function CommandCenter({ onNavigate }: { onNavigate?: (zone: string) => void }) {
+export default function CommandCenter({ onNavigate }: { onNavigate?: (zone: string, subTab?: string) => void }) {
   const [sub, setSub] = useState('overview')
+  // 'command' targets stay inside this zone (local sub-tab); anything else jumps
+  // to another admin zone, optionally deep-linking to one of that zone's sub-tabs.
   const navigate: Navigate = (zone, subTab) => {
-    if (subTab) setSub(subTab)
-    else onNavigate?.(zone)
+    if (zone === 'command') { if (subTab) setSub(subTab) }
+    else onNavigate?.(zone, subTab)
   }
   return (
     <div>
       <SubNav tabs={TABS} active={sub} onChange={setSub} />
       {sub === 'overview' && <CCOverview navigate={navigate} />}
-      {sub === 'queue'    && <ActionQueue />}
+      {sub === 'queue'    && <ActionQueue navigate={navigate} />}
       {sub === 'activity' && <CCActivity />}
       {sub === 'health'   && <CCHealth />}
     </div>
