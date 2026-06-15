@@ -27,13 +27,18 @@ import { childLogger } from '../lib/logger.js'
 const router = Router()
 const log    = childLogger('auth')
 
-// When true, new users are confirmed instantly and can log in without an email.
-// Defaults to ON whenever SendGrid isn't configured, so registration works
-// out of the box. Set AUTH_AUTOCONFIRM=false to force the real email flow
-// even before SendGrid is wired up, or =true to always skip email.
-const AUTO_CONFIRM =
-  process.env.AUTH_AUTOCONFIRM === 'true' ||
-  (process.env.AUTH_AUTOCONFIRM !== 'false' && !process.env.SENDGRID_API_KEY)
+// Email confirmation is REQUIRED by default. New users are created UNCONFIRMED
+// and the browser triggers Supabase's own confirmation email (via
+// supabase.auth.resend) right after registration, so delivery goes through
+// Supabase Auth's configured SMTP (SendGrid) rather than this server's separate
+// transport.
+//
+// Set AUTH_AUTOCONFIRM=true ONLY for local/dev or test environments with no
+// email delivery — it confirms users instantly and lets them sign in without an
+// email. It must NEVER be true in production. (Previously this defaulted to ON
+// whenever the *backend* lacked its own SENDGRID_API_KEY, which silently
+// bypassed verification and is why signup confirmation emails never arrived.)
+const AUTO_CONFIRM = process.env.AUTH_AUTOCONFIRM === 'true'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/register
@@ -76,7 +81,14 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
         code === 'user_already_exists'   ||
         createErr.status === 422
       if (isDuplicate) {
-        return res.status(409).json({ error: 'An account with this email already exists.' })
+        // The account may exist but never have been verified (e.g. created while
+        // email sending was broken). Send a `code` so the client can offer a
+        // "resend verification" path instead of a dead-end error. We do NOT probe
+        // confirmation state here — that would leak which emails are registered.
+        return res.status(409).json({
+          error: 'An account with this email already exists.',
+          code:  'exists',
+        })
       }
       log.error({ err: createErr, code, status: createErr.status, email }, 'auth.admin.createUser failed')
       return res.status(500).json({ error: 'Registration failed. Please try again.' })
@@ -119,9 +131,16 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       if (obErr) log.warn({ err: obErr, userId }, 'onboarding insert failed (non-fatal)')
     }
 
-    // 5. Email verification — skipped entirely when AUTO_CONFIRM is on.
+    // 5. Email verification.
+    //    AUTO_CONFIRM on  → user is already confirmed; no email, client logs in.
+    //    AUTO_CONFIRM off → user is UNCONFIRMED. We do NOT send the email from
+    //                       here (that used this server's own transport, which is
+    //                       separate from Supabase's SMTP). Instead the browser
+    //                       calls supabase.auth.resend({ type: 'signup' }) right
+    //                       after this responds, so the confirmation email is
+    //                       delivered through Supabase Auth's configured SMTP.
     if (AUTO_CONFIRM) {
-      log.info({ userId, email }, 'user auto-confirmed (no email verification)')
+      log.info({ userId, email }, 'user auto-confirmed (AUTH_AUTOCONFIRM=true) — no email verification')
       return res.status(201).json({
         ok:            true,
         autoConfirmed: true,
@@ -129,28 +148,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       })
     }
 
-    // Generate a Supabase verification link, then send our branded email.
-    const clientUrl   = process.env.CLIENT_URL || 'http://localhost:5173'
-    const { data: linkData, error: linkErr } = await sb.auth.admin.generateLink({
-      type:    'signup',
-      email,
-      password,
-      options: { redirectTo: `${clientUrl}/verify-email` },
-    })
-
-    if (linkErr) {
-      log.error({ err: linkErr, userId }, 'generateLink failed')
-      // Continue anyway — user can request resend
-    }
-
-    // Supabase returns a full action_link the user clicks. We pass it
-    // through SendGrid so the email matches our brand.
-    const verifyUrl = linkData?.properties?.action_link || `${clientUrl}/verify-email`
-
-    sendVerificationEmail(email, name, verifyUrl).catch(err =>
-      log.error({ err, email }, 'sendVerificationEmail failed'),
-    )
-
+    log.info({ userId, email }, 'user created unconfirmed — client will trigger Supabase confirmation email')
     return res.status(201).json({
       ok:            true,
       autoConfirmed: false,

@@ -128,11 +128,20 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-[1000]"
         style={{
-          // While the hero is in view, stay fully transparent — don't let scrolled state cut across the animation
           padding: `${scrolled && showLinks ? 12 : 20}px 40px`,
-          background: scrolled && showLinks ? 'rgba(8,8,8,0.97)' : 'transparent',
-          backdropFilter: scrolled && showLinks ? 'blur(20px) saturate(1.3)' : 'none',
-          borderBottom: scrolled && showLinks ? '1px solid rgba(139,0,0,0.16)' : 'none',
+          // Scrolled → solid glass. Over the cinematic hero (home, top) → a SUBTLE
+          // glass scrim with a faint red accent so the logo/CTA stay legible against
+          // the bright cage centre without over-darkening. Other pages: transparent.
+          background: scrolled && showLinks
+            ? 'rgba(8,8,8,0.97)'
+            : isHome
+              ? 'linear-gradient(180deg, rgba(8,8,8,0.62) 0%, rgba(8,8,8,0.14) 68%, transparent 100%)'
+              : 'transparent',
+          backdropFilter: scrolled && showLinks ? 'blur(20px) saturate(1.3)' : isHome ? 'blur(6px)' : 'none',
+          WebkitBackdropFilter: scrolled && showLinks ? 'blur(20px) saturate(1.3)' : isHome ? 'blur(6px)' : 'none',
+          borderBottom: scrolled && showLinks
+            ? '1px solid rgba(139,0,0,0.16)'
+            : isHome ? '1px solid rgba(196,30,58,0.10)' : 'none',
           boxShadow: scrolled && showLinks ? '0 2px 40px rgba(0,0,0,0.6)' : 'none',
           transition: 'padding 0.4s cubic-bezier(.25,.46,.45,.94), background 0.4s, box-shadow 0.4s, border-color 0.4s',
         }}

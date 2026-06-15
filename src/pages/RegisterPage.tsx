@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, RegisterData } from '../hooks/useAuth'
 import { apiFetch } from '../lib/api'
 import { validatePassword, getPasswordRules } from '../lib/passwordValidation'
+import { resendVerification } from '../lib/resendVerification'
+import ResendVerification from '../components/ResendVerification'
 import Navbar from '../components/Navbar'
 
 // ── Inline SVG eye icon ───────────────────────────────────────────────────────
@@ -171,6 +173,9 @@ export default function RegisterPage() {
   const [step, setStep]    = useState<Step>('account')
   const [error, setError]  = useState('')
   const [loading, setLoading] = useState(false)
+  // Set when registration reports the email is already taken — we offer a
+  // resend-verification path rather than a dead-end error.
+  const [existingAccount, setExistingAccount] = useState(false)
   const [subStatus, setSubStatus] = useState<'idle'|'checking'|'ok'|'taken'|'invalid'>('idle')
   const subTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
 
@@ -304,7 +309,12 @@ export default function RegisterPage() {
       },
     }
     const result = await register(payload)
-    if (!result.ok) { setLoading(false); return setError(result.error ?? 'Registration failed.') }
+    if (!result.ok) {
+      setLoading(false)
+      // Email already registered — show the "may not be verified, resend?" path.
+      if (result.code === 'exists') { setError(''); setExistingAccount(true); return }
+      return setError(result.error ?? 'Registration failed.')
+    }
 
     // Auto-confirm mode: no email step — log the user straight in.
     // The redirect-if-logged-in effect will take them to their dashboard.
@@ -316,6 +326,10 @@ export default function RegisterPage() {
       return navigate('/login', { replace: true })
     }
 
+    // The backend created an UNCONFIRMED user but did not send an email. Trigger
+    // Supabase's confirmation email now (via its SMTP) before showing the inbox
+    // screen. The done-screen's resend button handles any follow-up sends.
+    await resendVerification(form.email.trim())
     setLoading(false)
     setStep('done')
   }
@@ -350,8 +364,31 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {/* ── Existing-account prompt ── */}
+          {existingAccount && (
+            <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden text-center"
+                 style={{ borderLeft: '2px solid #8b0000' }}>
+              <div className="relative z-10">
+                <div className="sec-label mb-2 justify-center">Account Exists</div>
+                <h2 className="font-display text-off-white uppercase mb-4"
+                    style={{ fontSize:'clamp(28px,3.5vw,42px)', lineHeight:0.92 }}>
+                  Already Registered
+                </h2>
+                <p className="font-narrow text-gray-1 leading-relaxed mb-6" style={{ fontSize:14, maxWidth:360, margin:'0 auto 24px' }}>
+                  This account already exists but may not be verified. Want us to resend the
+                  verification email to <strong className="text-off-white">{form.email}</strong>?
+                </p>
+                <ResendVerification email={form.email.trim()} cooldownSeconds={60} className="mb-5" />
+                <p className="font-condensed text-[10px] text-gray-3 text-center">
+                  Already verified?{' '}
+                  <Link to="/login" className="text-blood-glow hover:text-off-white transition-colors no-underline">Sign In</Link>
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Card */}
-          {step !== 'done' && (
+          {step !== 'done' && !existingAccount && (
             <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden"
                  style={{ borderLeft: '2px solid #8b0000' }}>
               <div className="absolute inset-0 pointer-events-none"
@@ -667,9 +704,18 @@ export default function RegisterPage() {
                   <strong className="text-off-white">{form.email}</strong>.
                   Click it to activate your account and access your dashboard.
                 </p>
-                <p className="font-condensed text-[11px] text-gray-3 tracking-wide mb-6">
-                  Didn't receive it? Check your spam folder.
+                <p className="font-condensed text-[11px] text-gray-3 tracking-wide mb-5">
+                  Didn't receive it? Check your spam folder, or resend below.
                 </p>
+
+                {/* Resend — we already sent one on registration, so start cooled-down. */}
+                <ResendVerification
+                  email={form.email.trim()}
+                  initialSent
+                  cooldownSeconds={60}
+                  className="mb-6 text-left"
+                />
+
                 <Link to="/login" className="btn-primary inline-block">
                   Back to Sign In
                 </Link>

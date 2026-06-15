@@ -342,6 +342,17 @@ export default function HeroSection() {
           background: 'radial-gradient(ellipse at 88% 18%, rgba(100,0,0,0.16) 0%, transparent 38%)',
         }} />
 
+        {/* Faint cage-mesh — ties the hero to the walkout intro. Very low opacity
+            and edge-masked so it reads as texture and never affects readability. */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage:
+            'repeating-linear-gradient(45deg, rgba(255,255,255,0.022) 0 1px, transparent 1px 27px),' +
+            'repeating-linear-gradient(-45deg, rgba(255,255,255,0.022) 0 1px, transparent 1px 27px)',
+          maskImage: 'radial-gradient(ellipse at 50% 32%, black 0%, transparent 72%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 32%, black 0%, transparent 72%)',
+          opacity: 0.55,
+        }} />
+
         {/* Arena floor glow — warm light from below */}
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{
           height: 280,

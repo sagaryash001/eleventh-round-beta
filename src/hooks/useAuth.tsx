@@ -29,8 +29,8 @@ interface AuthContextValue {
   user:         AuthUser | null
   token:        string | null
   loading:      boolean
-  login:        (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
-  register:     (data: RegisterData) => Promise<{ ok: boolean; error?: string; autoConfirmed?: boolean }>
+  login:        (email: string, password: string) => Promise<{ ok: boolean; error?: string; needsVerification?: boolean }>
+  register:     (data: RegisterData) => Promise<{ ok: boolean; error?: string; autoConfirmed?: boolean; code?: string }>
   logout:       () => Promise<void>
   refreshUser:  () => Promise<void>
 }
@@ -133,9 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      if (/not confirmed/i.test(error.message)) {
-        return { ok: false, error: 'Email not verified — check your inbox.' }
+      // Supabase returns "Email not confirmed" for unverified accounts. Flag it
+      // so the login screen can auto-resend a verification link and show help.
+      if (/not confirmed|email.*confirm|confirm.*email/i.test(error.message)) {
+        return { ok: false, error: 'Your email is not verified yet.', needsVerification: true }
       }
+      console.error('[auth] login failed:', error.message)
       return { ok: false, error: error.message || 'Login failed.' }
     }
 
@@ -154,9 +157,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body:    JSON.stringify(data),
       })
       const json = await res.json()
-      if (!res.ok) return { ok: false, error: json.error ?? 'Registration failed.' }
+      if (!res.ok) {
+        console.error('[auth] register failed:', res.status, json?.error)
+        return { ok: false, error: json.error ?? 'Registration failed.', code: json?.code }
+      }
       return { ok: true, autoConfirmed: !!json.autoConfirmed }
-    } catch {
+    } catch (err) {
+      console.error('[auth] register request error:', (err as Error)?.message)
       return { ok: false, error: 'Cannot reach the server. Is it running?' }
     }
   }, [])

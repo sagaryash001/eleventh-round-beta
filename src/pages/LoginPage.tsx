@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { resendVerification } from '../lib/resendVerification'
+import ResendVerification from '../components/ResendVerification'
 import Navbar from '../components/Navbar'
 
 // ── Inline SVG eye icon (no external dependency) ──────────────────────────────
@@ -33,6 +35,12 @@ export default function LoginPage() {
   const [otpState,  setOtpState]  = useState<OtpState>('idle')
   const [otpError,  setOtpError]  = useState('')
 
+  // Unverified-email state: when sign-in fails because the email isn't confirmed,
+  // we auto-resend a verification link ONCE per attempt (throttled to 60s) and
+  // show a manual resend button below.
+  const [needsVerify, setNeedsVerify] = useState(false)
+  const lastAutoResend = useRef(0)
+
   const { login, user } = useAuth()
   const navigate        = useNavigate()
 
@@ -59,13 +67,26 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNeedsVerify(false)
     setLoading(true)
     const result = await login(email, password)
     setLoading(false)
-    if (!result.ok) {
-      // Friendly message for unverified emails (handled in useAuth, surfaced here).
-      setError(result.error ?? 'Login failed.')
+    if (result.ok) return
+
+    if (result.needsVerification) {
+      setNeedsVerify(true)
+      setError('Your email is not verified yet. We sent you a new verification link.')
+      // Auto-resend ONCE per attempt, throttled to 60s so repeated submits can't spam.
+      const now = Date.now()
+      if (now - lastAutoResend.current > 60_000) {
+        lastAutoResend.current = now
+        resendVerification(email.trim()).catch(() => { /* surfaced via manual button */ })
+      }
+      return
     }
+
+    // Friendly message for any other failure.
+    setError(result.error ?? 'Login failed.')
   }
 
   const handleMagicLink = async () => {
@@ -191,10 +212,15 @@ export default function LoginPage() {
                     {/* Extra hint for unverified email */}
                     {/verify|confirm/i.test(error) && (
                       <p className="mt-1 text-gray-3">
-                        Check your inbox for a verification email from Eleventh Round.
+                        Check your inbox (and spam) for a verification email from Eleventh Round.
                       </p>
                     )}
                   </div>
+                )}
+
+                {/* Unverified-email resend — auto-sent once on submit; manual after cooldown. */}
+                {needsVerify && (
+                  <ResendVerification email={email.trim()} initialSent cooldownSeconds={60} />
                 )}
 
                 <button

@@ -84,7 +84,8 @@
       "Bash(sed -n '520,545p' server/routes/fighter.js)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['dependencies','devDependencies'] if k in d}, indent=2\\)\\)\")",
       "Bash(xxd public/team/don-rudolph.jpg)",
-      "Bash(graphify update *)"
+      "Bash(graphify update *)",
+      "Bash(npx vitest *)"
     ]
   }
 }

@@ -247,6 +247,122 @@
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CINEMATIC HERO — "Blackout Noir" 5-stage sequence
+   Boot → Hologram → Command Table → Hyperspace → Product Reveal.
+   One pinned GSAP timeline cross-dissolves between stacked stage layers
+   over a persistent (less-zoomed) octagon background.
+═══════════════════════════════════════════════════════════════ */
+.cine-hero  { position: relative; background: #070809; }
+.cine-stage { position: relative; height: 100vh; min-height: 640px; overflow: hidden; background: #070809; }
+
+/* Octagon environment — LESS ZOOMED: full cover, no inset, framed lower so the
+   posts + floor circle stay visible. The only zoom is a brief hyperspace push. */
+.cine-bg {
+  position: absolute; inset: 0;
+  background: url('/images/hero-octagon-bg.png') center 52% / cover no-repeat;
+  transform-origin: 50% 50%;
+}
+
+.cine-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.cine-vignette { background: radial-gradient(ellipse at 50% 48%, transparent 0%, transparent 50%, rgba(0,0,0,0.5) 100%); }
+/* Blackout-noir scrims — left-weighted so copy reads; cage centre stays clear. */
+.cine-scrim-left  { background: linear-gradient(90deg, rgba(7,8,9,0.92) 0%, rgba(7,8,9,0.5) 32%, transparent 62%); }
+.cine-scrim-edges { background: linear-gradient(180deg, rgba(7,8,9,0.7) 0%, transparent 18%, transparent 60%, rgba(7,8,9,0.94) 100%); }
+.cine-floor-glow {
+  opacity: 0.5;
+  background:
+    radial-gradient(ellipse at 50% 108%, rgba(225,29,42,0.32) 0%, transparent 50%),
+    radial-gradient(ellipse at 14% 96%, rgba(139,15,26,0.2) 0%, transparent 46%);
+}
+
+/* Faint animated smoke (CSS pseudo-elements — no canvas/WebGL). */
+.cine-smoke { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0.4; }
+.cine-smoke::before, .cine-smoke::after {
+  content: ''; position: absolute; inset: -25%;
+  background:
+    radial-gradient(ellipse at 30% 72%, rgba(139,15,26,0.16), transparent 55%),
+    radial-gradient(ellipse at 72% 82%, rgba(60,0,0,0.18), transparent 55%);
+  animation: smokeDrift 28s ease-in-out infinite alternate;
+}
+.cine-smoke::after { animation-duration: 36s; animation-direction: alternate-reverse; opacity: 0.7; }
+@keyframes smokeDrift {
+  0%   { transform: translate3d(-2%, 1%, 0) scale(1.03); }
+  100% { transform: translate3d(3%, -3%, 0) scale(1.1); }
+}
+
+/* ── HUD primitives ─────────────────────────────────────────────────── */
+.hud-grid {            /* faint crimson vertical grid + horizontal scanlines */
+  background:
+    repeating-linear-gradient(90deg, transparent 0 80px, rgba(225,29,42,0.06) 80px 81px),
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(0,0,0,0.24) 3px 4px);
+}
+.hud-tick {            /* mono micro-label */
+  font-family: 'Share Tech Mono', ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #7a5d62;
+}
+.hud-tick--crimson { color: #e11d2a; text-shadow: 0 0 8px rgba(225,29,42,0.45); }
+.hud-tick--cyan    { color: #6fd9ef; }                 /* sparse ice accent */
+.hud-glow { box-shadow: 0 0 8px #e11d2a; }
+
+/* Clip-corner glass panel (the storyboard signature). */
+.hud-panel {
+  position: relative;
+  background: linear-gradient(158deg, rgba(22,15,18,0.72), rgba(10,9,11,0.6));
+  border: 1px solid rgba(225,29,42,0.22);
+  backdrop-filter: blur(12px) saturate(1.1); -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55), inset 0 0 24px rgba(139,15,26,0.08);
+}
+
+/* Product-reveal module card. */
+.hud-module { padding: 14px 14px 15px; transition: transform .35s var(--ease-cinema), border-color .35s, box-shadow .35s; }
+.hud-module:hover { transform: translateY(-4px); border-color: rgba(225,29,42,0.6); box-shadow: 0 26px 60px rgba(0,0,0,0.6), 0 0 24px rgba(225,29,42,0.28); }
+.hud-module__code  { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #e11d2a; }
+.hud-module__title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; color: #eef5f6; letter-spacing: 0.01em; }
+.hud-module__sub   { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7c80; }
+.hud-module__arrow { color: #e11d2a; }
+
+/* ── Stage layers — stacked; the timeline cross-dissolves between them ── */
+.cine-stage-layer {
+  position: absolute; inset: 0; z-index: 5; opacity: 0;
+  display: flex; align-items: center;
+  padding: clamp(86px,11vh,140px) clamp(28px,7vw,120px) clamp(64px,10vh,120px);
+}
+.cine-layer-boot { opacity: 1; }                       /* first frame visible pre-JS */
+.cine-layer-inner { width: 100%; max-width: 1500px; margin: 0 auto; }
+
+/* Stage 02 — four horizontal pillars. */
+.cine-pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.cine-pillar  { padding: 18px 16px 20px; min-height: 168px; display: flex; flex-direction: column; justify-content: space-between; }
+
+/* Stage 03 — circular command table. */
+.cine-table { position: relative; width: min(64vh, 540px); aspect-ratio: 1; margin: 0 auto; }
+.cine-table__ring { position: absolute; inset: 8%; border-radius: 50%; border: 1px solid rgba(225,29,42,0.28); box-shadow: inset 0 0 60px rgba(225,29,42,0.1), 0 0 30px rgba(225,29,42,0.12); }
+.cine-table__core { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+.cine-node { position: absolute; transform: translate(-50%,-50%); padding: 10px 14px; text-align: center; min-width: 120px; }
+
+/* Stage 04 — hyperspace forward-vector streaks. */
+.cine-streaks {
+  position: absolute; inset: -20%;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0 5deg, rgba(225,29,42,0.13) 5deg 5.5deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0%, transparent 14%, #000 60%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 0%, transparent 14%, #000 60%);
+}
+
+/* Stage 05 — product reveal (resting hero). */
+.cine-reveal { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(24px,4vw,56px); align-items: center; width: 100%; }
+.cine-modules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Mobile / reduced-motion: no pin → only the resting reveal, stacked ── */
+@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+  .cine-stage { height: auto; min-height: 100vh; overflow: visible; }
+  .cine-layer-boot, .cine-layer-hologram, .cine-layer-table, .cine-layer-hyper { display: none; }
+  .cine-layer-reveal { position: static; inset: auto; opacity: 1 !important; padding: 108px 22px 56px; }
+  .cine-reveal { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) { .cine-modules { grid-template-columns: 1fr; } }
+
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   :root {

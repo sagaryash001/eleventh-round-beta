@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import ResendVerification from '../components/ResendVerification'
 import Navbar from '../components/Navbar'
 
 type Status = 'verifying' | 'success' | 'error'
@@ -162,10 +163,16 @@ export default function VerifyEmailPage() {
                       style={{ fontSize:'clamp(28px,3.5vw,42px)', lineHeight:0.92 }}>
                     Link Invalid
                   </h2>
-                  <p className="font-narrow text-gray-2 mb-6" style={{ fontSize:13 }}>
+                  <p className="font-narrow text-gray-2 mb-2" style={{ fontSize:13 }}>
                     {message}
                   </p>
-                  <Link to="/login" className="btn-primary">Back to Sign In</Link>
+                  <p className="font-condensed text-[11px] text-gray-3 tracking-wide mb-5">
+                    Be sure to check your spam folder. Still nothing? Enter your email to get a fresh link.
+                  </p>
+
+                  <ResendVerification cooldownSeconds={60} className="mb-6 text-left" />
+
+                  <Link to="/login" className="btn-primary inline-block">Back to Sign In</Link>
                 </>
               )}
             </div>

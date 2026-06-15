@@ -24,6 +24,7 @@ export default {
         condensed:  ['"Barlow Condensed"', 'sans-serif'],
         body:       ['"Barlow"', 'sans-serif'],
         narrow:     ['"Archivo Narrow"', 'sans-serif'],
+        hud:        ['"Share Tech Mono"', 'ui-monospace', 'monospace'],
       },
     },
   },
