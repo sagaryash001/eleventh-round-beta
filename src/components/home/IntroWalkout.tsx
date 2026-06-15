@@ -105,6 +105,46 @@ export default function IntroWalkout() {
           'linear-gradient(to bottom, rgba(0,0,0,0.36) 0%, transparent 22%, transparent 58%, rgba(0,0,0,0.62) 100%)',
       }} />
 
+      {/* ── Branded HUD lockup ──────────────────────────────────────────────
+          Mono "ENTERING" tick + ELEVENTH ROUND wordmark + a smooth scanning
+          slider. The group enters once on mount; on dismiss this layer fades
+          FASTER than the overlay (0.32s vs 0.82s) so the brand clears just
+          ahead of the hero handoff — no collision with the Boot stage title. */}
+      <div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none px-6 text-center"
+        style={{
+          opacity:    fadingOut ? 0 : 1,
+          transition: fadingOut ? 'opacity 0.32s ease' : 'opacity 0.6s ease',
+        }}
+      >
+        <div className="er-intro-brand" style={{ opacity: 0 }}>
+          {/* SEQ tick */}
+          <div
+            className="font-hud uppercase mb-5"
+            style={{ fontSize: 'clamp(10px,1.3vw,14px)', letterSpacing: '0.32em', color: '#b8b4ae' }}
+          >
+            <span style={{ color: '#e11d2a' }}>▸</span>&nbsp; SEQ&nbsp;00&nbsp;//&nbsp;ENTERING
+          </div>
+
+          {/* Wordmark */}
+          <h1
+            className="font-display uppercase m-0"
+            style={{
+              color: '#f0ece4',
+              fontSize: 'clamp(48px,11vw,168px)',
+              lineHeight: 0.9,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Eleventh{' '}
+            <span style={{ color: '#e11d2a', textShadow: '0 0 48px rgba(225,29,42,0.45)' }}>Round</span>
+          </h1>
+
+          {/* Smooth scanning slider */}
+          <div className="er-intro-slider"><span /></div>
+        </div>
+      </div>
+
       {/* Skip Intro — bottom-right. */}
       <button
         type="button"
@@ -123,6 +163,42 @@ export default function IntroWalkout() {
       >
         Skip Intro ›
       </button>
+
+      {/* Scoped animations for the branded lockup + scanning slider. */}
+      <style>{`
+        .er-intro-brand {
+          animation: erIntroIn 0.95s cubic-bezier(.2,.7,.2,1) 0.45s forwards;
+        }
+        @keyframes erIntroIn {
+          0%   { opacity: 0; transform: translateY(16px); letter-spacing: 0.06em; filter: blur(5px); }
+          100% { opacity: 1; transform: translateY(0);    letter-spacing: 0;      filter: blur(0); }
+        }
+        .er-intro-slider {
+          position: relative;
+          width: clamp(180px, 26vw, 340px);
+          height: 2px;
+          margin: 28px auto 0;
+          background: rgba(255,255,255,0.12);
+          overflow: hidden;
+          opacity: 0;
+          animation: erIntroBarIn 0.6s ease 1.1s forwards;
+        }
+        @keyframes erIntroBarIn { to { opacity: 1; } }
+        .er-intro-slider > span {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          width: 40%;
+          background: linear-gradient(90deg, transparent 0%, #e11d2a 50%, transparent 100%);
+          box-shadow: 0 0 12px rgba(225,29,42,0.6);
+          animation: erIntroSlide 2.2s cubic-bezier(.45,0,.2,1) 1.3s infinite;
+        }
+        @keyframes erIntroSlide {
+          0%   { transform: translateX(-120%); }
+          100% { transform: translateX(320%); }
+        }
+      `}</style>
     </div>
   )
 }

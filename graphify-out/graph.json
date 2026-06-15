@@ -10551,8 +10551,8 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\LoginPage.tsx",
       "source_location": "L83",
       "weight": 1.0,
-      "_src": "loginpage_handlesubmit",
-      "_tgt": "resendverification_resendverification",
+      "_src": "resendverification_resendverification",
+      "_tgt": "loginpage_handlesubmit",
       "source": "resendverification_resendverification",
       "target": "loginpage_handlesubmit"
     },
