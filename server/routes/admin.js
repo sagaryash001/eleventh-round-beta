@@ -34,6 +34,7 @@ router.get('/overview', ...guard, async (req, res) => {
       { data: alts },
       { count: pendingVetting },
       { count: opportunityCount },
+      { count: pendingForgeReviews },
     ] = await Promise.all([
       sb.from('profiles').select('id, role, account_type, status'),
       sb.from('alerts').select('id, message, type').eq('resolved', false)
@@ -46,6 +47,9 @@ router.get('/overview', ...guard, async (req, res) => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'published')
         .is('deleted_at', null),
+      sb.from('sponsorforge_reviews')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending'),
     ])
 
     const list      = users ?? []
@@ -74,6 +78,7 @@ router.get('/overview', ...guard, async (req, res) => {
       promotions,
       sponsors,
       pending_vetting:      pendingVetting ?? 0,
+      pending_forge_reviews: pendingForgeReviews ?? 0,
       active_opportunities: opportunityCount ?? 0,
       platform_health:      platformHealth,
       alerts:               alertItems,

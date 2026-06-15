@@ -36,8 +36,9 @@ function CCOverview({ navigate }: { navigate?: Navigate }) {
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} />
 
-  const m       = metrics ?? {}
-  const pendVet = ovData?.pending_vetting ?? 0
+  const m         = metrics ?? {}
+  const pendVet   = ovData?.pending_vetting ?? 0
+  const pendForge = ovData?.pending_forge_reviews ?? 0
 
   // ── Panel 1: Active Platform ─────────────────────────────────────────────
   const totalUsers = m.total_users ?? 0
@@ -70,7 +71,7 @@ function CCOverview({ navigate }: { navigate?: Navigate }) {
   const proofsPending = m.proofs_pending_review ?? 0
   const overdue       = m.overdue_obligations   ?? 0
   const disputed      = m.disputed_contracts    ?? 0
-  const totalActions  = pendVet + proofsPending + overdue + disputed
+  const totalActions  = pendVet + pendForge + proofsPending + overdue + disputed
   const actionBarPct  = Math.min(totalActions * 14, 100)
 
   // ── Activity feed: real recent_contracts from marketplace API ────────────
@@ -134,6 +135,7 @@ function CCOverview({ navigate }: { navigate?: Navigate }) {
               <div className="dash-sub">
                 {[
                   pendVet       > 0 && `${pendVet} vetting`,
+                  pendForge     > 0 && `${pendForge} SponsorForge`,
                   proofsPending > 0 && `${proofsPending} proofs`,
                   overdue       > 0 && `${overdue} overdue`,
                   disputed      > 0 && `${disputed} disputed`,
@@ -256,8 +258,9 @@ function ActionQueue({ navigate }: { navigate?: Navigate }) {
 
   if (loading) return <DashSkeleton />
 
-  const m       = metrics ?? {}
-  const pendVet = ovData?.pending_vetting ?? 0
+  const m         = metrics ?? {}
+  const pendVet   = ovData?.pending_vetting ?? 0
+  const pendForge = ovData?.pending_forge_reviews ?? 0
 
   type Item = {
     cat: string; text: string; urgency: 'red' | 'yellow'; hint: string
@@ -268,6 +271,8 @@ function ActionQueue({ navigate }: { navigate?: Navigate }) {
     items.push({ cat: 'Obligations', text: `${m.overdue_obligations} obligation${m.overdue_obligations > 1 ? 's' : ''} overdue`, urgency: 'red', hint: 'Marketplace Ops → Obligations', zone: 'marketplace', subTab: 'obligations' })
   if (pendVet > 0)
     items.push({ cat: 'Vetting', text: `${pendVet} sponsor${pendVet > 1 ? 's' : ''} awaiting vetting`, urgency: 'yellow', hint: 'Users & Vetting → Sponsor Vetting', zone: 'users', subTab: 'vetting' })
+  if (pendForge > 0)
+    items.push({ cat: 'SponsorForge', text: `${pendForge} SponsorForge request${pendForge > 1 ? 's' : ''} awaiting review`, urgency: 'yellow', hint: 'Marketplace Ops → SponsorForge', zone: 'marketplace', subTab: 'sponsorforge' })
   if ((m.proofs_pending_review ?? 0) > 0)
     items.push({ cat: 'Proofs', text: `${m.proofs_pending_review} proof${m.proofs_pending_review > 1 ? 's' : ''} pending review`, urgency: 'yellow', hint: 'Marketplace Ops → Obligations', zone: 'marketplace', subTab: 'obligations' })
   if ((m.disputed_contracts ?? 0) > 0)
