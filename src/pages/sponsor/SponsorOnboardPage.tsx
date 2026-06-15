@@ -78,7 +78,7 @@ function Chips({ label, options, selected, onToggle }: {
 }
 
 export default function SponsorOnboardPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [step, setStep]       = useState<Step>('company')
   const [error, setError]     = useState('')
@@ -134,6 +134,9 @@ export default function SponsorOnboardPage() {
         preferred_promotions:     form.preferred_promotions,
         campaign_goals:           form.campaign_goals,
       })
+      // Pull the updated profile so onboarding_complete=true is reflected
+      // client-side before the dashboard's route guard runs (no stale bounce).
+      await refreshUser()
       setStep('done')
       setTimeout(() => navigate('/dashboard/sponsor', { replace: true }), 1600)
     } catch (e: any) {

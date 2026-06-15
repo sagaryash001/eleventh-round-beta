@@ -48,7 +48,22 @@ router.get('/status', ...guard, async (req, res) => {
       .eq('user_id', req.user.id)
       .maybeSingle()
     if (error) throw error
-    res.json({ onboarded: !!data })
+
+    const onboarded = !!data
+
+    // Backward-compat self-heal: an existing sponsor with a company profile but a
+    // stale onboarding_complete=false gets reconciled here so the whole app
+    // (route guards, redirects) treats them as onboarded — no re-registration.
+    if (onboarded && req.user.onboarding_complete === false) {
+      const { error: healErr } = await adminSupabase
+        .from('profiles')
+        .update({ onboarding_complete: true })
+        .eq('id', req.user.id)
+      if (healErr) log.warn({ err: healErr, uid: req.user.id }, 'onboarding_complete self-heal failed (non-fatal)')
+      else log.info({ uid: req.user.id }, 'self-healed stale sponsor onboarding_complete=false → true')
+    }
+
+    res.json({ onboarded })
   } catch (err) {
     log.error({ err }, '/sponsor/status threw')
     res.status(500).json({ error: err.message })
@@ -96,6 +111,14 @@ router.post('/onboard', ...guard, async (req, res) => {
       .select()
       .maybeSingle()
     if (error) throw error
+
+    // The company profile now exists → sponsor onboarding is complete. (Sponsors
+    // register with onboarding_complete=false; this is where it flips true.)
+    const { error: profErr } = await adminSupabase
+      .from('profiles')
+      .update({ onboarding_complete: true })
+      .eq('id', uid)
+    if (profErr) log.warn({ err: profErr, uid }, 'could not set onboarding_complete (non-fatal)')
 
     res.status(201).json({ ok: true, sponsorProfile: data })
   } catch (err) {

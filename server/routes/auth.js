@@ -40,6 +40,18 @@ const log    = childLogger('auth')
 // bypassed verification and is why signup confirmation emails never arrived.)
 const AUTO_CONFIRM = process.env.AUTH_AUTOCONFIRM === 'true'
 
+// Whether a freshly-registered user is considered fully onboarded.
+//
+// Sponsors are NEVER complete at registration: completing the marketing
+// questionnaire is not the same as having a company profile. Their
+// onboarding_complete flips to true only once the sponsor_profiles row is
+// created at /sponsor company setup. Fighters/managers/promotions keep the
+// existing behaviour (complete once they've answered the questionnaire).
+export function computeOnboardingComplete(role, onboarding) {
+  if (role === 'sponsor') return false
+  return !!onboarding
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/register
 // ═════════════════════════════════════════════════════════════════════════════
@@ -108,7 +120,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       account_type: accountType,
       team_name:    teamName || null,
       subdomain:    subdomain || null,
-      onboarding_complete: !!onboarding,
+      onboarding_complete: computeOnboardingComplete(role, onboarding),
     })
 
     if (profileErr) {

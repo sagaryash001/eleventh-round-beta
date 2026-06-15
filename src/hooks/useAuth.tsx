@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import { getSponsorStatus } from '../lib/api/sponsors'
 import { clearApiCache } from './useApi'
 
 export type UserRole = 'fighter' | 'manager' | 'admin' | 'sponsor'
@@ -45,13 +46,36 @@ async function fetchProfile(userId: string): Promise<AuthUser | null> {
     .eq('id', userId)
     .maybeSingle()
   if (error || !data) return null
+
+  let onboarded = !!data.onboarding_complete
+
+  // Backward-compat: an existing sponsor who already has a company profile is
+  // onboarded — even if profiles.onboarding_complete is stale/false (e.g. their
+  // sponsor_profiles row predates the flag being set). RLS can hide
+  // sponsor_profiles from the client, so we reconcile via the service-role
+  // backend (/api/sponsor/status), which also self-heals the stored flag. The
+  // call is time-boxed and fail-safe: a slow/down backend never blocks login —
+  // the sponsor is simply treated as not-yet-onboarded and routed to setup.
+  if (data.role === 'sponsor' && !onboarded) {
+    try {
+      const status = await Promise.race([
+        getSponsorStatus(),
+        new Promise<{ onboarded: boolean }>((_, reject) =>
+          setTimeout(() => reject(new Error('reconcile-timeout')), 3500)),
+      ])
+      if (status?.onboarded) onboarded = true
+    } catch (e) {
+      console.error('[auth] sponsor onboarding reconcile failed:', (e as Error)?.message)
+    }
+  }
+
   return {
     id:                  data.id,
     email:               data.email,
     name:                data.name,
     role:                data.role as UserRole,
     subdomain:           data.subdomain,
-    onboarding_complete: !!data.onboarding_complete,
+    onboarding_complete: onboarded,
   }
 }
 
