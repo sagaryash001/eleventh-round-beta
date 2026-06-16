@@ -186,10 +186,11 @@ router.post('/fighter', requireAuth, validate(FighterOnboardSchema), async (req,
         await sb.from('fighter_profiles')
           .update({ manager_id: mgr.id })
           .eq('user_id', uid)
-        await sb.from('manager_fighters').upsert(
+        const { error: mfErr } = await sb.from('manager_fighters').upsert(
           { manager_id: mgr.id, fighter_id: uid, status: 'active', accepted_at: new Date().toISOString() },
           { onConflict: 'manager_id,fighter_id' }
-        ).catch(e => log.warn({ e }, 'manager_fighters upsert failed (non-fatal)'))
+        )
+        if (mfErr) log.warn({ err: mfErr }, 'manager_fighters upsert failed (non-fatal)')
       }
     }
 

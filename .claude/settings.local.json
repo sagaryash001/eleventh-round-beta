@@ -86,7 +86,10 @@
       "Bash(xxd public/team/don-rudolph.jpg)",
       "Bash(graphify update *)",
       "Bash(npx vitest *)",
-      "Bash(graphify query *)"
+      "Bash(graphify query *)",
+      "PowerShell(npm run *)",
+      "PowerShell(npx vitest run)",
+      "PowerShell(graphify update *)"
     ]
   }
 }

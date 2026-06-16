@@ -102,7 +102,7 @@ async function handlePaymentSucceeded(intent) {
   }
 
   // Queue notification via outbox
-  await adminSupabase.from('outbox_events').insert({
+  const { error: outboxErr } = await adminSupabase.from('outbox_events').insert({
     event_type:     'payment.succeeded',
     aggregate_type: 'payment',
     aggregate_id:   payment.id,
@@ -113,7 +113,8 @@ async function handlePaymentSucceeded(intent) {
       fighter_id:  payment.fighter_id,
       amount_usd:  payment.amount_usd,
     },
-  }).catch(() => {})
+  })
+  if (outboxErr) log.warn({ err: outboxErr, payment_id: payment.id }, 'payment.succeeded outbox insert failed')
 
   log.info({ payment_id: payment.id, amount_usd: payment.amount_usd }, 'Payment succeeded')
 }
@@ -246,7 +247,7 @@ async function handleCheckoutCompleted(session) {
   }
 
   // Emit notification + email via outbox (fire-and-forget, non-fatal)
-  await adminSupabase.from('outbox_events').insert({
+  const { error: pkgOutboxErr } = await adminSupabase.from('outbox_events').insert({
     event_type:     'billing.package_purchased',
     aggregate_type: 'payments',
     aggregate_id:   payment?.id ?? packageId,
@@ -256,7 +257,8 @@ async function handleCheckoutCompleted(session) {
       billing_interval: pkg.billing_interval,
       amount_cents:     amountTotal,
     },
-  }).catch(e => log.warn({ err: e }, 'billing.package_purchased outbox insert failed'))
+  })
+  if (pkgOutboxErr) log.warn({ err: pkgOutboxErr }, 'billing.package_purchased outbox insert failed')
 
   log.info({ payment_id: payment?.id, package_id: packageId, user_id: userId }, 'Package checkout completed — payment + membership recorded')
 }

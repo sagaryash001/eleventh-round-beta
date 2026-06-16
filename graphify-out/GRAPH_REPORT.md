@@ -1,7 +1,7 @@
-# Graph Report - C:\Users\athar\eleventh-round-beta  (2026-06-15)
+# Graph Report - C:\Users\athar\eleventh-round-beta  (2026-06-16)
 
 ## Corpus Check
-- 145 files · ~5,555,678 words
+- 145 files · ~5,555,762 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

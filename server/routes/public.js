@@ -234,7 +234,8 @@ router.post('/apparel/:id/click', async (req, res) => {
   try {
     const sb = adminSupabase
     if (sb) {
-      await sb.from('apparel_clicks').insert({ product_id: req.params.id }).catch(() => {})
+      // Best-effort click tracking — ignore any insert error (outer try/catch also guards).
+      await sb.from('apparel_clicks').insert({ product_id: req.params.id })
     }
   } catch {
     // intentionally silent — click tracking must not affect UX

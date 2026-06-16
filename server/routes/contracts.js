@@ -278,11 +278,12 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
             category:         'sponsor',
           }]
 
-      await adminSupabase.from('obligations').insert(obligationRows)
+      const { error: oblErr } = await adminSupabase.from('obligations').insert(obligationRows)
+      if (oblErr) log.error({ err: oblErr, contract_id: updated.id }, 'contract.accept obligations insert failed')
     }
 
-    // Queue outbox event
-    await adminSupabase.from('outbox_events').insert({
+    // Queue outbox event (best-effort notification — must not fail the signing).
+    const { error: outboxErr } = await adminSupabase.from('outbox_events').insert({
       event_type:     updated.status === 'active' ? 'contract.signed' : 'contract.pending_signature',
       aggregate_type: 'contract',
       aggregate_id:   updated.id,
@@ -292,7 +293,8 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
         fighter_id:  updated.fighter_id,
         status:      updated.status,
       },
-    }).catch(() => {})
+    })
+    if (outboxErr) log.warn({ err: outboxErr, contract_id: updated.id }, 'contract.accept outbox insert failed')
 
     res.json({ ok: true, contract: updated })
   } catch (err) {
