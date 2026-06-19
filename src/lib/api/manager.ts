@@ -55,11 +55,22 @@ export const getManagerRoster = () =>
 export const inviteFighter = (data: { email: string; name?: string | null; message?: string | null }) =>
   apiPost<{ ok: boolean; connection_id: string; matched: boolean }>('/api/manager/roster/invite', data)
 
-export const createPendingFighter = (data: {
+export interface PendingProfileInput {
   name: string; sport?: string; weight_class?: string | null
   record_wins?: number; record_losses?: number; record_draws?: number
   base_city?: string | null; notes?: string | null
-}) => apiPost<{ ok: boolean; connection_id: string }>('/api/manager/roster/create-pending', data)
+}
+
+export const createPendingFighter = (data: PendingProfileInput) =>
+  apiPost<{ ok: boolean; connection_id: string }>('/api/manager/roster/create-pending', data)
+
+// Edit a manager-only draft profile.
+export const updatePendingProfile = (id: string, data: PendingProfileInput) =>
+  apiPatch<{ ok: boolean }>(`/api/manager/roster/${id}/pending-profile`, data)
+
+// Convert a draft profile into a real invite by adding an email.
+export const convertPendingToInvite = (id: string, email: string) =>
+  apiPost<{ ok: boolean; connection_id: string; matched: boolean }>(`/api/manager/roster/${id}/invite-email`, { email })
 
 export const updateConnectionStatus = (id: string, status: 'active' | 'declined' | 'removed') =>
   apiPatch<{ ok: boolean }>(`/api/manager/roster/${id}/status`, { status })

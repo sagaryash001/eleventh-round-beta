@@ -190,6 +190,11 @@ export const ManagerConnectionStatusSchema = z.object({
   status: z.enum(['active','declined','removed']),
 })
 
+// Convert a manager-only draft profile into an email/platform invite.
+export const PendingProfileEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Valid email required.').max(254),
+})
+
 export const FighterManagerRequestSchema = z.object({
   manager_email: z.string().trim().toLowerCase().max(254).optional().nullable(),
   team_name:     z.string().trim().max(120).optional().nullable(),

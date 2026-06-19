@@ -8,6 +8,7 @@ import { useApi } from '../../hooks/useApi'
 import {
   getManagerRoster, inviteFighter, createPendingFighter,
   updateConnectionStatus, resendInvite, getFighterDetail, updateFighterProfile,
+  updatePendingProfile, convertPendingToInvite,
   getManagerContracts, type RosterEntry,
 } from '../../lib/api/manager'
 import { getManagerModuleProgress } from '../../lib/api/education'
@@ -380,6 +381,129 @@ function ManagerCommandCenter({ onNavigate }: { onNavigate: (zone: string) => vo
   )
 }
 
+// ── Draft profile card (manager-only tracking; not yet invited) ───────────────
+function DraftProfileCard({ conn, onChanged }: { conn: RosterEntry; onChanged: () => void }) {
+  const d: any = conn.pending_fighter_data ?? {}
+  const [mode, setMode] = useState<'view' | 'invite' | 'edit'>('view')
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [form, setForm] = useState({
+    name: conn.invited_name ?? d.name ?? '', sport: d.sport ?? 'mma',
+    weight_class: d.weight_class ?? '', base_city: d.base_city ?? '',
+    record_wins: String(d.record_wins ?? 0), record_losses: String(d.record_losses ?? 0), record_draws: String(d.record_draws ?? 0),
+    notes: d.notes ?? '',
+  })
+
+  const name   = conn.invited_name ?? d.name ?? 'Draft Fighter'
+  const record = `${d.record_wins ?? 0}-${d.record_losses ?? 0}${(d.record_draws ?? 0) > 0 ? `-${d.record_draws}` : ''}`
+
+  const sendInvite = async () => {
+    if (!email.trim()) { setMsg({ type: 'err', text: 'Enter a fighter email.' }); return }
+    setBusy(true); setMsg(null)
+    try {
+      const r = await convertPendingToInvite(conn.id, email.trim())
+      setMsg({ type: 'ok', text: r.matched ? 'Invite sent to existing fighter.' : 'Email invite sent.' })
+      onChanged()
+    } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+    finally { setBusy(false) }
+  }
+  const saveEdit = async () => {
+    if (!form.name.trim()) { setMsg({ type: 'err', text: 'Name is required.' }); return }
+    setBusy(true); setMsg(null)
+    try {
+      await updatePendingProfile(conn.id, {
+        name: form.name.trim(), sport: form.sport,
+        weight_class: form.weight_class || null, base_city: form.base_city || null,
+        record_wins: Number(form.record_wins), record_losses: Number(form.record_losses), record_draws: Number(form.record_draws),
+        notes: form.notes || null,
+      })
+      setMode('view'); onChanged()
+    } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+    finally { setBusy(false) }
+  }
+  const remove = async () => {
+    setBusy(true); setMsg(null)
+    try { await updateConnectionStatus(conn.id, 'removed'); onChanged() }
+    catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+    finally { setBusy(false) }
+  }
+
+  return (
+    <div className="dash-card" style={{ borderLeft: '2px solid #5a5a66' }}>
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="font-condensed font-bold text-off-white" style={{ fontSize: 13 }}>{name}</span>
+            <span className="badge" style={{ background: 'rgba(120,120,130,0.12)', color: '#9a9aa2', border: '1px solid rgba(120,120,130,0.25)' }}>Draft Profile</span>
+          </div>
+          <div className="font-condensed text-[11px] text-gray-3">
+            {record}{d.weight_class ? ` · ${d.weight_class}` : ''}{d.base_city ? ` · ${d.base_city}` : ''}
+          </div>
+          <div className="font-condensed text-[10px] text-gray-3 mt-0.5">Manager-only profile — not yet invited</div>
+        </div>
+        {mode === 'view' && (
+          <div className="flex gap-2 flex-shrink-0">
+            <button onClick={() => { setMode('invite'); setMsg(null) }} disabled={busy}
+              className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border cursor-pointer transition-all disabled:opacity-40"
+              style={{ borderColor: '#2a5c2a', color: '#00c060' }}>Invite by Email</button>
+            <button onClick={() => { setMode('edit'); setMsg(null) }} disabled={busy}
+              className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-2 cursor-pointer hover:border-blood hover:text-off-white transition-all disabled:opacity-40">Edit</button>
+            <button onClick={remove} disabled={busy}
+              className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+              {busy ? <Spinner /> : 'Remove'}</button>
+          </div>
+        )}
+      </div>
+
+      {mode === 'invite' && (
+        <div className="mt-3 pt-3 border-t border-charcoal-3 space-y-2">
+          <MI label="Fighter Email" value={email} onChange={setEmail} placeholder="fighter@email.com" required />
+          <Msg msg={msg} />
+          <div className="flex gap-2">
+            <button onClick={sendInvite} disabled={busy} className="btn-primary text-[11px] py-2 disabled:opacity-50">
+              {busy ? <><Spinner /> Sending…</> : 'Send Invite'}</button>
+            <button onClick={() => { setMode('view'); setMsg(null) }} className="btn-ghost text-[11px] py-2">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {mode === 'edit' && (
+        <div className="mt-3 pt-3 border-t border-charcoal-3 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <MI label="Name" value={form.name} onChange={v => setForm(p => ({ ...p, name: v }))} required />
+            <div>
+              <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Sport</label>
+              <select value={form.sport} onChange={e => setForm(p => ({ ...p, sport: e.target.value }))}
+                className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none">
+                {['mma', 'boxing', 'bjj', 'muay_thai', 'wrestling', 'other'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <MI label="Weight Class" value={form.weight_class} onChange={v => setForm(p => ({ ...p, weight_class: v }))} />
+            <MI label="City / Base" value={form.base_city} onChange={v => setForm(p => ({ ...p, base_city: v }))} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <MI label="Wins" type="number" value={form.record_wins} onChange={v => setForm(p => ({ ...p, record_wins: v }))} />
+            <MI label="Losses" type="number" value={form.record_losses} onChange={v => setForm(p => ({ ...p, record_losses: v }))} />
+            <MI label="Draws" type="number" value={form.record_draws} onChange={v => setForm(p => ({ ...p, record_draws: v }))} />
+          </div>
+          <div>
+            <label className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3 block mb-1">Notes</label>
+            <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={2}
+              className="w-full bg-charcoal-2 border border-charcoal-3 text-off-white font-body text-[13px] px-3 py-2 outline-none resize-none" />
+          </div>
+          <Msg msg={msg} />
+          <div className="flex gap-2">
+            <button onClick={saveEdit} disabled={busy} className="btn-primary text-[11px] py-2 disabled:opacity-50">
+              {busy ? <><Spinner /> Saving…</> : 'Save Changes'}</button>
+            <button onClick={() => { setMode('view'); setMsg(null) }} className="btn-ghost text-[11px] py-2">Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Roster zone ───────────────────────────────────────────────────────────────
 function RosterZone() {
   const [roster,     setRoster]    = useState<RosterEntry[]>([])
@@ -458,7 +582,7 @@ function RosterZone() {
         record_wins: Number(cpf.record_wins), record_losses: Number(cpf.record_losses), record_draws: Number(cpf.record_draws),
         base_city: cpf.base_city || null, notes: cpf.notes || null,
       })
-      setCpfMsg({ type: 'ok', text: 'Pending fighter profile created.' })
+      setCpfMsg({ type: 'ok', text: 'Draft profile created — manager-only. Invite by email when ready.' })
       setCpf({ name: '', sport: 'mma', weight_class: '', record_wins: '0', record_losses: '0', record_draws: '0', base_city: '', notes: '' })
       load()
     } catch (e: any) { setCpfMsg({ type: 'err', text: e.message }) }
@@ -468,8 +592,15 @@ function RosterZone() {
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} retry={load} />
 
+  // A manager-only draft profile: pending, no linked fighter, no email yet.
+  // (Recognise the new 'draft_profile' source and legacy 'manual_create' rows.)
+  const isDraft = (c: RosterEntry) =>
+    c.status === 'pending' && !c.fighter_id && !c.invited_email &&
+    (c.source === 'draft_profile' || c.source === 'manual_create')
+
   const active   = roster.filter(c => c.status === 'active')
-  const pending  = roster.filter(c => c.status === 'pending')
+  const drafts   = roster.filter(isDraft)
+  const pending  = roster.filter(c => c.status === 'pending' && !isDraft(c))
   const declined = roster.filter(c => c.status === 'declined')
   const other    = roster.filter(c => !['active', 'pending', 'declined'].includes(c.status))
 
@@ -481,7 +612,7 @@ function RosterZone() {
           <button onClick={() => { setShowInvite(v => !v); setShowCreate(false) }}
             className="btn-ghost text-[11px] py-2 px-4">{showInvite ? 'Cancel' : '+ Invite Fighter'}</button>
           <button onClick={() => { setShowCreate(v => !v); setShowInvite(false) }}
-            className="btn-ghost text-[11px] py-2 px-4">{showCreate ? 'Cancel' : '+ Create Pending'}</button>
+            className="btn-ghost text-[11px] py-2 px-4">{showCreate ? 'Cancel' : '+ Create Pending Profile'}</button>
         </div>
       </div>
       <Msg msg={msg} />
@@ -489,6 +620,7 @@ function RosterZone() {
       {showInvite && (
         <div className="dash-card space-y-3" style={{ borderLeft: '2px solid #8b0000' }}>
           <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Invite Fighter by Email</div>
+          <p className="font-condensed text-[11px] text-gray-3">Sends an invite to a real fighter. Existing platform fighters get an in-app notification; new emails get an account invite. Active only after they accept.</p>
           <div className="grid grid-cols-2 gap-3">
             <MI label="Fighter Email" value={invite.email} onChange={v => setInvite(p => ({ ...p, email: v }))} placeholder="fighter@email.com" required />
             <MI label="Name (optional)" value={invite.name} onChange={v => setInvite(p => ({ ...p, name: v }))} placeholder="Fighter name" />
@@ -508,7 +640,8 @@ function RosterZone() {
 
       {showCreate && (
         <div className="dash-card space-y-3" style={{ borderLeft: '2px solid #8b0000' }}>
-          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Create Pending Fighter Profile</div>
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Create Pending Profile</div>
+          <p className="font-condensed text-[11px] text-gray-3">Manager-only tracking — no email is sent and no account is created. You can invite this profile by email later.</p>
           <div className="grid grid-cols-2 gap-3">
             <MI label="Name" value={cpf.name} onChange={v => setCpf(p => ({ ...p, name: v }))} required placeholder="Full name" />
             <div>
@@ -676,6 +809,13 @@ function RosterZone() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {drafts.length > 0 && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Pending Profiles / Draft Profiles</div>
+          {drafts.map(conn => <DraftProfileCard key={conn.id} conn={conn} onChanged={load} />)}
         </div>
       )}
 

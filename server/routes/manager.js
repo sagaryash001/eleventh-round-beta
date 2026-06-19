@@ -6,7 +6,7 @@ import { Router } from 'express'
 import { adminSupabase } from '../db/supabase.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validate,
-  ManagerInviteSchema, PendingFighterCreateSchema,
+  ManagerInviteSchema, PendingFighterCreateSchema, PendingProfileEmailSchema,
   ManagerConnectionStatusSchema, ManagerFighterProfileUpdateSchema,
 } from '../lib/validate.js'
 import { activateConnection, clearManagerLink } from '../lib/roster.js'
@@ -265,7 +265,25 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
   }
 })
 
+// Build the manager-entered profile blob (stored as JSONB).
+function buildPendingProfileData(p) {
+  return {
+    name:          p.name,
+    sport:         p.sport,
+    weight_class:  p.weight_class  ?? null,
+    record_wins:   p.record_wins,
+    record_losses: p.record_losses,
+    record_draws:  p.record_draws,
+    base_city:     p.base_city     ?? null,
+    notes:         p.notes         ?? null,
+  }
+}
+
 // ── POST /api/manager/roster/create-pending ───────────────────────────────────
+// MANAGER-ONLY DRAFT PROFILE. This is NOT an invite: it creates no auth user,
+// sends no email, emits no outbox event, and creates no notification. The fighter
+// never sees it (fighter_id is null) until the manager later converts it to an
+// invite via /roster/:id/invite-email.
 router.post('/roster/create-pending', ...guard, validate(PendingFighterCreateSchema), async (req, res) => {
   try {
     const mid = req.user.id
@@ -275,27 +293,116 @@ router.post('/roster/create-pending', ...guard, validate(PendingFighterCreateSch
       .insert({
         manager_id:           mid,
         fighter_id:           null,
+        invited_email:        null,            // explicitly no email — this is a draft, not an invite
         status:               'pending',
-        source:               'manual_create',
+        source:               'draft_profile', // distinct from 'manager_invite' so the UI can separate it
         invited_name:         p.name,
-        pending_fighter_data: JSON.stringify({
-          name:          p.name,
-          sport:         p.sport,
-          weight_class:  p.weight_class  ?? null,
-          record_wins:   p.record_wins,
-          record_losses: p.record_losses,
-          record_draws:  p.record_draws,
-          base_city:     p.base_city     ?? null,
-          notes:         p.notes         ?? null,
-        }),
+        pending_fighter_data: buildPendingProfileData(p),
       })
       .select('id').maybeSingle()
     if (error) throw error
 
-    log.info({ id: data.id, name: p.name, mid }, 'pending fighter profile created')
+    log.info({ connectionId: data.id, mid, name: p.name }, 'draft profile created (manager-only, no email/notification/user)')
     res.status(201).json({ ok: true, connection_id: data.id })
   } catch (err) {
     log.error({ err }, 'POST /manager/roster/create-pending threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── PATCH /api/manager/roster/:connectionId/pending-profile ───────────────────
+// Edit a manager-only draft profile's details. Draft rows only.
+router.patch('/roster/:connectionId/pending-profile', ...guard, validate(PendingFighterCreateSchema), async (req, res) => {
+  try {
+    const mid = req.user.id
+    const p   = req.valid
+
+    const { data: conn } = await adminSupabase.from('manager_fighters')
+      .select('id, source, fighter_id, status')
+      .eq('id', req.params.connectionId).eq('manager_id', mid).maybeSingle()
+    if (!conn) return res.status(404).json({ error: 'Draft profile not found.' })
+    if (conn.source !== 'draft_profile' || conn.fighter_id) {
+      return res.status(400).json({ error: 'Only manager-only draft profiles can be edited here.' })
+    }
+
+    const { error } = await adminSupabase.from('manager_fighters')
+      .update({ invited_name: p.name, pending_fighter_data: buildPendingProfileData(p), updated_at: new Date().toISOString() })
+      .eq('id', conn.id)
+    if (error) throw error
+
+    log.info({ connectionId: conn.id, mid }, 'draft profile updated')
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'PATCH /manager/roster/:id/pending-profile threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/manager/roster/:connectionId/invite-email ───────────────────────
+// Convert a manager-only draft profile into a real invite. Reuses the invite
+// routing: existing platform fighter → in-app notification (no email); unknown
+// email → email invite. Preserves the manager-entered profile data; never
+// duplicates a roster row.
+router.post('/roster/:connectionId/invite-email', ...guard, validate(PendingProfileEmailSchema), async (req, res) => {
+  try {
+    const mid   = req.user.id
+    const email = req.valid.email
+    const now   = new Date().toISOString()
+
+    const { data: conn } = await adminSupabase.from('manager_fighters')
+      .select('id, source, fighter_id, status, invited_name')
+      .eq('id', req.params.connectionId).eq('manager_id', mid).maybeSingle()
+    if (!conn) return res.status(404).json({ error: 'Draft profile not found.' })
+    if (conn.status === 'active') return res.status(400).json({ error: 'This fighter is already active on your roster.' })
+    if (conn.source !== 'draft_profile' || conn.fighter_id) {
+      return res.status(400).json({ error: 'This roster entry is not a draft profile.' })
+    }
+
+    // Does a platform user already own this email?
+    const { data: existingUser } = await adminSupabase
+      .from('profiles').select('id, role').eq('email', email).maybeSingle()
+
+    if (existingUser && existingUser.role !== 'fighter') {
+      return res.status(400).json({ error: 'That email belongs to a non-fighter account.' })
+    }
+
+    if (existingUser) {
+      // Guard against duplicating an existing manager↔fighter row.
+      const { data: dupe } = await adminSupabase.from('manager_fighters')
+        .select('id, status').eq('manager_id', mid).eq('fighter_id', existingUser.id).neq('id', conn.id).maybeSingle()
+      if (dupe?.status === 'active')  return res.status(409).json({ error: 'This fighter is already on your active roster.' })
+      if (dupe?.status === 'pending') return res.status(409).json({ error: 'A pending invite for this fighter already exists.' })
+      if (dupe) {
+        // A declined/removed row exists — re-use it and drop the draft to satisfy the unique (manager_id, fighter_id) index.
+        await adminSupabase.from('manager_fighters')
+          .update({ status: 'pending', source: 'manager_invite', invited_email: email, requested_by: mid, declined_at: null, removed_at: null, updated_at: now })
+          .eq('id', dupe.id)
+        await adminSupabase.from('manager_fighters').update({ status: 'removed', removed_at: now, updated_at: now }).eq('id', conn.id)
+        adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: dupe.id, payload: { fighter_id: existingUser.id, invited_email: email, invited_name: conn.invited_name, manager_id: mid } }).then(() => {}).catch(() => {})
+        log.info({ mid, fid: existingUser.id, connectionId: dupe.id, draftId: conn.id, route: 'convert-existing-merge' }, 'draft converted to invite (existing fighter, merged)')
+        return res.json({ ok: true, connection_id: dupe.id, matched: true })
+      }
+
+      // Link the draft row to the existing fighter and invite them in-app.
+      const { error } = await adminSupabase.from('manager_fighters')
+        .update({ fighter_id: existingUser.id, source: 'manager_invite', invited_email: email, requested_by: mid, updated_at: now })
+        .eq('id', conn.id)
+      if (error) throw error
+      adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: conn.id, payload: { fighter_id: existingUser.id, invited_email: email, invited_name: conn.invited_name, manager_id: mid } }).then(() => {}).catch(() => {})
+      log.info({ mid, fid: existingUser.id, connectionId: conn.id, route: 'convert-existing' }, 'draft converted to invite (existing fighter)')
+      return res.json({ ok: true, connection_id: conn.id, matched: true })
+    }
+
+    // No platform account — convert to an email invite (non-platform).
+    const { error } = await adminSupabase.from('manager_fighters')
+      .update({ source: 'manager_invite', invited_email: email, requested_by: mid, updated_at: now })
+      .eq('id', conn.id)
+    if (error) throw error
+    adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: conn.id, payload: { invited_email: email, invited_name: conn.invited_name, manager_id: mid } }).then(() => {}).catch(() => {})
+    log.info({ mid, email, connectionId: conn.id, route: 'convert-email' }, 'draft converted to invite (non-platform)')
+    res.json({ ok: true, connection_id: conn.id, matched: false })
+  } catch (err) {
+    log.error({ err }, 'POST /manager/roster/:id/invite-email threw')
     res.status(500).json({ error: err.message })
   }
 })
@@ -379,6 +486,9 @@ router.post('/roster/:connectionId/resend', ...guard, async (req, res) => {
     }
     if (conn.source === 'fighter_request') {
       return res.status(400).json({ error: 'This is a fighter request — accept or decline it instead of resending.' })
+    }
+    if (conn.source === 'draft_profile' || (!conn.invited_email && !conn.fighter_id)) {
+      return res.status(400).json({ error: 'Add an email to this draft profile before sending an invite.' })
     }
     // Cooldown: only throttle invites that are already pending (a declined invite
     // should always be resendable regardless of when it was declined).
