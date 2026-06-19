@@ -40,7 +40,11 @@ const log          = childLogger('outbox-dispatcher')
 const POLL_MS      = Number(process.env.OUTBOX_POLL_MS   || 5_000)
 const BATCH_SIZE   = Number(process.env.OUTBOX_BATCH_SIZE || 10)
 const MAX_ATTEMPTS = 5
-const CLIENT       = process.env.CLIENT_URL || 'http://localhost:5173'
+// Public app origin used in every email link. MUST be the production domain in
+// prod — set CLIENT_URL=https://eleventh-rnd.com on Render. The fallback is the
+// production domain (never localhost/beta) so a missing env can't ship a wrong
+// link; override with CLIENT_URL for local/preview.
+const CLIENT       = process.env.CLIENT_URL || 'https://eleventh-rnd.com'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

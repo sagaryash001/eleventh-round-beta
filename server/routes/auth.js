@@ -106,6 +106,22 @@ async function bootstrapProfile(sb, { userId, email, name, role, accountType, te
       if (obErr) log.warn({ err: obErr, userId }, 'onboarding insert failed (non-fatal)')
     }
   }
+
+  // Fighters get a fighter_profiles row, and any pending non-platform roster
+  // invite for this email is linked to the new user so their Manager/Team card
+  // shows the Accept/Decline invite immediately.
+  if (role === 'fighter') {
+    const { error: fpErr } = await sb.from('fighter_profiles').insert({ user_id: userId })
+    if (fpErr && !/duplicate|unique|23505/i.test(`${fpErr.message} ${fpErr.code ?? ''}`)) {
+      log.warn({ err: fpErr, userId }, 'fighter_profiles insert failed (non-fatal)')
+    }
+    const { error: linkErr } = await sb.from('manager_fighters')
+      .update({ fighter_id: userId, updated_at: new Date().toISOString() })
+      .eq('invited_email', String(email).toLowerCase())
+      .eq('status', 'pending')
+      .is('fighter_id', null)
+    if (linkErr) log.warn({ err: linkErr, userId, email }, 'manager_fighters invite link failed (non-fatal)')
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -278,7 +294,9 @@ router.post('/post-verify', requireAuth, async (req, res) => {
         })
         log.info({ userId: req.user.id, role }, 'post-verify profile bootstrap')
       } catch (e) {
-        log.warn({ err: e, userId: req.user.id }, 'post-verify profile bootstrap failed')
+        // Do NOT continue silently — a missing profile breaks the whole account.
+        log.error({ err: e, userId: req.user.id }, 'post-verify profile bootstrap FAILED')
+        return res.status(500).json({ error: 'Could not finish setting up your account. Please try signing in again, or contact support.' })
       }
     }
 
@@ -361,7 +379,7 @@ router.post('/resend-verification', validate(LoginSchema.pick({ email: true }).e
   try {
     const sb = requireSupabase()
     const { email } = req.valid
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+    const clientUrl = process.env.CLIENT_URL || 'https://eleventh-rnd.com'
 
     const { data: linkData, error } = await sb.auth.admin.generateLink({
       type: 'signup',

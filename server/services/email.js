@@ -17,7 +17,7 @@ import nodemailer from 'nodemailer'
 
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'contact@eleventh-rnd.us'
 const FROM_NAME  = process.env.SENDGRID_FROM_NAME  || 'The Eleventh Round'
-const CLIENT     = process.env.CLIENT_URL           || 'http://localhost:5173'
+const CLIENT     = process.env.CLIENT_URL           || 'https://eleventh-rnd.com'
 
 // ── Transport selection ───────────────────────────────────────────────────────
 

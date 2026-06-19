@@ -41,10 +41,18 @@ export default function VerifyEmailPage() {
             'Content-Type':  'application/json',
             'Authorization': `Bearer ${data.session.access_token}`,
           },
-        }).catch(() => { /* non-fatal — profile bootstrap is idempotent */ })
+        }).catch(() => null)
 
         const profile = await refreshUser()
         if (cancelled) return
+
+        // If the profile still doesn't exist, account setup failed — be truthful
+        // rather than dropping the user on a broken dashboard.
+        if (!profile) {
+          setStatus('error')
+          setMessage('Your email is verified, but we could not finish setting up your account. Please sign in again, or contact support.')
+          return
+        }
 
         setStatus('success')
 

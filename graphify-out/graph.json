@@ -9,7 +9,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\postcss.config.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_postcss_config_js",
-      "community": 65,
+      "community": 64,
       "norm_label": "postcss.config.js"
     },
     {
@@ -18,7 +18,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\tailwind.config.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_tailwind_config_js",
-      "community": 66,
+      "community": 65,
       "norm_label": "tailwind.config.js"
     },
     {
@@ -27,7 +27,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\vite.config.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_vite_config_ts",
-      "community": 67,
+      "community": 66,
       "norm_label": "vite.config.ts"
     },
     {
@@ -36,7 +36,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\vitest.config.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_vitest_config_ts",
-      "community": 68,
+      "community": 67,
       "norm_label": "vitest.config.ts"
     },
     {
@@ -45,7 +45,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\app.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_app_js",
-      "community": 69,
+      "community": 68,
       "norm_label": "app.js"
     },
     {
@@ -54,7 +54,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\index.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_index_js",
-      "community": 37,
+      "community": 36,
       "norm_label": "index.js"
     },
     {
@@ -63,7 +63,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\index.js",
       "source_location": "L24",
       "id": "index_shutdown",
-      "community": 37,
+      "community": 36,
       "norm_label": "shutdown()"
     },
     {
@@ -72,7 +72,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\vitest.config.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_vitest_config_js",
-      "community": 70,
+      "community": 69,
       "norm_label": "vitest.config.js"
     },
     {
@@ -117,7 +117,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\db\\supabase.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_db_supabase_js",
-      "community": 28,
+      "community": 27,
       "norm_label": "supabase.js"
     },
     {
@@ -126,7 +126,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\supabase.ts",
       "source_location": "L58",
       "id": "supabase_requiresupabase",
-      "community": 28,
+      "community": 27,
       "norm_label": "requiresupabase()"
     },
     {
@@ -142,7 +142,7 @@
       "label": "email()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L48",
+      "source_location": "L52",
       "id": "outbox_dispatcher_email",
       "community": 6,
       "norm_label": "email()"
@@ -151,7 +151,7 @@
       "label": "getProfile()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L55",
+      "source_location": "L59",
       "id": "outbox_dispatcher_getprofile",
       "community": 6,
       "norm_label": "getprofile()"
@@ -160,7 +160,7 @@
       "label": "handleApplicationReceived()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L64",
+      "source_location": "L68",
       "id": "outbox_dispatcher_handleapplicationreceived",
       "community": 6,
       "norm_label": "handleapplicationreceived()"
@@ -169,7 +169,7 @@
       "label": "handleApplicationShortlisted()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L90",
+      "source_location": "L94",
       "id": "outbox_dispatcher_handleapplicationshortlisted",
       "community": 6,
       "norm_label": "handleapplicationshortlisted()"
@@ -178,7 +178,7 @@
       "label": "handleApplicationAccepted()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L116",
+      "source_location": "L120",
       "id": "outbox_dispatcher_handleapplicationaccepted",
       "community": 6,
       "norm_label": "handleapplicationaccepted()"
@@ -187,7 +187,7 @@
       "label": "handleApplicationRejected()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L142",
+      "source_location": "L146",
       "id": "outbox_dispatcher_handleapplicationrejected",
       "community": 6,
       "norm_label": "handleapplicationrejected()"
@@ -196,7 +196,7 @@
       "label": "handleContractCreated()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L168",
+      "source_location": "L172",
       "id": "outbox_dispatcher_handlecontractcreated",
       "community": 6,
       "norm_label": "handlecontractcreated()"
@@ -205,7 +205,7 @@
       "label": "handleContractSigned()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L215",
+      "source_location": "L219",
       "id": "outbox_dispatcher_handlecontractsigned",
       "community": 6,
       "norm_label": "handlecontractsigned()"
@@ -214,7 +214,7 @@
       "label": "handleContractPendingSignature()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L263",
+      "source_location": "L267",
       "id": "outbox_dispatcher_handlecontractpendingsignature",
       "community": 6,
       "norm_label": "handlecontractpendingsignature()"
@@ -223,7 +223,7 @@
       "label": "handleObligationProofSubmitted()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L290",
+      "source_location": "L294",
       "id": "outbox_dispatcher_handleobligationproofsubmitted",
       "community": 6,
       "norm_label": "handleobligationproofsubmitted()"
@@ -232,7 +232,7 @@
       "label": "handleObligationProofApproved()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L323",
+      "source_location": "L327",
       "id": "outbox_dispatcher_handleobligationproofapproved",
       "community": 6,
       "norm_label": "handleobligationproofapproved()"
@@ -241,7 +241,7 @@
       "label": "handleObligationProofRejected()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L349",
+      "source_location": "L353",
       "id": "outbox_dispatcher_handleobligationproofrejected",
       "community": 6,
       "norm_label": "handleobligationproofrejected()"
@@ -250,7 +250,7 @@
       "label": "handlePaymentSucceeded()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L380",
+      "source_location": "L384",
       "id": "outbox_dispatcher_handlepaymentsucceeded",
       "community": 6,
       "norm_label": "handlepaymentsucceeded()"
@@ -259,7 +259,7 @@
       "label": "handleMessageReceived()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L406",
+      "source_location": "L410",
       "id": "outbox_dispatcher_handlemessagereceived",
       "community": 6,
       "norm_label": "handlemessagereceived()"
@@ -268,7 +268,7 @@
       "label": "handleManagerRosterInvite()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L442",
+      "source_location": "L446",
       "id": "outbox_dispatcher_handlemanagerrosterinvite",
       "community": 6,
       "norm_label": "handlemanagerrosterinvite()"
@@ -277,7 +277,7 @@
       "label": "handleRosterInviteAccepted()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L496",
+      "source_location": "L500",
       "id": "outbox_dispatcher_handlerosterinviteaccepted",
       "community": 6,
       "norm_label": "handlerosterinviteaccepted()"
@@ -286,7 +286,7 @@
       "label": "handleRosterInviteDeclined()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L525",
+      "source_location": "L529",
       "id": "outbox_dispatcher_handlerosterinvitedeclined",
       "community": 6,
       "norm_label": "handlerosterinvitedeclined()"
@@ -295,7 +295,7 @@
       "label": "handleRosterRequestAccepted()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L554",
+      "source_location": "L558",
       "id": "outbox_dispatcher_handlerosterrequestaccepted",
       "community": 6,
       "norm_label": "handlerosterrequestaccepted()"
@@ -304,7 +304,7 @@
       "label": "handleFighterManagerRequest()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L582",
+      "source_location": "L586",
       "id": "outbox_dispatcher_handlefightermanagerrequest",
       "community": 6,
       "norm_label": "handlefightermanagerrequest()"
@@ -313,7 +313,7 @@
       "label": "handleSponsorApproved()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L608",
+      "source_location": "L612",
       "id": "outbox_dispatcher_handlesponsorapproved",
       "community": 6,
       "norm_label": "handlesponsorapproved()"
@@ -322,7 +322,7 @@
       "label": "handleBillingPackagePurchased()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L634",
+      "source_location": "L638",
       "id": "outbox_dispatcher_handlebillingpackagepurchased",
       "community": 6,
       "norm_label": "handlebillingpackagepurchased()"
@@ -331,7 +331,7 @@
       "label": "tick()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L691",
+      "source_location": "L695",
       "id": "outbox_dispatcher_tick",
       "community": 6,
       "norm_label": "tick()"
@@ -340,7 +340,7 @@
       "label": "processBatch()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L720",
+      "source_location": "L724",
       "id": "outbox_dispatcher_processbatch",
       "community": 6,
       "norm_label": "processbatch()"
@@ -349,7 +349,7 @@
       "label": "startOutboxDispatcher()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L750",
+      "source_location": "L754",
       "id": "outbox_dispatcher_startoutboxdispatcher",
       "community": 6,
       "norm_label": "startoutboxdispatcher()"
@@ -405,7 +405,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\logger.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_logger_js",
-      "community": 38,
+      "community": 37,
       "norm_label": "logger.js"
     },
     {
@@ -414,7 +414,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\logger.js",
       "source_location": "L32",
       "id": "logger_childlogger",
-      "community": 38,
+      "community": 37,
       "norm_label": "childlogger()"
     },
     {
@@ -423,7 +423,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_matching_js",
-      "community": 25,
+      "community": 24,
       "norm_label": "matching.js"
     },
     {
@@ -432,7 +432,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L26",
       "id": "matching_scoretier",
-      "community": 25,
+      "community": 24,
       "norm_label": "scoretier()"
     },
     {
@@ -441,7 +441,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L36",
       "id": "matching_computematchscore",
-      "community": 25,
+      "community": 24,
       "norm_label": "computematchscore()"
     },
     {
@@ -450,7 +450,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L180",
       "id": "matching_computematchesforopp",
-      "community": 25,
+      "community": 24,
       "norm_label": "computematchesforopp()"
     },
     {
@@ -504,7 +504,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\state-machines.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_state_machines_js",
-      "community": 29,
+      "community": 28,
       "norm_label": "state-machines.js"
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\state-machines.js",
       "source_location": "L18",
       "id": "state_machines_assertcontracttransition",
-      "community": 29,
+      "community": 28,
       "norm_label": "assertcontracttransition()"
     },
     {
@@ -522,7 +522,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\state-machines.js",
       "source_location": "L48",
       "id": "state_machines_assertobligationtransition",
-      "community": 29,
+      "community": 28,
       "norm_label": "assertobligationtransition()"
     },
     {
@@ -531,7 +531,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\validate.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_validate_js",
-      "community": 39,
+      "community": 38,
       "norm_label": "validate.js"
     },
     {
@@ -540,7 +540,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\validate.js",
       "source_location": "L18",
       "id": "validate_validate",
-      "community": 39,
+      "community": 38,
       "norm_label": "validate()"
     },
     {
@@ -585,7 +585,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\admin.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_admin_js",
-      "community": 40,
+      "community": 39,
       "norm_label": "admin.js"
     },
     {
@@ -594,7 +594,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\admin.js",
       "source_location": "L17",
       "id": "admin_pick",
-      "community": 40,
+      "community": 39,
       "norm_label": "pick()"
     },
     {
@@ -603,7 +603,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\applications.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_applications_js",
-      "community": 71,
+      "community": 70,
       "norm_label": "applications.js"
     },
     {
@@ -612,7 +612,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
-      "community": 23,
+      "community": 4,
       "norm_label": "auth.js"
     },
     {
@@ -621,7 +621,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
       "source_location": "L50",
       "id": "auth_computeonboardingcomplete",
-      "community": 23,
+      "community": 4,
       "norm_label": "computeonboardingcomplete()"
     },
     {
@@ -630,7 +630,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
       "source_location": "L59",
       "id": "auth_emailhaspendingrosterinvite",
-      "community": 23,
+      "community": 4,
       "norm_label": "emailhaspendingrosterinvite()"
     },
     {
@@ -639,16 +639,16 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
       "source_location": "L74",
       "id": "auth_bootstrapprofile",
-      "community": 23,
+      "community": 4,
       "norm_label": "bootstrapprofile()"
     },
     {
       "label": "isEmailVerified()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L395",
+      "source_location": "L413",
       "id": "auth_isemailverified",
-      "community": 23,
+      "community": 4,
       "norm_label": "isemailverified()"
     },
     {
@@ -657,7 +657,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\billing.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_billing_js",
-      "community": 30,
+      "community": 29,
       "norm_label": "billing.js"
     },
     {
@@ -666,7 +666,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\billing.js",
       "source_location": "L17",
       "id": "billing_getstripe",
-      "community": 30,
+      "community": 29,
       "norm_label": "getstripe()"
     },
     {
@@ -675,7 +675,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\billing.js",
       "source_location": "L25",
       "id": "billing_audiencefor",
-      "community": 30,
+      "community": 29,
       "norm_label": "audiencefor()"
     },
     {
@@ -909,7 +909,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\contracts.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_contracts_js",
-      "community": 72,
+      "community": 71,
       "norm_label": "contracts.js"
     },
     {
@@ -918,7 +918,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\conversations.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_conversations_js",
-      "community": 41,
+      "community": 40,
       "norm_label": "conversations.js"
     },
     {
@@ -927,7 +927,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\conversations.js",
       "source_location": "L11",
       "id": "conversations_validatecontextaccess",
-      "community": 41,
+      "community": 40,
       "norm_label": "validatecontextaccess()"
     },
     {
@@ -1197,7 +1197,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\notifications.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_notifications_js",
-      "community": 73,
+      "community": 72,
       "norm_label": "notifications.js"
     },
     {
@@ -1206,7 +1206,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\obligations.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_obligations_js",
-      "community": 74,
+      "community": 73,
       "norm_label": "obligations.js"
     },
     {
@@ -1215,7 +1215,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\onboarding.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_onboarding_js",
-      "community": 31,
+      "community": 30,
       "norm_label": "onboarding.js"
     },
     {
@@ -1224,7 +1224,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\onboarding.js",
       "source_location": "L25",
       "id": "onboarding_slugify",
-      "community": 31,
+      "community": 30,
       "norm_label": "slugify()"
     },
     {
@@ -1233,7 +1233,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\onboarding.js",
       "source_location": "L40",
       "id": "onboarding_computebaselinereadiness",
-      "community": 31,
+      "community": 30,
       "norm_label": "computebaselinereadiness()"
     },
     {
@@ -1278,7 +1278,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\public.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_public_js",
-      "community": 75,
+      "community": 74,
       "norm_label": "public.js"
     },
     {
@@ -1332,7 +1332,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\sponsorship-payments.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_sponsorship_payments_js",
-      "community": 42,
+      "community": 41,
       "norm_label": "sponsorship-payments.js"
     },
     {
@@ -1341,7 +1341,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\sponsorship-payments.js",
       "source_location": "L27",
       "id": "sponsorship_payments_getstripe",
-      "community": 42,
+      "community": 41,
       "norm_label": "getstripe()"
     },
     {
@@ -1422,7 +1422,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_stripe_js",
-      "community": 43,
+      "community": 42,
       "norm_label": "stripe.js"
     },
     {
@@ -1431,7 +1431,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe.js",
       "source_location": "L9",
       "id": "stripe_getstripe",
-      "community": 43,
+      "community": 42,
       "norm_label": "getstripe()"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\uploads.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_uploads_js",
-      "community": 76,
+      "community": 75,
       "norm_label": "uploads.js"
     },
     {
@@ -1539,7 +1539,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\auth-guard.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_auth_guard_test_js",
-      "community": 77,
+      "community": 76,
       "norm_label": "auth-guard.test.js"
     },
     {
@@ -1548,7 +1548,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\auth-validation.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_auth_validation_test_js",
-      "community": 78,
+      "community": 77,
       "norm_label": "auth-validation.test.js"
     },
     {
@@ -1557,7 +1557,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\health.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_health_test_js",
-      "community": 79,
+      "community": 78,
       "norm_label": "health.test.js"
     },
     {
@@ -1566,7 +1566,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\onboarding-complete.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_onboarding_complete_test_js",
-      "community": 80,
+      "community": 79,
       "norm_label": "onboarding-complete.test.js"
     },
     {
@@ -1575,7 +1575,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\roster-rule.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_roster_rule_test_js",
-      "community": 81,
+      "community": 80,
       "norm_label": "roster-rule.test.js"
     },
     {
@@ -1584,7 +1584,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_app_tsx",
-      "community": 26,
+      "community": 25,
       "norm_label": "app.tsx"
     },
     {
@@ -1593,7 +1593,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L40",
       "id": "app_getderivedstatefromerror",
-      "community": 26,
+      "community": 25,
       "norm_label": "getderivedstatefromerror()"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L113",
       "id": "app_approutes",
-      "community": 26,
+      "community": 25,
       "norm_label": "approutes()"
     },
     {
@@ -1611,7 +1611,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L167",
       "id": "app_app",
-      "community": 26,
+      "community": 25,
       "norm_label": "app()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_file": "src\\main.tsx",
       "source_location": "L1",
       "id": "src_main_tsx",
-      "community": 82,
+      "community": 81,
       "norm_label": "main.tsx"
     },
     {
@@ -1629,7 +1629,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\DashboardPreview.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_dashboardpreview_tsx",
-      "community": 83,
+      "community": 82,
       "norm_label": "dashboardpreview.tsx"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\FinalCTA.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_finalcta_tsx",
-      "community": 84,
+      "community": 83,
       "norm_label": "finalcta.tsx"
     },
     {
@@ -1647,7 +1647,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\Footer.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_footer_tsx",
-      "community": 85,
+      "community": 84,
       "norm_label": "footer.tsx"
     },
     {
@@ -1746,7 +1746,7 @@
       "source_file": "src\\components\\IntroSequence.tsx",
       "source_location": "L1",
       "id": "src_components_introsequence_tsx",
-      "community": 44,
+      "community": 43,
       "norm_label": "introsequence.tsx"
     },
     {
@@ -1755,7 +1755,7 @@
       "source_file": "src\\components\\IntroSequence.tsx",
       "source_location": "L50",
       "id": "introsequence_tick",
-      "community": 44,
+      "community": 43,
       "norm_label": "tick()"
     },
     {
@@ -1863,7 +1863,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProblemsSection.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_problemssection_tsx",
-      "community": 45,
+      "community": 44,
       "norm_label": "problemssection.tsx"
     },
     {
@@ -1872,7 +1872,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProblemsSection.tsx",
       "source_location": "L6",
       "id": "problemssection_hexnode",
-      "community": 45,
+      "community": 44,
       "norm_label": "hexnode()"
     },
     {
@@ -1881,7 +1881,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProductsCarousel.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_productscarousel_tsx",
-      "community": 46,
+      "community": 45,
       "norm_label": "productscarousel.tsx"
     },
     {
@@ -1890,7 +1890,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProductsCarousel.tsx",
       "source_location": "L186",
       "id": "productscarousel_getchildxs",
-      "community": 46,
+      "community": 45,
       "norm_label": "getchildxs()"
     },
     {
@@ -1917,7 +1917,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\TeamSection.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_teamsection_tsx",
-      "community": 47,
+      "community": 46,
       "norm_label": "teamsection.tsx"
     },
     {
@@ -1926,7 +1926,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\TeamSection.tsx",
       "source_location": "L7",
       "id": "teamsection_headshot",
-      "community": 47,
+      "community": 46,
       "norm_label": "headshot()"
     },
     {
@@ -1935,7 +1935,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\TestimonialsSection.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_testimonialssection_tsx",
-      "community": 86,
+      "community": 85,
       "norm_label": "testimonialssection.tsx"
     },
     {
@@ -1944,7 +1944,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\CartDrawer.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_apparel_cartdrawer_tsx",
-      "community": 48,
+      "community": 47,
       "norm_label": "cartdrawer.tsx"
     },
     {
@@ -1953,7 +1953,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\CartDrawer.tsx",
       "source_location": "L9",
       "id": "cartdrawer_handlecheckout",
-      "community": 48,
+      "community": 47,
       "norm_label": "handlecheckout()"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\ProductImageViewer.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_apparel_productimageviewer_tsx",
-      "community": 87,
+      "community": 86,
       "norm_label": "productimageviewer.tsx"
     },
     {
@@ -1971,7 +1971,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\ProductViewer3D.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_apparel_productviewer3d_tsx",
-      "community": 49,
+      "community": 48,
       "norm_label": "productviewer3d.tsx"
     },
     {
@@ -1980,7 +1980,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\ProductViewer3D.tsx",
       "source_location": "L6",
       "id": "productviewer3d_garmentmesh",
-      "community": 49,
+      "community": 48,
       "norm_label": "garmentmesh()"
     },
     {
@@ -2367,7 +2367,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\CinematicHero.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_cinematichero_tsx",
-      "community": 50,
+      "community": 49,
       "norm_label": "cinematichero.tsx"
     },
     {
@@ -2376,7 +2376,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\CinematicHero.tsx",
       "source_location": "L17",
       "id": "cinematichero_cinematichero",
-      "community": 50,
+      "community": 49,
       "norm_label": "cinematichero()"
     },
     {
@@ -2385,7 +2385,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\HeroProductCard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_heroproductcard_tsx",
-      "community": 88,
+      "community": 87,
       "norm_label": "heroproductcard.tsx"
     },
     {
@@ -2394,7 +2394,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\HeroStages.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_herostages_tsx",
-      "community": 51,
+      "community": 50,
       "norm_label": "herostages.tsx"
     },
     {
@@ -2403,7 +2403,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\HeroStages.tsx",
       "source_location": "L12",
       "id": "herostages_hudtick",
-      "community": 51,
+      "community": 50,
       "norm_label": "hudtick()"
     },
     {
@@ -2412,7 +2412,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\IntroWalkout.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_introwalkout_tsx",
-      "community": 52,
+      "community": 51,
       "norm_label": "introwalkout.tsx"
     },
     {
@@ -2421,7 +2421,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\IntroWalkout.tsx",
       "source_location": "L28",
       "id": "introwalkout_shouldplay",
-      "community": 52,
+      "community": 51,
       "norm_label": "shouldplay()"
     },
     {
@@ -2430,7 +2430,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_context_cartcontext_tsx",
-      "community": 24,
+      "community": 23,
       "norm_label": "cartcontext.tsx"
     },
     {
@@ -2439,7 +2439,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L24",
       "id": "cartcontext_reducer",
-      "community": 24,
+      "community": 23,
       "norm_label": "reducer()"
     },
     {
@@ -2448,7 +2448,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L56",
       "id": "cartcontext_loadcart",
-      "community": 24,
+      "community": 23,
       "norm_label": "loadcart()"
     },
     {
@@ -2457,7 +2457,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L79",
       "id": "cartcontext_cartprovider",
-      "community": 24,
+      "community": 23,
       "norm_label": "cartprovider()"
     },
     {
@@ -2466,7 +2466,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L107",
       "id": "cartcontext_usecart",
-      "community": 24,
+      "community": 23,
       "norm_label": "usecart()"
     },
     {
@@ -2475,7 +2475,7 @@
       "source_file": "src\\data\\frames.ts",
       "source_location": "L1",
       "id": "src_data_frames_ts",
-      "community": 89,
+      "community": 88,
       "norm_label": "frames.ts"
     },
     {
@@ -2484,7 +2484,7 @@
       "source_file": "src\\data\\problems.ts",
       "source_location": "L1",
       "id": "src_data_problems_ts",
-      "community": 90,
+      "community": 89,
       "norm_label": "problems.ts"
     },
     {
@@ -2493,7 +2493,7 @@
       "source_file": "src\\data\\products.ts",
       "source_location": "L1",
       "id": "src_data_products_ts",
-      "community": 91,
+      "community": 90,
       "norm_label": "products.ts"
     },
     {
@@ -2502,7 +2502,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\data\\team.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_data_team_ts",
-      "community": 92,
+      "community": 91,
       "norm_label": "team.ts"
     },
     {
@@ -2574,7 +2574,7 @@
       "source_file": "src\\hooks\\useScrollReveal.ts",
       "source_location": "L1",
       "id": "src_hooks_usescrollreveal_ts",
-      "community": 53,
+      "community": 52,
       "norm_label": "usescrollreveal.ts"
     },
     {
@@ -2583,7 +2583,7 @@
       "source_file": "src\\hooks\\useScrollReveal.ts",
       "source_location": "L3",
       "id": "usescrollreveal_usescrollreveal",
-      "community": 53,
+      "community": 52,
       "norm_label": "usescrollreveal()"
     },
     {
@@ -2592,7 +2592,7 @@
       "source_file": "src\\hooks\\useSubdomain.ts",
       "source_location": "L1",
       "id": "src_hooks_usesubdomain_ts",
-      "community": 54,
+      "community": 53,
       "norm_label": "usesubdomain.ts"
     },
     {
@@ -2601,7 +2601,7 @@
       "source_file": "src\\hooks\\useSubdomain.ts",
       "source_location": "L15",
       "id": "usesubdomain_usesubdomain",
-      "community": 54,
+      "community": 53,
       "norm_label": "usesubdomain()"
     },
     {
@@ -2646,7 +2646,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\supabase.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_supabase_ts",
-      "community": 28,
+      "community": 27,
       "norm_label": "supabase.ts"
     },
     {
@@ -4122,7 +4122,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\HomePage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_homepage_tsx",
-      "community": 55,
+      "community": 54,
       "norm_label": "homepage.tsx"
     },
     {
@@ -4131,7 +4131,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\HomePage.tsx",
       "source_location": "L12",
       "id": "homepage_homepage",
-      "community": 55,
+      "community": 54,
       "norm_label": "homepage()"
     },
     {
@@ -4230,7 +4230,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\PodcastPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_podcastpage_tsx",
-      "community": 32,
+      "community": 31,
       "norm_label": "podcastpage.tsx"
     },
     {
@@ -4239,7 +4239,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\PodcastPage.tsx",
       "source_location": "L53",
       "id": "podcastpage_eplabel",
-      "community": 32,
+      "community": 31,
       "norm_label": "eplabel()"
     },
     {
@@ -4248,7 +4248,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\PodcastPage.tsx",
       "source_location": "L58",
       "id": "podcastpage_primarylink",
-      "community": 32,
+      "community": 31,
       "norm_label": "primarylink()"
     },
     {
@@ -4257,7 +4257,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\RegisterPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_registerpage_tsx",
-      "community": 93,
+      "community": 92,
       "norm_label": "registerpage.tsx"
     },
     {
@@ -4266,7 +4266,7 @@
       "source_file": "src\\pages\\TeamPage.tsx",
       "source_location": "L1",
       "id": "src_pages_teampage_tsx",
-      "community": 56,
+      "community": 55,
       "norm_label": "teampage.tsx"
     },
     {
@@ -4275,7 +4275,7 @@
       "source_file": "src\\pages\\TeamPage.tsx",
       "source_location": "L9",
       "id": "teampage_headshot",
-      "community": 56,
+      "community": 55,
       "norm_label": "headshot()"
     },
     {
@@ -4428,7 +4428,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\ListPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_contracts_listpage_tsx",
-      "community": 33,
+      "community": 32,
       "norm_label": "listpage.tsx"
     },
     {
@@ -4437,7 +4437,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\ListPage.tsx",
       "source_location": "L29",
       "id": "listpage_statuspill",
-      "community": 33,
+      "community": 32,
       "norm_label": "statuspill()"
     },
     {
@@ -4446,7 +4446,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\ListPage.tsx",
       "source_location": "L107",
       "id": "listpage_e",
-      "community": 33,
+      "community": 32,
       "norm_label": "e()"
     },
     {
@@ -4455,7 +4455,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\AdminDashboard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admindashboard_tsx",
-      "community": 34,
+      "community": 33,
       "norm_label": "admindashboard.tsx"
     },
     {
@@ -4464,7 +4464,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\AdminDashboard.tsx",
       "source_location": "L30",
       "id": "admindashboard_gotozone",
-      "community": 34,
+      "community": 33,
       "norm_label": "gotozone()"
     },
     {
@@ -4473,7 +4473,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\AdminDashboard.tsx",
       "source_location": "L32",
       "id": "admindashboard_selectzone",
-      "community": 34,
+      "community": 33,
       "norm_label": "selectzone()"
     },
     {
@@ -4482,7 +4482,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\DashShell.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_dashshell_tsx",
-      "community": 94,
+      "community": 93,
       "norm_label": "dashshell.tsx"
     },
     {
@@ -4491,7 +4491,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\DashWidgets.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_dashwidgets_tsx",
-      "community": 57,
+      "community": 56,
       "norm_label": "dashwidgets.tsx"
     },
     {
@@ -4500,7 +4500,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\DashWidgets.tsx",
       "source_location": "L98",
       "id": "dashwidgets_toxy",
-      "community": 57,
+      "community": 56,
       "norm_label": "toxy()"
     },
     {
@@ -4725,7 +4725,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminCharts.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admin_admincharts_tsx",
-      "community": 58,
+      "community": 57,
       "norm_label": "admincharts.tsx"
     },
     {
@@ -4734,7 +4734,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminCharts.tsx",
       "source_location": "L19",
       "id": "admincharts_chartempty",
-      "community": 58,
+      "community": 57,
       "norm_label": "chartempty()"
     },
     {
@@ -4743,7 +4743,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminUtils.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admin_adminutils_tsx",
-      "community": 59,
+      "community": 58,
       "norm_label": "adminutils.tsx"
     },
     {
@@ -4752,7 +4752,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminUtils.tsx",
       "source_location": "L5",
       "id": "adminutils_ffield",
-      "community": 59,
+      "community": 58,
       "norm_label": "ffield()"
     },
     {
@@ -5139,7 +5139,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\shared\\CommandLayout.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_shared_commandlayout_tsx",
-      "community": 60,
+      "community": 59,
       "norm_label": "commandlayout.tsx"
     },
     {
@@ -5148,7 +5148,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\shared\\CommandLayout.tsx",
       "source_location": "L6",
       "id": "commandlayout_clickablepanel",
-      "community": 60,
+      "community": 59,
       "norm_label": "clickablepanel()"
     },
     {
@@ -5274,7 +5274,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Contracts.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_sponsor_contracts_tsx",
-      "community": 95,
+      "community": 94,
       "norm_label": "contracts.tsx"
     },
     {
@@ -5283,7 +5283,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Overview.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_sponsor_overview_tsx",
-      "community": 96,
+      "community": 95,
       "norm_label": "overview.tsx"
     },
     {
@@ -5337,7 +5337,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_fighter_fighterprofileeditpage_tsx",
-      "community": 27,
+      "community": 26,
       "norm_label": "fighterprofileeditpage.tsx"
     },
     {
@@ -5346,7 +5346,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L30",
       "id": "fighterprofileeditpage_sectionheader",
-      "community": 27,
+      "community": 26,
       "norm_label": "sectionheader()"
     },
     {
@@ -5355,7 +5355,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L39",
       "id": "fighterprofileeditpage_label",
-      "community": 27,
+      "community": 26,
       "norm_label": "label()"
     },
     {
@@ -5364,7 +5364,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L48",
       "id": "fighterprofileeditpage_input",
-      "community": 27,
+      "community": 26,
       "norm_label": "input()"
     },
     {
@@ -5616,7 +5616,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\opportunities\\DiscoveryPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_opportunities_discoverypage_tsx",
-      "community": 35,
+      "community": 34,
       "norm_label": "discoverypage.tsx"
     },
     {
@@ -5625,7 +5625,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\opportunities\\DiscoveryPage.tsx",
       "source_location": "L17",
       "id": "discoverypage_oppcard",
-      "community": 35,
+      "community": 34,
       "norm_label": "oppcard()"
     },
     {
@@ -5634,7 +5634,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\opportunities\\DiscoveryPage.tsx",
       "source_location": "L34",
       "id": "discoverypage_e",
-      "community": 35,
+      "community": 34,
       "norm_label": "e()"
     },
     {
@@ -5643,7 +5643,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\FighterPublicPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_public_fighterpublicpage_tsx",
-      "community": 36,
+      "community": 35,
       "norm_label": "fighterpublicpage.tsx"
     },
     {
@@ -5652,7 +5652,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\FighterPublicPage.tsx",
       "source_location": "L12",
       "id": "fighterpublicpage_safehref",
-      "community": 36,
+      "community": 35,
       "norm_label": "safehref()"
     },
     {
@@ -5661,7 +5661,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\FighterPublicPage.tsx",
       "source_location": "L22",
       "id": "fighterpublicpage_statpill",
-      "community": 36,
+      "community": 35,
       "norm_label": "statpill()"
     },
     {
@@ -5670,7 +5670,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\TeamPublicPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_public_teampublicpage_tsx",
-      "community": 97,
+      "community": 96,
       "norm_label": "teampublicpage.tsx"
     },
     {
@@ -5850,7 +5850,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\SponsorOnboardPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_sponsor_sponsoronboardpage_tsx",
-      "community": 98,
+      "community": 97,
       "norm_label": "sponsoronboardpage.tsx"
     },
     {
@@ -5859,7 +5859,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\LoginPage.test.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_loginpage_test_tsx",
-      "community": 61,
+      "community": 60,
       "norm_label": "loginpage.test.tsx"
     },
     {
@@ -5868,7 +5868,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\LoginPage.test.tsx",
       "source_location": "L7",
       "id": "loginpage_test_wrapper",
-      "community": 61,
+      "community": 60,
       "norm_label": "wrapper()"
     },
     {
@@ -5877,7 +5877,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\Navbar.test.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_navbar_test_tsx",
-      "community": 62,
+      "community": 61,
       "norm_label": "navbar.test.tsx"
     },
     {
@@ -5886,7 +5886,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\Navbar.test.tsx",
       "source_location": "L7",
       "id": "navbar_test_wrapper",
-      "community": 62,
+      "community": 61,
       "norm_label": "wrapper()"
     },
     {
@@ -5895,7 +5895,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\setup.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_setup_ts",
-      "community": 99,
+      "community": 98,
       "norm_label": "setup.ts"
     },
     {
@@ -5904,7 +5904,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\useAuth.test.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_useauth_test_tsx",
-      "community": 63,
+      "community": 62,
       "norm_label": "useauth.test.tsx"
     },
     {
@@ -5913,7 +5913,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\useAuth.test.tsx",
       "source_location": "L24",
       "id": "useauth_test_wrapper",
-      "community": 63,
+      "community": 62,
       "norm_label": "wrapper()"
     },
     {
@@ -6182,7 +6182,7 @@
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L1",
-      "community": 64,
+      "community": 63,
       "norm_label": "claude.md",
       "id": "claude_md"
     },
@@ -6191,7 +6191,7 @@
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L1",
-      "community": 64,
+      "community": 63,
       "norm_label": "graphify",
       "id": "er_app_claude_graphify"
     },
@@ -7425,7 +7425,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L48",
+      "source_location": "L52",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_email",
@@ -7437,7 +7437,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L55",
+      "source_location": "L59",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7449,7 +7449,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L64",
+      "source_location": "L68",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleapplicationreceived",
@@ -7461,7 +7461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L90",
+      "source_location": "L94",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleapplicationshortlisted",
@@ -7473,7 +7473,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L116",
+      "source_location": "L120",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleapplicationaccepted",
@@ -7485,7 +7485,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L142",
+      "source_location": "L146",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleapplicationrejected",
@@ -7497,7 +7497,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L168",
+      "source_location": "L172",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlecontractcreated",
@@ -7509,7 +7509,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L215",
+      "source_location": "L219",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlecontractsigned",
@@ -7521,7 +7521,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L263",
+      "source_location": "L267",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlecontractpendingsignature",
@@ -7533,7 +7533,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L290",
+      "source_location": "L294",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleobligationproofsubmitted",
@@ -7545,7 +7545,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L323",
+      "source_location": "L327",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleobligationproofapproved",
@@ -7557,7 +7557,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L349",
+      "source_location": "L353",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handleobligationproofrejected",
@@ -7569,7 +7569,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L380",
+      "source_location": "L384",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlepaymentsucceeded",
@@ -7581,7 +7581,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L406",
+      "source_location": "L410",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlemessagereceived",
@@ -7593,7 +7593,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L442",
+      "source_location": "L446",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlemanagerrosterinvite",
@@ -7605,7 +7605,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L496",
+      "source_location": "L500",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlerosterinviteaccepted",
@@ -7617,7 +7617,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L525",
+      "source_location": "L529",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlerosterinvitedeclined",
@@ -7629,7 +7629,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L554",
+      "source_location": "L558",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlerosterrequestaccepted",
@@ -7641,7 +7641,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L582",
+      "source_location": "L586",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlefightermanagerrequest",
@@ -7653,7 +7653,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L608",
+      "source_location": "L612",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlesponsorapproved",
@@ -7665,7 +7665,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L634",
+      "source_location": "L638",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_handlebillingpackagepurchased",
@@ -7677,7 +7677,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L691",
+      "source_location": "L695",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_tick",
@@ -7689,7 +7689,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L720",
+      "source_location": "L724",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_processbatch",
@@ -7701,7 +7701,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L750",
+      "source_location": "L754",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_jobs_outbox_dispatcher_js",
       "_tgt": "outbox_dispatcher_startoutboxdispatcher",
@@ -7713,7 +7713,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L80",
+      "source_location": "L84",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationreceived",
       "_tgt": "outbox_dispatcher_email",
@@ -7725,7 +7725,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L106",
+      "source_location": "L110",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationshortlisted",
       "_tgt": "outbox_dispatcher_email",
@@ -7737,7 +7737,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L132",
+      "source_location": "L136",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationaccepted",
       "_tgt": "outbox_dispatcher_email",
@@ -7749,7 +7749,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L158",
+      "source_location": "L162",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationrejected",
       "_tgt": "outbox_dispatcher_email",
@@ -7761,7 +7761,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L199",
+      "source_location": "L203",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlecontractcreated",
       "_tgt": "outbox_dispatcher_email",
@@ -7773,7 +7773,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L247",
+      "source_location": "L251",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlecontractsigned",
       "_tgt": "outbox_dispatcher_email",
@@ -7785,7 +7785,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L281",
+      "source_location": "L285",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlecontractpendingsignature",
       "_tgt": "outbox_dispatcher_email",
@@ -7797,7 +7797,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L313",
+      "source_location": "L317",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleobligationproofsubmitted",
       "_tgt": "outbox_dispatcher_email",
@@ -7809,7 +7809,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L340",
+      "source_location": "L344",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleobligationproofapproved",
       "_tgt": "outbox_dispatcher_email",
@@ -7821,7 +7821,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L370",
+      "source_location": "L374",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleobligationproofrejected",
       "_tgt": "outbox_dispatcher_email",
@@ -7833,7 +7833,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L397",
+      "source_location": "L401",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlepaymentsucceeded",
       "_tgt": "outbox_dispatcher_email",
@@ -7845,7 +7845,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L515",
+      "source_location": "L519",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlerosterinviteaccepted",
       "_tgt": "outbox_dispatcher_email",
@@ -7857,7 +7857,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L544",
+      "source_location": "L548",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlerosterinvitedeclined",
       "_tgt": "outbox_dispatcher_email",
@@ -7869,7 +7869,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L573",
+      "source_location": "L577",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlerosterrequestaccepted",
       "_tgt": "outbox_dispatcher_email",
@@ -7881,7 +7881,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L599",
+      "source_location": "L603",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlefightermanagerrequest",
       "_tgt": "outbox_dispatcher_email",
@@ -7893,7 +7893,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L624",
+      "source_location": "L628",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlesponsorapproved",
       "_tgt": "outbox_dispatcher_email",
@@ -7905,7 +7905,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L655",
+      "source_location": "L659",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlebillingpackagepurchased",
       "_tgt": "outbox_dispatcher_email",
@@ -7917,7 +7917,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L78",
+      "source_location": "L82",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationreceived",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7929,7 +7929,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L104",
+      "source_location": "L108",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationshortlisted",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7941,7 +7941,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L130",
+      "source_location": "L134",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationaccepted",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7953,7 +7953,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L156",
+      "source_location": "L160",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleapplicationrejected",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7965,7 +7965,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L195",
+      "source_location": "L199",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlecontractcreated",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7977,7 +7977,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L245",
+      "source_location": "L249",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlecontractsigned",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -7989,7 +7989,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L279",
+      "source_location": "L283",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlecontractpendingsignature",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8001,7 +8001,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L296",
+      "source_location": "L300",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleobligationproofsubmitted",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8013,7 +8013,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L338",
+      "source_location": "L342",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleobligationproofapproved",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8025,7 +8025,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L368",
+      "source_location": "L372",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handleobligationproofrejected",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8037,7 +8037,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L395",
+      "source_location": "L399",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlepaymentsucceeded",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8049,7 +8049,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L448",
+      "source_location": "L452",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlemanagerrosterinvite",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8061,7 +8061,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L500",
+      "source_location": "L504",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlerosterinviteaccepted",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8073,7 +8073,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L529",
+      "source_location": "L533",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlerosterinvitedeclined",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8085,7 +8085,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L558",
+      "source_location": "L562",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlerosterrequestaccepted",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8097,7 +8097,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L596",
+      "source_location": "L600",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlefightermanagerrequest",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8109,7 +8109,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L622",
+      "source_location": "L626",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlesponsorapproved",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8121,7 +8121,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L653",
+      "source_location": "L657",
       "weight": 1.0,
       "_src": "outbox_dispatcher_handlebillingpackagepurchased",
       "_tgt": "outbox_dispatcher_getprofile",
@@ -8793,7 +8793,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\jobs\\outbox-dispatcher.js",
-      "source_location": "L711",
+      "source_location": "L715",
       "weight": 1.0,
       "_src": "outbox_dispatcher_tick",
       "_tgt": "outbox_dispatcher_processbatch",
@@ -9273,7 +9273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L395",
+      "source_location": "L413",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
       "_tgt": "auth_isemailverified",
@@ -9292,6 +9292,18 @@
       "source": "auth_computeonboardingcomplete",
       "target": "auth_bootstrapprofile",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
+      "source_location": "L118",
+      "weight": 1.0,
+      "_src": "auth_bootstrapprofile",
+      "_tgt": "education_update",
+      "source": "auth_bootstrapprofile",
+      "target": "education_update"
     },
     {
       "relation": "contains",
