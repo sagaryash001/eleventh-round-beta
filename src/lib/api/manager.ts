@@ -64,6 +64,10 @@ export const createPendingFighter = (data: {
 export const updateConnectionStatus = (id: string, status: 'active' | 'declined' | 'removed') =>
   apiPatch<{ ok: boolean }>(`/api/manager/roster/${id}/status`, { status })
 
+// Re-send a declined or pending invite (manager side).
+export const resendInvite = (id: string) =>
+  apiPost<{ ok: boolean }>(`/api/manager/roster/${id}/resend`, {})
+
 export const getFighterDetail = (fighterId: string) =>
   apiGet<any>(`/api/manager/fighters/${fighterId}`)
 
@@ -89,6 +93,14 @@ export const requestManager = (data: {
 
 export const cancelManagerRequest = (connectionId: string) =>
   apiPatch<{ ok: boolean }>(`/api/fighter/manager/request/${connectionId}`, { status: 'removed' })
+
+// Fighter accepts a manager-initiated invite (→ active).
+export const acceptManagerInvite = (connectionId: string) =>
+  apiPatch<{ ok: boolean }>(`/api/fighter/manager/request/${connectionId}`, { status: 'active' })
+
+// Fighter declines a manager-initiated invite (→ declined; manager can resend).
+export const declineManagerInvite = (connectionId: string) =>
+  apiPatch<{ ok: boolean }>(`/api/fighter/manager/request/${connectionId}`, { status: 'declined' })
 
 export const getManagerContracts = () =>
   apiGet<{ contracts: Array<{

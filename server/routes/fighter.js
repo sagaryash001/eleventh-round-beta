@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { adminSupabase } from '../db/supabase.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validate, FighterManagerRequestSchema } from '../lib/validate.js'
+import { activateConnection, clearManagerLink } from '../lib/roster.js'
 import { childLogger } from '../lib/logger.js'
 
 const router = Router()
@@ -1044,42 +1045,72 @@ router.post('/manager/request', ...guard, validate(FighterManagerRequestSchema),
 })
 
 // ── PATCH /api/fighter/manager/request/:connectionId ──────────────────────────
-// Fighter can: remove/cancel their own request, OR accept a manager-initiated invite.
+// Fighter can: accept a manager invite (→ active), decline a manager invite
+// (→ declined, so the manager can resend), or cancel/leave (→ removed).
 router.patch('/manager/request/:connectionId', ...guard, async (req, res) => {
   try {
     const uid         = req.user.id
     const { status }  = req.body
     const now         = new Date().toISOString()
 
-    if (!['removed', 'active'].includes(status)) {
-      return res.status(400).json({ error: 'Only "removed" or "active" are accepted.' })
+    if (!['removed', 'active', 'declined'].includes(status)) {
+      return res.status(400).json({ error: 'Only "active", "declined" or "removed" are accepted.' })
     }
 
     const { data: conn } = await adminSupabase
-      .from('manager_fighters').select('id, status, source')
+      .from('manager_fighters').select('id, status, source, manager_id')
       .eq('id', req.params.connectionId).eq('fighter_id', uid).maybeSingle()
 
     if (!conn) return res.status(404).json({ error: 'Connection not found.' })
     if (conn.status === 'removed') return res.status(400).json({ error: 'Connection is already removed.' })
 
-    // A fighter may only accept rows the manager created (manager_invite or manual_create).
-    // Fighter cannot self-accept their own outbound requests.
-    if (status === 'active' && conn.source === 'fighter_request') {
-      return res.status(400).json({ error: 'You cannot accept your own outbound request. The manager must accept it.' })
-    }
-    if (status === 'active' && conn.status !== 'pending') {
-      return res.status(400).json({ error: 'Connection is not pending.' })
+    const managerInitiated = conn.source === 'manager_invite' || conn.source === 'manual_create'
+
+    // ── Accept: enforce consent + the one-manager rule via the shared helper ──
+    if (status === 'active') {
+      // A fighter may only accept rows the manager created — not their own outbound request.
+      if (conn.source === 'fighter_request') {
+        return res.status(400).json({ error: 'You cannot accept your own outbound request. The manager must accept it.' })
+      }
+      if (conn.status !== 'pending') {
+        return res.status(400).json({ error: 'Connection is not pending.' })
+      }
+      const result = await activateConnection(adminSupabase, { conn, managerId: conn.manager_id, fighterId: uid })
+      if (result.error) return res.status(result.status).json({ error: result.error })
+      // Notify the manager that the fighter joined their roster.
+      adminSupabase.from('outbox_events').insert({
+        event_type: 'roster.invite_accepted', aggregate_type: 'manager_fighters', aggregate_id: conn.id,
+        payload: { manager_id: conn.manager_id, fighter_id: uid },
+      }).then(() => {}).catch(() => {})
+      log.info({ connectionId: conn.id, uid, mid: conn.manager_id, status: 'active' }, 'fighter accepted manager invite')
+      return res.json({ ok: true })
     }
 
-    const updates = { status, updated_at: now }
-    if (status === 'active')  updates.accepted_at = now
-    if (status === 'removed') updates.removed_at  = now
+    // ── Decline a manager invite → keep it visible to the manager for resend ──
+    if (status === 'declined') {
+      if (!managerInitiated) {
+        return res.status(400).json({ error: 'Only manager invitations can be declined. Use cancel for your own request.' })
+      }
+      const { error } = await adminSupabase.from('manager_fighters')
+        .update({ status: 'declined', declined_at: now, updated_at: now }).eq('id', conn.id)
+      if (error) throw error
+      // Notify the manager so they can resend if appropriate.
+      adminSupabase.from('outbox_events').insert({
+        event_type: 'roster.invite_declined', aggregate_type: 'manager_fighters', aggregate_id: conn.id,
+        payload: { manager_id: conn.manager_id, fighter_id: uid },
+      }).then(() => {}).catch(() => {})
+      log.info({ connectionId: conn.id, uid, mid: conn.manager_id, status: 'declined' }, 'fighter declined manager invite')
+      return res.json({ ok: true })
+    }
 
+    // ── Remove / leave ── if leaving an active relationship, unlink the profile.
+    const wasActive = conn.status === 'active'
     const { error } = await adminSupabase.from('manager_fighters')
-      .update(updates).eq('id', conn.id)
+      .update({ status: 'removed', removed_at: now, updated_at: now }).eq('id', conn.id)
     if (error) throw error
+    if (wasActive) await clearManagerLink(adminSupabase, uid, conn.manager_id)
 
-    log.info({ connectionId: conn.id, uid, status }, 'fighter updated connection status')
+    log.info({ connectionId: conn.id, uid, mid: conn.manager_id, status: 'removed' }, 'fighter removed connection')
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'PATCH /fighter/manager/request/:id threw')

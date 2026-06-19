@@ -7,8 +7,7 @@ import { CommandCalendarCard, CommandCalendarPanel } from '../../components/even
 import { useApi } from '../../hooks/useApi'
 import { getContracts, type Contract } from '../../lib/api/contracts'
 import { getSponsorForge, submitSponsorForge, type SponsorForgeStatus, type SFChecklistItem, type SFItemStatus } from '../../lib/api/fighters'
-import { getFighterManager, requestManager, cancelManagerRequest, type ManagerConnection } from '../../lib/api/manager'
-import { apiPatch } from '../../lib/api/client'
+import { getFighterManager, requestManager, cancelManagerRequest, acceptManagerInvite, declineManagerInvite, type ManagerConnection } from '../../lib/api/manager'
 import {
   getFighterModules, getFighterModule, updateModuleProgress, completeModule,
   parseMetadata, parseChecklistState,
@@ -120,8 +119,19 @@ function ManagerCard() {
         const accept = async () => {
           setActingId(c.id); setMsg(null)
           try {
-            await apiPatch(`/api/fighter/manager/request/${c.id}`, { status: 'active' })
+            await acceptManagerInvite(c.id)
             setMsg({ type: 'ok', text: 'Invitation accepted.' }); load()
+          } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+          finally { setActingId(null) }
+        }
+        // Manager invite → decline (manager keeps it + can resend).
+        // Own outbound request → cancel (remove it entirely).
+        const reject = async () => {
+          setActingId(c.id); setMsg(null)
+          try {
+            if (isManagerInvite) { await declineManagerInvite(c.id); setMsg({ type: 'ok', text: 'Invitation declined.' }) }
+            else                 { await cancelManagerRequest(c.id); setMsg({ type: 'ok', text: 'Request cancelled.' }) }
+            load()
           } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
           finally { setActingId(null) }
         }
@@ -130,11 +140,11 @@ function ManagerCard() {
             <div className="flex-1">
               <div className="font-condensed text-[12px] text-off-white">
                 {isManagerInvite ? 'Invited by' : 'Request sent to'}{' '}
-                <span className="font-bold">{c.manager?.name ?? c.team_name ?? '—'}</span>
+                <span className="font-bold">{c.manager?.name ?? c.manager?.team_name ?? c.team_name ?? '—'}</span>
               </div>
               {c.request_message && <div className="font-condensed text-[11px] text-gray-3 italic">"{c.request_message}"</div>}
             </div>
-            <span className="badge badge-yellow">Pending</span>
+            <span className="badge badge-yellow">{isManagerInvite ? 'Invited' : 'Pending'}</span>
             {isManagerInvite && (
               <button onClick={accept} disabled={actingId === c.id}
                 className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2 py-1 border cursor-pointer transition-all disabled:opacity-40"
@@ -142,7 +152,7 @@ function ManagerCard() {
                 {actingId === c.id ? '…' : 'Accept'}
               </button>
             )}
-            <button onClick={() => cancel(c.id)} disabled={actingId === c.id}
+            <button onClick={reject} disabled={actingId === c.id}
               className="font-condensed font-bold uppercase text-[9px] tracking-[0.15em] px-2 py-1 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
               {actingId === c.id ? '…' : isManagerInvite ? 'Decline' : 'Cancel'}
             </button>

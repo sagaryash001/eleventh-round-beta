@@ -9,10 +9,14 @@ import { validate,
   ManagerInviteSchema, PendingFighterCreateSchema,
   ManagerConnectionStatusSchema, ManagerFighterProfileUpdateSchema,
 } from '../lib/validate.js'
+import { activateConnection, clearManagerLink } from '../lib/roster.js'
 import { childLogger } from '../lib/logger.js'
 
 const router = Router()
 const log    = childLogger('manager')
+
+// Minimum gap between resends of the same invite — prevents accidental spam.
+const RESEND_COOLDOWN_MS = 60 * 1000
 
 function requireManager(req, res, next) {
   if (!['manager', 'admin'].includes(req.user?.role))
@@ -207,7 +211,8 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
             request_message: message ?? null, requested_by: mid, declined_at: null, removed_at: null, updated_at: now })
           .eq('id', existing.id)
         if (error) throw error
-        adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existing.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
+        adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existing.id, payload: { fighter_id: existingUser.id, invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
+        log.info({ mid, fid: existingUser.id, connectionId: existing.id, route: 'existing-user-reinvite' }, 'roster invite (existing fighter)')
         return res.json({ ok: true, connection_id: existing.id, matched: true })
       }
 
@@ -217,7 +222,8 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
           request_message: message ?? null, requested_by: mid })
         .select('id').maybeSingle()
       if (error) throw error
-      adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
+      adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { fighter_id: existingUser.id, invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
+      log.info({ mid, fid: existingUser.id, connectionId: data.id, route: 'existing-user-new' }, 'roster invite (existing fighter)')
       return res.status(201).json({ ok: true, connection_id: data.id, matched: true })
     }
 
@@ -240,6 +246,7 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
         .eq('id', existingEmail.id)
       if (error) throw error
       adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existingEmail.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
+      log.info({ mid, email, connectionId: existingEmail.id, route: 'email-invite-reuse' }, 'roster invite (non-platform)')
       return res.json({ ok: true, connection_id: existingEmail.id, matched: false })
     }
 
@@ -250,6 +257,7 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
       .select('id').maybeSingle()
     if (error) throw error
     adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
+    log.info({ mid, email, connectionId: data.id, route: 'email-invite-new' }, 'roster invite (non-platform)')
     return res.status(201).json({ ok: true, connection_id: data.id, matched: false })
   } catch (err) {
     log.error({ err }, 'POST /manager/roster/invite threw')
@@ -308,17 +316,26 @@ router.patch('/roster/:connectionId/status', ...guard, validate(ManagerConnectio
     if (findErr) throw findErr
     if (!conn)   return res.status(404).json({ error: 'Connection not found.' })
 
-    // Consent guard: only fighter-requested rows may be activated by the manager.
-    // Manager-initiated invites (manager_invite, manual_create) must be accepted
-    // by the fighter via PATCH /api/fighter/manager/request/:id.
-    if (status === 'active' && conn.source !== 'fighter_request') {
-      return res.status(400).json({
-        error: 'This invite must be accepted by the fighter, not activated by the manager.',
-      })
+    // ── Activate (only fighter-requested rows; manager invites need fighter consent) ──
+    if (status === 'active') {
+      if (conn.source !== 'fighter_request') {
+        return res.status(400).json({
+          error: 'This invite must be accepted by the fighter, not activated by the manager.',
+        })
+      }
+      // Shared helper enforces the one-manager rule + profile link + sibling decline.
+      const result = await activateConnection(adminSupabase, { conn, managerId: mid, fighterId: conn.fighter_id })
+      if (result.error) return res.status(result.status).json({ error: result.error })
+      // Notify the fighter that the manager accepted their request.
+      adminSupabase.from('outbox_events').insert({
+        event_type: 'roster.request_accepted', aggregate_type: 'manager_fighters', aggregate_id: conn.id,
+        payload: { manager_id: mid, fighter_id: conn.fighter_id },
+      }).then(() => {}).catch(() => {})
+      log.info({ connectionId: conn.id, mid, fid: conn.fighter_id, status: 'active' }, 'manager accepted fighter request')
+      return res.json({ ok: true })
     }
 
     const updates = { status, updated_at: now }
-    if (status === 'active')   updates.accepted_at = now
     if (status === 'declined') updates.declined_at = now
     if (status === 'removed')  updates.removed_at  = now
 
@@ -326,10 +343,67 @@ router.patch('/roster/:connectionId/status', ...guard, validate(ManagerConnectio
       .update(updates).eq('id', conn.id)
     if (error) throw error
 
-    log.info({ connectionId: conn.id, mid, status }, 'connection status updated')
+    // Leaving an active relationship unlinks the fighter profile.
+    if ((status === 'removed' || status === 'declined') && conn.status === 'active') {
+      await clearManagerLink(adminSupabase, conn.fighter_id, mid)
+    }
+
+    log.info({ connectionId: conn.id, mid, fid: conn.fighter_id, status }, 'connection status updated')
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'PATCH /manager/roster/:id/status threw')
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/manager/roster/:connectionId/resend ─────────────────────────────
+// Re-send a declined or still-pending invite. Resets the row to pending, bumps
+// the timestamp, and re-emits the outbox notification. A short cooldown prevents
+// rapid double-sends. Cannot resend an already-active connection.
+router.post('/roster/:connectionId/resend', ...guard, async (req, res) => {
+  try {
+    const mid = req.user.id
+    const now = new Date().toISOString()
+
+    const { data: conn, error: findErr } = await adminSupabase
+      .from('manager_fighters')
+      .select('id, status, source, fighter_id, invited_email, invited_name, updated_at')
+      .eq('id', req.params.connectionId)
+      .eq('manager_id', mid)
+      .maybeSingle()
+    if (findErr) throw findErr
+    if (!conn) return res.status(404).json({ error: 'Connection not found.' })
+
+    if (conn.status === 'active') {
+      return res.status(400).json({ error: 'This fighter is already active on your roster.' })
+    }
+    if (conn.source === 'fighter_request') {
+      return res.status(400).json({ error: 'This is a fighter request — accept or decline it instead of resending.' })
+    }
+    // Cooldown: only throttle invites that are already pending (a declined invite
+    // should always be resendable regardless of when it was declined).
+    if (conn.status === 'pending' && conn.updated_at &&
+        Date.now() - new Date(conn.updated_at).getTime() < RESEND_COOLDOWN_MS) {
+      return res.status(429).json({ error: 'Invite was just sent. Please wait a moment before resending.' })
+    }
+
+    const { error } = await adminSupabase.from('manager_fighters')
+      .update({ status: 'pending', declined_at: null, updated_at: now })
+      .eq('id', conn.id)
+    if (error) throw error
+
+    const { error: outboxErr } = await adminSupabase.from('outbox_events').insert({
+      event_type:     'manager.roster_invite',
+      aggregate_type: 'manager_fighters',
+      aggregate_id:   conn.id,
+      payload: { invited_email: conn.invited_email, invited_name: conn.invited_name, fighter_id: conn.fighter_id, manager_id: mid, resend: true },
+    })
+    if (outboxErr) log.warn({ err: outboxErr, connectionId: conn.id }, 'resend outbox insert failed')
+
+    log.info({ connectionId: conn.id, mid, fid: conn.fighter_id, email: conn.invited_email, status: 'pending' }, 'invite resent')
+    res.json({ ok: true })
+  } catch (err) {
+    log.error({ err }, 'POST /manager/roster/:id/resend threw')
     res.status(500).json({ error: err.message })
   }
 })

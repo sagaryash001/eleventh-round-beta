@@ -7,7 +7,7 @@ import { CommandCalendarCard, CommandCalendarPanel } from '../../components/even
 import { useApi } from '../../hooks/useApi'
 import {
   getManagerRoster, inviteFighter, createPendingFighter,
-  updateConnectionStatus, getFighterDetail, updateFighterProfile,
+  updateConnectionStatus, resendInvite, getFighterDetail, updateFighterProfile,
   getManagerContracts, type RosterEntry,
 } from '../../lib/api/manager'
 import { getManagerModuleProgress } from '../../lib/api/education'
@@ -429,6 +429,15 @@ function RosterZone() {
     finally { setActingId(null) }
   }
 
+  const resend = async (id: string) => {
+    setActingId(id); setMsg(null)
+    try {
+      await resendInvite(id)
+      setMsg({ type: 'ok', text: 'Invite resent.' }); load()
+    } catch (e: any) { setMsg({ type: 'err', text: e.message }) }
+    finally { setActingId(null) }
+  }
+
   const submitInvite = async () => {
     if (!invite.email.trim()) { setInvMsg({ type: 'err', text: 'Email is required.' }); return }
     setInvSaving(true); setInvMsg(null)
@@ -459,9 +468,10 @@ function RosterZone() {
   if (loading) return <DashSkeleton />
   if (error)   return <ApiError message={error} retry={load} />
 
-  const active  = roster.filter(c => c.status === 'active')
-  const pending = roster.filter(c => c.status === 'pending')
-  const other   = roster.filter(c => !['active', 'pending'].includes(c.status))
+  const active   = roster.filter(c => c.status === 'active')
+  const pending  = roster.filter(c => c.status === 'pending')
+  const declined = roster.filter(c => c.status === 'declined')
+  const other    = roster.filter(c => !['active', 'pending', 'declined'].includes(c.status))
 
   return (
     <div className="space-y-4">
@@ -611,23 +621,32 @@ function RosterZone() {
         <div className="space-y-2">
           <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Pending Connections</div>
           {pending.map(conn => {
-            const isRequest  = conn.source === 'fighter_request'
-            const displayName = conn.fighter?.name ?? conn.invited_name ?? conn.pending_fighter_data?.name ?? 'Unknown Fighter'
+            const isRequest    = conn.source === 'fighter_request'
+            const onPlatform   = !!conn.fighter_id          // existing platform fighter
+            const displayName  = rosterDisplayName(conn)
             const displayEmail = conn.fighter?.email ?? conn.invited_email ?? null
+            // Status line tailored to invite routing (existing vs non-platform).
+            const statusLine = isRequest
+              ? 'Requested to join your roster'
+              : onPlatform
+                ? 'Pending fighter acceptance'
+                : 'Invitation sent — email not yet registered'
             return (
               <div key={conn.id} className="dash-card" style={{ borderLeft: '2px solid #c9a82c' }}>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="font-condensed font-bold text-off-white" style={{ fontSize: 13 }}>{displayName}</span>
-                      <StatusBadge status={conn.status} />
-                      <span className="font-condensed text-[9px] text-gray-3 capitalize">{conn.source.replace(/_/g, ' ')}</span>
+                      <span className="badge badge-yellow">{onPlatform || isRequest ? 'Pending' : 'Invited'}</span>
                     </div>
                     {displayEmail && <div className="font-condensed text-[11px] text-gray-3">{displayEmail}</div>}
+                    <div className="font-condensed text-[10px] text-gray-3 mt-0.5">
+                      {statusLine}{conn.created_at ? ` · ${new Date(conn.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                    </div>
                     {conn.request_message && <div className="font-condensed text-[11px] text-gray-2 italic mt-0.5">"{conn.request_message}"</div>}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    {isRequest && (
+                    {isRequest ? (
                       <>
                         <button onClick={() => changeStatus(conn.id, 'active')} disabled={actingId === conn.id}
                           className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border cursor-pointer transition-all disabled:opacity-40"
@@ -640,18 +659,55 @@ function RosterZone() {
                           {actingId === conn.id ? <Spinner /> : 'Decline'}
                         </button>
                       </>
-                    )}
-                    {!isRequest && (
-                      <button onClick={() => changeStatus(conn.id, 'removed')} disabled={actingId === conn.id}
-                        className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
-                        {actingId === conn.id ? <Spinner /> : 'Cancel'}
-                      </button>
+                    ) : (
+                      <>
+                        <button onClick={() => resend(conn.id)} disabled={actingId === conn.id}
+                          className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-2 cursor-pointer hover:border-blood hover:text-off-white transition-all disabled:opacity-40">
+                          {actingId === conn.id ? <Spinner /> : 'Resend'}
+                        </button>
+                        <button onClick={() => changeStatus(conn.id, 'removed')} disabled={actingId === conn.id}
+                          className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">
+                          {actingId === conn.id ? <Spinner /> : 'Cancel'}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
               </div>
             )
           })}
+        </div>
+      )}
+
+      {declined.length > 0 && (
+        <div className="space-y-2">
+          <div className="font-condensed text-[10px] font-bold tracking-[0.35em] uppercase text-gray-3">Declined Invites</div>
+          {declined.map(conn => (
+            <div key={conn.id} className="dash-card" style={{ borderLeft: '2px solid #8b0000' }}>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-condensed font-bold text-gray-1" style={{ fontSize: 13 }}>{rosterDisplayName(conn)}</span>
+                    <span className="badge badge-red">Declined</span>
+                  </div>
+                  {(conn.fighter?.email ?? conn.invited_email) && (
+                    <div className="font-condensed text-[11px] text-gray-3">{conn.fighter?.email ?? conn.invited_email}</div>
+                  )}
+                  <div className="font-condensed text-[10px] text-gray-3 mt-0.5">
+                    Invite declined{conn.declined_at ? ` · ${new Date(conn.declined_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                  </div>
+                </div>
+                {/* Fighter requests are not resendable — only manager-initiated invites. */}
+                {conn.source !== 'fighter_request' && (
+                  <button onClick={() => resend(conn.id)} disabled={actingId === conn.id}
+                    className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border cursor-pointer transition-all disabled:opacity-40"
+                    style={{ borderColor: '#2a5c2a', color: '#00c060' }}>
+                    {actingId === conn.id ? <Spinner /> : 'Resend Invite'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -662,9 +718,7 @@ function RosterZone() {
             <div key={conn.id} className="dash-card opacity-60" style={{ borderLeft: '2px solid #222226' }}>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <span className="font-condensed text-[12px] text-gray-2">
-                    {conn.fighter?.name ?? conn.invited_name ?? conn.pending_fighter_data?.name ?? '—'}
-                  </span>
+                  <span className="font-condensed text-[12px] text-gray-2">{rosterDisplayName(conn)}</span>
                 </div>
                 <StatusBadge status={conn.status} />
               </div>
@@ -674,6 +728,15 @@ function RosterZone() {
       )}
     </div>
   )
+}
+
+// Best display name for a roster row — never shows "Unknown" when an email exists.
+function rosterDisplayName(conn: RosterEntry): string {
+  return conn.fighter?.name
+    ?? conn.invited_name
+    ?? (conn.pending_fighter_data?.name as string | undefined)
+    ?? conn.invited_email
+    ?? 'Invited Fighter'
 }
 
 // ── Fighter Ops zone (Applications + SponsorForge) ────────────────────────────

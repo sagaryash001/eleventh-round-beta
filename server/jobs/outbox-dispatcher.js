@@ -23,7 +23,10 @@
 //   obligation.proof_rejected     → in-app (fighter) + email
 //   payment.succeeded             → in-app (fighter) + email  (sponsorship payments)
 //   message.received              → in-app (all)     + email  (short preview only)
-//   manager.roster_invite         → email to invited address
+//   manager.roster_invite         → in-app (existing fighter) OR email (non-platform)
+//   roster.invite_accepted        → in-app (manager) + email   (fighter accepted)
+//   roster.invite_declined        → in-app (manager) + email   (fighter declined)
+//   roster.request_accepted       → in-app (fighter) + email   (manager accepted request)
 //   fighter.manager_request       → in-app (manager) + email
 //   sponsor.approved              → in-app (sponsor) + email
 //   billing.package_purchased     → in-app (user)    + email
@@ -437,8 +440,7 @@ async function handleMessageReceived(payload) {
 }
 
 async function handleManagerRosterInvite(payload) {
-  const { invited_email, invited_name, manager_id, message } = payload
-  if (!invited_email) return
+  const { invited_email, invited_name, manager_id, fighter_id, message } = payload
 
   let managerName = 'A manager'
   if (manager_id) {
@@ -446,6 +448,23 @@ async function handleManagerRosterInvite(payload) {
     managerName = mp?.name ?? managerName
   }
 
+  // Case A/C — existing platform fighter (confirmed or not): in-app notification,
+  // NO account-invite email. They accept from their Manager / Team card.
+  if (fighter_id) {
+    await adminSupabase.from('notifications').insert({
+      recipient_id: fighter_id,
+      type:         'manager.roster_invite',
+      title:        'Roster invite received',
+      body:         `${managerName} invited you to join their roster.`,
+      action_url:   `${CLIENT}/dashboard/fighter`,
+      related_type: 'manager_fighters',
+      related_id:   null,
+    })
+    return
+  }
+
+  // Case B — non-platform fighter: email invite to register/accept.
+  if (!invited_email) return
   await email(invited_email, `${esc(managerName)} invited you to join their roster`, emailHtml(`
     <p>Hi${invited_name ? ` <strong style="color:#f0ece4">${esc(invited_name)}</strong>` : ''},</p>
     <p><strong style="color:#f0ece4">${esc(managerName)}</strong> has invited you to join their fighter roster
@@ -454,6 +473,93 @@ async function handleManagerRosterInvite(payload) {
     <p>Create an account or sign in to accept the invitation.</p>
     ${ctaButton(`${CLIENT}/register`, 'Accept Invitation')}
   `))
+}
+
+// Fighter accepted a manager's invite → notify the manager.
+async function handleRosterInviteAccepted(payload) {
+  const { manager_id, fighter_id } = payload
+  if (!manager_id) return
+
+  const fp = await getProfile(fighter_id)
+  const fighterName = fp?.name ?? 'A fighter'
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: manager_id,
+    type:         'roster.invite_accepted',
+    title:        'Fighter joined your roster',
+    body:         `${fighterName} accepted your roster invite.`,
+    action_url:   `${CLIENT}/dashboard/manager`,
+    related_type: 'manager_fighters',
+    related_id:   fighter_id ?? null,
+  })
+
+  const mp = await getProfile(manager_id)
+  if (mp?.email) {
+    await email(mp.email, `${esc(fighterName)} joined your roster`, emailHtml(`
+      <p>Hi <strong style="color:#f0ece4">${esc(mp.name ?? 'there')}</strong>,</p>
+      <p><strong style="color:#f0ece4">${esc(fighterName)}</strong> has <strong style="color:#00c060">accepted</strong>
+         your roster invite and is now active on your roster.</p>
+      ${ctaButton(`${CLIENT}/dashboard/manager`, 'View Roster')}
+    `))
+  }
+}
+
+// Fighter declined a manager's invite → notify the manager (resend available).
+async function handleRosterInviteDeclined(payload) {
+  const { manager_id, fighter_id } = payload
+  if (!manager_id) return
+
+  const fp = await getProfile(fighter_id)
+  const fighterName = fp?.name ?? 'A fighter'
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: manager_id,
+    type:         'roster.invite_declined',
+    title:        'Roster invite declined',
+    body:         `${fighterName} declined your roster invite.`,
+    action_url:   `${CLIENT}/dashboard/manager`,
+    related_type: 'manager_fighters',
+    related_id:   fighter_id ?? null,
+  })
+
+  const mp = await getProfile(manager_id)
+  if (mp?.email) {
+    await email(mp.email, `${esc(fighterName)} declined your roster invite`, emailHtml(`
+      <p>Hi <strong style="color:#f0ece4">${esc(mp.name ?? 'there')}</strong>,</p>
+      <p><strong style="color:#f0ece4">${esc(fighterName)}</strong> has declined your roster invite.</p>
+      <p>You can resend the invite from your roster page if you&rsquo;d like to try again.</p>
+      ${ctaButton(`${CLIENT}/dashboard/manager`, 'View Roster')}
+    `))
+  }
+}
+
+// Manager accepted a fighter's request → notify the fighter.
+async function handleRosterRequestAccepted(payload) {
+  const { manager_id, fighter_id } = payload
+  if (!fighter_id) return
+
+  const mp = await getProfile(manager_id)
+  const managerName = mp?.name ?? 'Your manager'
+
+  await adminSupabase.from('notifications').insert({
+    recipient_id: fighter_id,
+    type:         'roster.request_accepted',
+    title:        'You joined a roster',
+    body:         `${managerName} accepted your request — you're now on their roster.`,
+    action_url:   `${CLIENT}/dashboard/fighter`,
+    related_type: 'manager_fighters',
+    related_id:   manager_id ?? null,
+  })
+
+  const fp = await getProfile(fighter_id)
+  if (fp?.email) {
+    await email(fp.email, `You're now on ${esc(managerName)}'s roster`, emailHtml(`
+      <p>Hi <strong style="color:#f0ece4">${esc(fp.name ?? 'there')}</strong>,</p>
+      <p><strong style="color:#f0ece4">${esc(managerName)}</strong> has <strong style="color:#00c060">accepted</strong>
+         your request. You&rsquo;re now connected on The Eleventh Round.</p>
+      ${ctaButton(`${CLIENT}/dashboard/fighter`, 'Go to Dashboard')}
+    `))
+  }
 }
 
 async function handleFighterManagerRequest(payload) {
@@ -555,6 +661,9 @@ const HANDLERS = {
   'payment.succeeded':           handlePaymentSucceeded,
   'message.received':            handleMessageReceived,
   'manager.roster_invite':       handleManagerRosterInvite,
+  'roster.invite_accepted':      handleRosterInviteAccepted,
+  'roster.invite_declined':      handleRosterInviteDeclined,
+  'roster.request_accepted':     handleRosterRequestAccepted,
   'fighter.manager_request':     handleFighterManagerRequest,
   'sponsor.approved':            handleSponsorApproved,
   'billing.package_purchased':   handleBillingPackagePurchased,
