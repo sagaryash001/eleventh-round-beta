@@ -9,7 +9,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\postcss.config.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_postcss_config_js",
-      "community": 64,
+      "community": 65,
       "norm_label": "postcss.config.js"
     },
     {
@@ -18,7 +18,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\tailwind.config.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_tailwind_config_js",
-      "community": 65,
+      "community": 66,
       "norm_label": "tailwind.config.js"
     },
     {
@@ -27,7 +27,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\vite.config.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_vite_config_ts",
-      "community": 66,
+      "community": 67,
       "norm_label": "vite.config.ts"
     },
     {
@@ -36,7 +36,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\vitest.config.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_vitest_config_ts",
-      "community": 67,
+      "community": 68,
       "norm_label": "vitest.config.ts"
     },
     {
@@ -45,7 +45,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\app.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_app_js",
-      "community": 68,
+      "community": 69,
       "norm_label": "app.js"
     },
     {
@@ -54,7 +54,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\index.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_index_js",
-      "community": 36,
+      "community": 37,
       "norm_label": "index.js"
     },
     {
@@ -63,7 +63,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\index.js",
       "source_location": "L24",
       "id": "index_shutdown",
-      "community": 36,
+      "community": 37,
       "norm_label": "shutdown()"
     },
     {
@@ -72,7 +72,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\vitest.config.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_vitest_config_js",
-      "community": 69,
+      "community": 70,
       "norm_label": "vitest.config.js"
     },
     {
@@ -81,7 +81,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\db\\pool.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_db_pool_js",
-      "community": 2,
+      "community": 5,
       "norm_label": "pool.js"
     },
     {
@@ -90,7 +90,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\db\\pool.js",
       "source_location": "L71",
       "id": "pool_query",
-      "community": 2,
+      "community": 5,
       "norm_label": "query()"
     },
     {
@@ -99,7 +99,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\db\\pool.js",
       "source_location": "L97",
       "id": "pool_getclient",
-      "community": 2,
+      "community": 5,
       "norm_label": "getclient()"
     },
     {
@@ -108,7 +108,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\db\\pool.js",
       "source_location": "L110",
       "id": "pool_withtransaction",
-      "community": 2,
+      "community": 5,
       "norm_label": "withtransaction()"
     },
     {
@@ -117,7 +117,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\db\\supabase.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_db_supabase_js",
-      "community": 27,
+      "community": 28,
       "norm_label": "supabase.js"
     },
     {
@@ -126,7 +126,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\supabase.ts",
       "source_location": "L58",
       "id": "supabase_requiresupabase",
-      "community": 27,
+      "community": 28,
       "norm_label": "requiresupabase()"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\crypto.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_crypto_js",
-      "community": 5,
+      "community": 4,
       "norm_label": "crypto.js"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\crypto.js",
       "source_location": "L14",
       "id": "crypto_key",
-      "community": 5,
+      "community": 4,
       "norm_label": "key()"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\crypto.js",
       "source_location": "L21",
       "id": "crypto_isencryptionconfigured",
-      "community": 5,
+      "community": 4,
       "norm_label": "isencryptionconfigured()"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\crypto.js",
       "source_location": "L25",
       "id": "crypto_encrypt",
-      "community": 5,
+      "community": 4,
       "norm_label": "encrypt()"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\crypto.js",
       "source_location": "L34",
       "id": "crypto_decrypt",
-      "community": 5,
+      "community": 4,
       "norm_label": "decrypt()"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\logger.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_logger_js",
-      "community": 37,
+      "community": 38,
       "norm_label": "logger.js"
     },
     {
@@ -414,7 +414,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\logger.js",
       "source_location": "L32",
       "id": "logger_childlogger",
-      "community": 37,
+      "community": 38,
       "norm_label": "childlogger()"
     },
     {
@@ -423,7 +423,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_matching_js",
-      "community": 23,
+      "community": 25,
       "norm_label": "matching.js"
     },
     {
@@ -432,7 +432,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L26",
       "id": "matching_scoretier",
-      "community": 23,
+      "community": 25,
       "norm_label": "scoretier()"
     },
     {
@@ -441,7 +441,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L36",
       "id": "matching_computematchscore",
-      "community": 23,
+      "community": 25,
       "norm_label": "computematchscore()"
     },
     {
@@ -450,7 +450,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\matching.js",
       "source_location": "L180",
       "id": "matching_computematchesforopp",
-      "community": 23,
+      "community": 25,
       "norm_label": "computematchesforopp()"
     },
     {
@@ -459,7 +459,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\roster.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_roster_js",
-      "community": 5,
+      "community": 4,
       "norm_label": "roster.js"
     },
     {
@@ -468,7 +468,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\roster.js",
       "source_location": "L19",
       "id": "roster_blockifactivemanager",
-      "community": 5,
+      "community": 4,
       "norm_label": "blockifactivemanager()"
     },
     {
@@ -477,7 +477,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\roster.js",
       "source_location": "L26",
       "id": "roster_fighteractivemanager",
-      "community": 5,
+      "community": 4,
       "norm_label": "fighteractivemanager()"
     },
     {
@@ -486,7 +486,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\roster.js",
       "source_location": "L44",
       "id": "roster_activateconnection",
-      "community": 5,
+      "community": 4,
       "norm_label": "activateconnection()"
     },
     {
@@ -495,7 +495,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\roster.js",
       "source_location": "L84",
       "id": "roster_clearmanagerlink",
-      "community": 5,
+      "community": 4,
       "norm_label": "clearmanagerlink()"
     },
     {
@@ -504,7 +504,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\state-machines.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_state_machines_js",
-      "community": 28,
+      "community": 29,
       "norm_label": "state-machines.js"
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\state-machines.js",
       "source_location": "L18",
       "id": "state_machines_assertcontracttransition",
-      "community": 28,
+      "community": 29,
       "norm_label": "assertcontracttransition()"
     },
     {
@@ -522,7 +522,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\state-machines.js",
       "source_location": "L48",
       "id": "state_machines_assertobligationtransition",
-      "community": 28,
+      "community": 29,
       "norm_label": "assertobligationtransition()"
     },
     {
@@ -531,7 +531,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\validate.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_lib_validate_js",
-      "community": 38,
+      "community": 39,
       "norm_label": "validate.js"
     },
     {
@@ -540,7 +540,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\lib\\validate.js",
       "source_location": "L18",
       "id": "validate_validate",
-      "community": 38,
+      "community": 39,
       "norm_label": "validate()"
     },
     {
@@ -585,7 +585,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\admin.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_admin_js",
-      "community": 39,
+      "community": 40,
       "norm_label": "admin.js"
     },
     {
@@ -594,7 +594,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\admin.js",
       "source_location": "L17",
       "id": "admin_pick",
-      "community": 39,
+      "community": 40,
       "norm_label": "pick()"
     },
     {
@@ -603,7 +603,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\applications.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_applications_js",
-      "community": 70,
+      "community": 71,
       "norm_label": "applications.js"
     },
     {
@@ -612,7 +612,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
-      "community": 24,
+      "community": 23,
       "norm_label": "auth.js"
     },
     {
@@ -621,25 +621,34 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
       "source_location": "L50",
       "id": "auth_computeonboardingcomplete",
-      "community": 24,
+      "community": 23,
       "norm_label": "computeonboardingcomplete()"
+    },
+    {
+      "label": "emailHasPendingRosterInvite()",
+      "file_type": "code",
+      "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
+      "source_location": "L59",
+      "id": "auth_emailhaspendingrosterinvite",
+      "community": 23,
+      "norm_label": "emailhaspendingrosterinvite()"
     },
     {
       "label": "bootstrapProfile()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L58",
+      "source_location": "L74",
       "id": "auth_bootstrapprofile",
-      "community": 24,
+      "community": 23,
       "norm_label": "bootstrapprofile()"
     },
     {
       "label": "isEmailVerified()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L367",
+      "source_location": "L395",
       "id": "auth_isemailverified",
-      "community": 24,
+      "community": 23,
       "norm_label": "isemailverified()"
     },
     {
@@ -648,7 +657,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\billing.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_billing_js",
-      "community": 29,
+      "community": 30,
       "norm_label": "billing.js"
     },
     {
@@ -657,7 +666,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\billing.js",
       "source_location": "L17",
       "id": "billing_getstripe",
-      "community": 29,
+      "community": 30,
       "norm_label": "getstripe()"
     },
     {
@@ -666,7 +675,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\billing.js",
       "source_location": "L25",
       "id": "billing_audiencefor",
-      "community": 29,
+      "community": 30,
       "norm_label": "audiencefor()"
     },
     {
@@ -675,7 +684,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly-webhook.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_calendly_webhook_js",
-      "community": 5,
+      "community": 4,
       "norm_label": "calendly-webhook.js"
     },
     {
@@ -684,7 +693,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly-webhook.js",
       "source_location": "L22",
       "id": "calendly_webhook_verifysignature",
-      "community": 5,
+      "community": 4,
       "norm_label": "verifysignature()"
     },
     {
@@ -693,7 +702,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly-webhook.js",
       "source_location": "L32",
       "id": "calendly_webhook_calendlylocation",
-      "community": 5,
+      "community": 4,
       "norm_label": "calendlylocation()"
     },
     {
@@ -702,7 +711,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_calendly_js",
-      "community": 5,
+      "community": 4,
       "norm_label": "calendly.js"
     },
     {
@@ -711,7 +720,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L25",
       "id": "calendly_cfg",
-      "community": 5,
+      "community": 4,
       "norm_label": "cfg()"
     },
     {
@@ -720,7 +729,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L32",
       "id": "calendly_isconfigured",
-      "community": 5,
+      "community": 4,
       "norm_label": "isconfigured()"
     },
     {
@@ -729,7 +738,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L37",
       "id": "calendly_calendlyapi",
-      "community": 5,
+      "community": 4,
       "norm_label": "calendlyapi()"
     },
     {
@@ -738,7 +747,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L49",
       "id": "calendly_webhookurl",
-      "community": 5,
+      "community": 4,
       "norm_label": "webhookurl()"
     },
     {
@@ -747,7 +756,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L58",
       "id": "calendly_createwebhooksubscription",
-      "community": 5,
+      "community": 4,
       "norm_label": "createwebhooksubscription()"
     },
     {
@@ -756,7 +765,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L89",
       "id": "calendly_deletewebhooksubscription",
-      "community": 5,
+      "community": 4,
       "norm_label": "deletewebhooksubscription()"
     },
     {
@@ -765,7 +774,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L100",
       "id": "calendly_getvalidaccesstoken",
-      "community": 5,
+      "community": 4,
       "norm_label": "getvalidaccesstoken()"
     },
     {
@@ -774,7 +783,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L131",
       "id": "calendly_activeconnection",
-      "community": 5,
+      "community": 4,
       "norm_label": "activeconnection()"
     },
     {
@@ -783,7 +792,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L143",
       "id": "calendly_scopelist",
-      "community": 5,
+      "community": 4,
       "norm_label": "scopelist()"
     },
     {
@@ -792,7 +801,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L146",
       "id": "calendly_hasanyscope",
-      "community": 5,
+      "community": 4,
       "norm_label": "hasanyscope()"
     },
     {
@@ -801,7 +810,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L151",
       "id": "calendly_cancreatelinks",
-      "community": 5,
+      "community": 4,
       "norm_label": "cancreatelinks()"
     },
     {
@@ -810,7 +819,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L152",
       "id": "calendly_cancancelevents",
-      "community": 5,
+      "community": 4,
       "norm_label": "cancancelevents()"
     },
     {
@@ -819,7 +828,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L156",
       "id": "calendly_calendlypost",
-      "community": 5,
+      "community": 4,
       "norm_label": "calendlypost()"
     },
     {
@@ -828,7 +837,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L172",
       "id": "calendly_canmanageevent",
-      "community": 5,
+      "community": 4,
       "norm_label": "canmanageevent()"
     },
     {
@@ -837,7 +846,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L244",
       "id": "calendly_fail",
-      "community": 5,
+      "community": 4,
       "norm_label": "fail()"
     },
     {
@@ -846,7 +855,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L366",
       "id": "calendly_calendlylocation",
-      "community": 5,
+      "community": 4,
       "norm_label": "calendlylocation()"
     },
     {
@@ -855,7 +864,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L375",
       "id": "calendly_runsyncforuser",
-      "community": 5,
+      "community": 4,
       "norm_label": "runsyncforuser()"
     },
     {
@@ -864,7 +873,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\calendly.js",
       "source_location": "L443",
       "id": "calendly_maybeautosync",
-      "community": 5,
+      "community": 4,
       "norm_label": "maybeautosync()"
     },
     {
@@ -900,7 +909,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\contracts.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_contracts_js",
-      "community": 71,
+      "community": 72,
       "norm_label": "contracts.js"
     },
     {
@@ -909,7 +918,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\conversations.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_conversations_js",
-      "community": 40,
+      "community": 41,
       "norm_label": "conversations.js"
     },
     {
@@ -918,7 +927,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\conversations.js",
       "source_location": "L11",
       "id": "conversations_validatecontextaccess",
-      "community": 40,
+      "community": 41,
       "norm_label": "validatecontextaccess()"
     },
     {
@@ -1188,7 +1197,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\notifications.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_notifications_js",
-      "community": 72,
+      "community": 73,
       "norm_label": "notifications.js"
     },
     {
@@ -1197,7 +1206,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\obligations.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_obligations_js",
-      "community": 73,
+      "community": 74,
       "norm_label": "obligations.js"
     },
     {
@@ -1206,7 +1215,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\onboarding.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_onboarding_js",
-      "community": 30,
+      "community": 31,
       "norm_label": "onboarding.js"
     },
     {
@@ -1215,7 +1224,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\onboarding.js",
       "source_location": "L25",
       "id": "onboarding_slugify",
-      "community": 30,
+      "community": 31,
       "norm_label": "slugify()"
     },
     {
@@ -1224,7 +1233,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\onboarding.js",
       "source_location": "L40",
       "id": "onboarding_computebaselinereadiness",
-      "community": 30,
+      "community": 31,
       "norm_label": "computebaselinereadiness()"
     },
     {
@@ -1269,7 +1278,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\public.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_public_js",
-      "community": 74,
+      "community": 75,
       "norm_label": "public.js"
     },
     {
@@ -1323,7 +1332,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\sponsorship-payments.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_sponsorship_payments_js",
-      "community": 41,
+      "community": 42,
       "norm_label": "sponsorship-payments.js"
     },
     {
@@ -1332,7 +1341,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\sponsorship-payments.js",
       "source_location": "L27",
       "id": "sponsorship_payments_getstripe",
-      "community": 41,
+      "community": 42,
       "norm_label": "getstripe()"
     },
     {
@@ -1341,7 +1350,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_stripe_webhook_js",
-      "community": 5,
+      "community": 4,
       "norm_label": "stripe-webhook.js"
     },
     {
@@ -1350,7 +1359,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L75",
       "id": "stripe_webhook_handlepaymentsucceeded",
-      "community": 5,
+      "community": 4,
       "norm_label": "handlepaymentsucceeded()"
     },
     {
@@ -1359,7 +1368,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L122",
       "id": "stripe_webhook_handlepaymentfailed",
-      "community": 5,
+      "community": 4,
       "norm_label": "handlepaymentfailed()"
     },
     {
@@ -1368,7 +1377,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L145",
       "id": "stripe_webhook_handlecheckoutcompleted",
-      "community": 5,
+      "community": 4,
       "norm_label": "handlecheckoutcompleted()"
     },
     {
@@ -1377,7 +1386,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L271",
       "id": "stripe_webhook_handleinvoicepaid",
-      "community": 5,
+      "community": 4,
       "norm_label": "handleinvoicepaid()"
     },
     {
@@ -1386,7 +1395,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L333",
       "id": "stripe_webhook_handlesubscriptionupdated",
-      "community": 5,
+      "community": 4,
       "norm_label": "handlesubscriptionupdated()"
     },
     {
@@ -1395,7 +1404,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe-webhook.js",
       "source_location": "L354",
       "id": "stripe_webhook_handlesubscriptiondeleted",
-      "community": 5,
+      "community": 4,
       "norm_label": "handlesubscriptiondeleted()"
     },
     {
@@ -1413,7 +1422,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_stripe_js",
-      "community": 42,
+      "community": 43,
       "norm_label": "stripe.js"
     },
     {
@@ -1422,7 +1431,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\stripe.js",
       "source_location": "L9",
       "id": "stripe_getstripe",
-      "community": 42,
+      "community": 43,
       "norm_label": "getstripe()"
     },
     {
@@ -1431,7 +1440,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\uploads.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_routes_uploads_js",
-      "community": 75,
+      "community": 76,
       "norm_label": "uploads.js"
     },
     {
@@ -1530,7 +1539,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\auth-guard.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_auth_guard_test_js",
-      "community": 76,
+      "community": 77,
       "norm_label": "auth-guard.test.js"
     },
     {
@@ -1539,7 +1548,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\auth-validation.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_auth_validation_test_js",
-      "community": 77,
+      "community": 78,
       "norm_label": "auth-validation.test.js"
     },
     {
@@ -1548,7 +1557,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\health.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_health_test_js",
-      "community": 78,
+      "community": 79,
       "norm_label": "health.test.js"
     },
     {
@@ -1557,7 +1566,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\onboarding-complete.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_onboarding_complete_test_js",
-      "community": 79,
+      "community": 80,
       "norm_label": "onboarding-complete.test.js"
     },
     {
@@ -1566,7 +1575,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\tests\\roster-rule.test.js",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_server_tests_roster_rule_test_js",
-      "community": 80,
+      "community": 81,
       "norm_label": "roster-rule.test.js"
     },
     {
@@ -1575,7 +1584,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_app_tsx",
-      "community": 25,
+      "community": 26,
       "norm_label": "app.tsx"
     },
     {
@@ -1584,7 +1593,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L40",
       "id": "app_getderivedstatefromerror",
-      "community": 25,
+      "community": 26,
       "norm_label": "getderivedstatefromerror()"
     },
     {
@@ -1593,7 +1602,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L113",
       "id": "app_approutes",
-      "community": 25,
+      "community": 26,
       "norm_label": "approutes()"
     },
     {
@@ -1602,7 +1611,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\App.tsx",
       "source_location": "L167",
       "id": "app_app",
-      "community": 25,
+      "community": 26,
       "norm_label": "app()"
     },
     {
@@ -1611,7 +1620,7 @@
       "source_file": "src\\main.tsx",
       "source_location": "L1",
       "id": "src_main_tsx",
-      "community": 81,
+      "community": 82,
       "norm_label": "main.tsx"
     },
     {
@@ -1620,7 +1629,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\DashboardPreview.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_dashboardpreview_tsx",
-      "community": 82,
+      "community": 83,
       "norm_label": "dashboardpreview.tsx"
     },
     {
@@ -1629,7 +1638,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\FinalCTA.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_finalcta_tsx",
-      "community": 83,
+      "community": 84,
       "norm_label": "finalcta.tsx"
     },
     {
@@ -1638,7 +1647,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\Footer.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_footer_tsx",
-      "community": 84,
+      "community": 85,
       "norm_label": "footer.tsx"
     },
     {
@@ -1737,7 +1746,7 @@
       "source_file": "src\\components\\IntroSequence.tsx",
       "source_location": "L1",
       "id": "src_components_introsequence_tsx",
-      "community": 43,
+      "community": 44,
       "norm_label": "introsequence.tsx"
     },
     {
@@ -1746,7 +1755,7 @@
       "source_file": "src\\components\\IntroSequence.tsx",
       "source_location": "L50",
       "id": "introsequence_tick",
-      "community": 43,
+      "community": 44,
       "norm_label": "tick()"
     },
     {
@@ -1854,7 +1863,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProblemsSection.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_problemssection_tsx",
-      "community": 44,
+      "community": 45,
       "norm_label": "problemssection.tsx"
     },
     {
@@ -1863,7 +1872,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProblemsSection.tsx",
       "source_location": "L6",
       "id": "problemssection_hexnode",
-      "community": 44,
+      "community": 45,
       "norm_label": "hexnode()"
     },
     {
@@ -1872,7 +1881,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProductsCarousel.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_productscarousel_tsx",
-      "community": 45,
+      "community": 46,
       "norm_label": "productscarousel.tsx"
     },
     {
@@ -1881,7 +1890,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ProductsCarousel.tsx",
       "source_location": "L186",
       "id": "productscarousel_getchildxs",
-      "community": 45,
+      "community": 46,
       "norm_label": "getchildxs()"
     },
     {
@@ -1890,7 +1899,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\ResendVerification.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_resendverification_tsx",
-      "community": 4,
+      "community": 22,
       "norm_label": "resendverification.tsx"
     },
     {
@@ -1899,7 +1908,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\resendVerification.ts",
       "source_location": "L25",
       "id": "resendverification_resendverification",
-      "community": 4,
+      "community": 22,
       "norm_label": "resendverification()"
     },
     {
@@ -1908,7 +1917,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\TeamSection.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_teamsection_tsx",
-      "community": 46,
+      "community": 47,
       "norm_label": "teamsection.tsx"
     },
     {
@@ -1917,7 +1926,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\TeamSection.tsx",
       "source_location": "L7",
       "id": "teamsection_headshot",
-      "community": 46,
+      "community": 47,
       "norm_label": "headshot()"
     },
     {
@@ -1926,7 +1935,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\TestimonialsSection.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_testimonialssection_tsx",
-      "community": 85,
+      "community": 86,
       "norm_label": "testimonialssection.tsx"
     },
     {
@@ -1935,7 +1944,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\CartDrawer.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_apparel_cartdrawer_tsx",
-      "community": 47,
+      "community": 48,
       "norm_label": "cartdrawer.tsx"
     },
     {
@@ -1944,7 +1953,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\CartDrawer.tsx",
       "source_location": "L9",
       "id": "cartdrawer_handlecheckout",
-      "community": 47,
+      "community": 48,
       "norm_label": "handlecheckout()"
     },
     {
@@ -1953,7 +1962,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\ProductImageViewer.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_apparel_productimageviewer_tsx",
-      "community": 86,
+      "community": 87,
       "norm_label": "productimageviewer.tsx"
     },
     {
@@ -1962,7 +1971,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\ProductViewer3D.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_apparel_productviewer3d_tsx",
-      "community": 48,
+      "community": 49,
       "norm_label": "productviewer3d.tsx"
     },
     {
@@ -1971,7 +1980,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\apparel\\ProductViewer3D.tsx",
       "source_location": "L6",
       "id": "productviewer3d_garmentmesh",
-      "community": 48,
+      "community": 49,
       "norm_label": "garmentmesh()"
     },
     {
@@ -1980,7 +1989,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_events_calendar_tsx",
-      "community": 17,
+      "community": 18,
       "norm_label": "calendar.tsx"
     },
     {
@@ -1989,7 +1998,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L24",
       "id": "calendar_itemcolor",
-      "community": 17,
+      "community": 18,
       "norm_label": "itemcolor()"
     },
     {
@@ -1998,7 +2007,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L26",
       "id": "calendar_iscancelled",
-      "community": 17,
+      "community": 18,
       "norm_label": "iscancelled()"
     },
     {
@@ -2007,7 +2016,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L29",
       "id": "calendar_daykey",
-      "community": 17,
+      "community": 18,
       "norm_label": "daykey()"
     },
     {
@@ -2016,7 +2025,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L30",
       "id": "calendar_sameday",
-      "community": 17,
+      "community": 18,
       "norm_label": "sameday()"
     },
     {
@@ -2025,7 +2034,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L31",
       "id": "calendar_monthstart",
-      "community": 17,
+      "community": 18,
       "norm_label": "monthstart()"
     },
     {
@@ -2034,7 +2043,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L32",
       "id": "calendar_monthend",
-      "community": 17,
+      "community": 18,
       "norm_label": "monthend()"
     },
     {
@@ -2043,7 +2052,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L33",
       "id": "calendar_addmonths",
-      "community": 17,
+      "community": 18,
       "norm_label": "addmonths()"
     },
     {
@@ -2052,7 +2061,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L35",
       "id": "calendar_fmtdate",
-      "community": 17,
+      "community": 18,
       "norm_label": "fmtdate()"
     },
     {
@@ -2061,7 +2070,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L38",
       "id": "calendar_fmttime",
-      "community": 17,
+      "community": 18,
       "norm_label": "fmttime()"
     },
     {
@@ -2070,7 +2079,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\Calendar.tsx",
       "source_location": "L44",
       "id": "calendar_usecalendarfeed",
-      "community": 17,
+      "community": 18,
       "norm_label": "usecalendarfeed()"
     },
     {
@@ -2079,7 +2088,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_events_eventcalendar_tsx",
-      "community": 2,
+      "community": 5,
       "norm_label": "eventcalendar.tsx"
     },
     {
@@ -2088,7 +2097,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L35",
       "id": "eventcalendar_fmtdate",
-      "community": 2,
+      "community": 5,
       "norm_label": "fmtdate()"
     },
     {
@@ -2097,7 +2106,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L38",
       "id": "eventcalendar_fmttime",
-      "community": 2,
+      "community": 5,
       "norm_label": "fmttime()"
     },
     {
@@ -2106,7 +2115,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L41",
       "id": "eventcalendar_daysuntil",
-      "community": 2,
+      "community": 5,
       "norm_label": "daysuntil()"
     },
     {
@@ -2115,7 +2124,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L46",
       "id": "eventcalendar_safehttpurl",
-      "community": 2,
+      "community": 5,
       "norm_label": "safehttpurl()"
     },
     {
@@ -2124,7 +2133,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L70",
       "id": "eventcalendar_set",
-      "community": 2,
+      "community": 5,
       "norm_label": "set()"
     },
     {
@@ -2142,7 +2151,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L82",
       "id": "eventcalendar_submit",
-      "community": 2,
+      "community": 5,
       "norm_label": "submit()"
     },
     {
@@ -2151,7 +2160,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L217",
       "id": "eventcalendar_createlink",
-      "community": 2,
+      "community": 5,
       "norm_label": "createlink()"
     },
     {
@@ -2160,7 +2169,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L226",
       "id": "eventcalendar_copylink",
-      "community": 2,
+      "community": 5,
       "norm_label": "copylink()"
     },
     {
@@ -2169,7 +2178,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L232",
       "id": "eventcalendar_cancelmeeting",
-      "community": 2,
+      "community": 5,
       "norm_label": "cancelmeeting()"
     },
     {
@@ -2178,7 +2187,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L241",
       "id": "eventcalendar_respond",
-      "community": 2,
+      "community": 0,
       "norm_label": "respond()"
     },
     {
@@ -2187,7 +2196,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L248",
       "id": "eventcalendar_cyclestatus",
-      "community": 2,
+      "community": 5,
       "norm_label": "cyclestatus()"
     },
     {
@@ -2196,7 +2205,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L253",
       "id": "eventcalendar_docomplete",
-      "community": 2,
+      "community": 5,
       "norm_label": "docomplete()"
     },
     {
@@ -2205,7 +2214,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L258",
       "id": "eventcalendar_addtemplates",
-      "community": 2,
+      "community": 5,
       "norm_label": "addtemplates()"
     },
     {
@@ -2214,7 +2223,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L264",
       "id": "eventcalendar_addmanual",
-      "community": 2,
+      "community": 5,
       "norm_label": "addmanual()"
     },
     {
@@ -2223,7 +2232,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L540",
       "id": "eventcalendar_connect",
-      "community": 2,
+      "community": 5,
       "norm_label": "connect()"
     },
     {
@@ -2232,7 +2241,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L545",
       "id": "eventcalendar_sync",
-      "community": 2,
+      "community": 5,
       "norm_label": "sync()"
     },
     {
@@ -2241,7 +2250,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventCalendar.tsx",
       "source_location": "L554",
       "id": "eventcalendar_disconnect",
-      "community": 2,
+      "community": 5,
       "norm_label": "disconnect()"
     },
     {
@@ -2250,7 +2259,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_events_eventwizard_tsx",
-      "community": 18,
+      "community": 15,
       "norm_label": "eventwizard.tsx"
     },
     {
@@ -2259,7 +2268,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L49",
       "id": "eventwizard_pad",
-      "community": 18,
+      "community": 15,
       "norm_label": "pad()"
     },
     {
@@ -2268,7 +2277,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L50",
       "id": "eventwizard_tolocalinput",
-      "community": 18,
+      "community": 15,
       "norm_label": "tolocalinput()"
     },
     {
@@ -2277,7 +2286,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L55",
       "id": "eventwizard_recommend",
-      "community": 18,
+      "community": 15,
       "norm_label": "recommend()"
     },
     {
@@ -2286,7 +2295,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L149",
       "id": "eventwizard_setd",
-      "community": 18,
+      "community": 15,
       "norm_label": "setd()"
     },
     {
@@ -2295,7 +2304,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L150",
       "id": "eventwizard_seta",
-      "community": 18,
+      "community": 15,
       "norm_label": "seta()"
     },
     {
@@ -2304,7 +2313,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L154",
       "id": "eventwizard_prefilldue",
-      "community": 18,
+      "community": 15,
       "norm_label": "prefilldue()"
     },
     {
@@ -2313,7 +2322,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L169",
       "id": "eventwizard_next",
-      "community": 18,
+      "community": 15,
       "norm_label": "next()"
     },
     {
@@ -2322,7 +2331,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L179",
       "id": "eventwizard_back",
-      "community": 18,
+      "community": 15,
       "norm_label": "back()"
     },
     {
@@ -2331,7 +2340,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L181",
       "id": "eventwizard_pickcaltype",
-      "community": 18,
+      "community": 15,
       "norm_label": "pickcaltype()"
     },
     {
@@ -2340,7 +2349,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L186",
       "id": "eventwizard_submit",
-      "community": 2,
+      "community": 15,
       "norm_label": "submit()"
     },
     {
@@ -2349,7 +2358,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\events\\EventWizard.tsx",
       "source_location": "L217",
       "id": "eventwizard_toggletpl",
-      "community": 18,
+      "community": 15,
       "norm_label": "toggletpl()"
     },
     {
@@ -2358,7 +2367,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\CinematicHero.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_cinematichero_tsx",
-      "community": 49,
+      "community": 50,
       "norm_label": "cinematichero.tsx"
     },
     {
@@ -2367,7 +2376,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\CinematicHero.tsx",
       "source_location": "L17",
       "id": "cinematichero_cinematichero",
-      "community": 49,
+      "community": 50,
       "norm_label": "cinematichero()"
     },
     {
@@ -2376,7 +2385,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\HeroProductCard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_heroproductcard_tsx",
-      "community": 87,
+      "community": 88,
       "norm_label": "heroproductcard.tsx"
     },
     {
@@ -2385,7 +2394,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\HeroStages.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_herostages_tsx",
-      "community": 50,
+      "community": 51,
       "norm_label": "herostages.tsx"
     },
     {
@@ -2394,7 +2403,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\HeroStages.tsx",
       "source_location": "L12",
       "id": "herostages_hudtick",
-      "community": 50,
+      "community": 51,
       "norm_label": "hudtick()"
     },
     {
@@ -2403,7 +2412,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\IntroWalkout.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_components_home_introwalkout_tsx",
-      "community": 51,
+      "community": 52,
       "norm_label": "introwalkout.tsx"
     },
     {
@@ -2412,7 +2421,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\components\\home\\IntroWalkout.tsx",
       "source_location": "L28",
       "id": "introwalkout_shouldplay",
-      "community": 51,
+      "community": 52,
       "norm_label": "shouldplay()"
     },
     {
@@ -2421,7 +2430,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_context_cartcontext_tsx",
-      "community": 22,
+      "community": 24,
       "norm_label": "cartcontext.tsx"
     },
     {
@@ -2430,7 +2439,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L24",
       "id": "cartcontext_reducer",
-      "community": 22,
+      "community": 24,
       "norm_label": "reducer()"
     },
     {
@@ -2439,7 +2448,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L56",
       "id": "cartcontext_loadcart",
-      "community": 22,
+      "community": 24,
       "norm_label": "loadcart()"
     },
     {
@@ -2448,7 +2457,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L79",
       "id": "cartcontext_cartprovider",
-      "community": 22,
+      "community": 24,
       "norm_label": "cartprovider()"
     },
     {
@@ -2457,7 +2466,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\context\\CartContext.tsx",
       "source_location": "L107",
       "id": "cartcontext_usecart",
-      "community": 22,
+      "community": 24,
       "norm_label": "usecart()"
     },
     {
@@ -2466,7 +2475,7 @@
       "source_file": "src\\data\\frames.ts",
       "source_location": "L1",
       "id": "src_data_frames_ts",
-      "community": 88,
+      "community": 89,
       "norm_label": "frames.ts"
     },
     {
@@ -2475,7 +2484,7 @@
       "source_file": "src\\data\\problems.ts",
       "source_location": "L1",
       "id": "src_data_problems_ts",
-      "community": 89,
+      "community": 90,
       "norm_label": "problems.ts"
     },
     {
@@ -2484,7 +2493,7 @@
       "source_file": "src\\data\\products.ts",
       "source_location": "L1",
       "id": "src_data_products_ts",
-      "community": 90,
+      "community": 91,
       "norm_label": "products.ts"
     },
     {
@@ -2493,7 +2502,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\data\\team.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_data_team_ts",
-      "community": 91,
+      "community": 92,
       "norm_label": "team.ts"
     },
     {
@@ -2554,7 +2563,7 @@
       "label": "useAuth()",
       "file_type": "code",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\hooks\\useAuth.tsx",
-      "source_location": "L256",
+      "source_location": "L261",
       "id": "useauth_useauth",
       "community": 11,
       "norm_label": "useauth()"
@@ -2565,7 +2574,7 @@
       "source_file": "src\\hooks\\useScrollReveal.ts",
       "source_location": "L1",
       "id": "src_hooks_usescrollreveal_ts",
-      "community": 52,
+      "community": 53,
       "norm_label": "usescrollreveal.ts"
     },
     {
@@ -2574,7 +2583,7 @@
       "source_file": "src\\hooks\\useScrollReveal.ts",
       "source_location": "L3",
       "id": "usescrollreveal_usescrollreveal",
-      "community": 52,
+      "community": 53,
       "norm_label": "usescrollreveal()"
     },
     {
@@ -2583,7 +2592,7 @@
       "source_file": "src\\hooks\\useSubdomain.ts",
       "source_location": "L1",
       "id": "src_hooks_usesubdomain_ts",
-      "community": 53,
+      "community": 54,
       "norm_label": "usesubdomain.ts"
     },
     {
@@ -2592,7 +2601,7 @@
       "source_file": "src\\hooks\\useSubdomain.ts",
       "source_location": "L15",
       "id": "usesubdomain_usesubdomain",
-      "community": 53,
+      "community": 54,
       "norm_label": "usesubdomain()"
     },
     {
@@ -2628,7 +2637,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\resendVerification.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_resendverification_ts",
-      "community": 4,
+      "community": 22,
       "norm_label": "resendverification.ts"
     },
     {
@@ -2637,7 +2646,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\supabase.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_supabase_ts",
-      "community": 27,
+      "community": 28,
       "norm_label": "supabase.ts"
     },
     {
@@ -2646,7 +2655,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_admin_ts",
-      "community": 0,
+      "community": 2,
       "norm_label": "admin.ts"
     },
     {
@@ -2655,7 +2664,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L74",
       "id": "admin_getadminusers",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminusers()"
     },
     {
@@ -2664,7 +2673,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L87",
       "id": "admin_updateadminuser",
-      "community": 4,
+      "community": 0,
       "norm_label": "updateadminuser()"
     },
     {
@@ -2673,7 +2682,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L94",
       "id": "admin_getpendingsponsors",
-      "community": 0,
+      "community": 2,
       "norm_label": "getpendingsponsors()"
     },
     {
@@ -2682,7 +2691,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L97",
       "id": "admin_verifysponsor",
-      "community": 4,
+      "community": 0,
       "norm_label": "verifysponsor()"
     },
     {
@@ -2691,7 +2700,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L102",
       "id": "admin_getadminmodules",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminmodules()"
     },
     {
@@ -2718,7 +2727,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L120",
       "id": "admin_getadminpackages",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminpackages()"
     },
     {
@@ -2745,7 +2754,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L136",
       "id": "admin_getadmindashboard",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadmindashboard()"
     },
     {
@@ -2754,7 +2763,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L146",
       "id": "admin_getadmincontracts",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadmincontracts()"
     },
     {
@@ -2763,7 +2772,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L157",
       "id": "admin_getadminconversationlist",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminconversationlist()"
     },
     {
@@ -2772,7 +2781,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L167",
       "id": "admin_adminlockconversation",
-      "community": 0,
+      "community": 2,
       "norm_label": "adminlockconversation()"
     },
     {
@@ -2790,7 +2799,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L188",
       "id": "admin_getsponsorforgereviews",
-      "community": 0,
+      "community": 2,
       "norm_label": "getsponsorforgereviews()"
     },
     {
@@ -2799,7 +2808,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\admin.ts",
       "source_location": "L191",
       "id": "admin_decidesponsorforgereview",
-      "community": 0,
+      "community": 2,
       "norm_label": "decidesponsorforgereview()"
     },
     {
@@ -2862,7 +2871,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\billing.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_billing_ts",
-      "community": 0,
+      "community": 2,
       "norm_label": "billing.ts"
     },
     {
@@ -2871,7 +2880,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\billing.ts",
       "source_location": "L42",
       "id": "billing_getbillingpackages",
-      "community": 0,
+      "community": 2,
       "norm_label": "getbillingpackages()"
     },
     {
@@ -2880,7 +2889,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\billing.ts",
       "source_location": "L45",
       "id": "billing_getbillingstatus",
-      "community": 0,
+      "community": 2,
       "norm_label": "getbillingstatus()"
     },
     {
@@ -2898,7 +2907,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\billing.ts",
       "source_location": "L52",
       "id": "billing_getadminpaymentslist",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminpaymentslist()"
     },
     {
@@ -2907,7 +2916,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\billing.ts",
       "source_location": "L66",
       "id": "billing_getadminmembershipslist",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminmembershipslist()"
     },
     {
@@ -2916,7 +2925,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_calendly_ts",
-      "community": 2,
+      "community": 5,
       "norm_label": "calendly.ts"
     },
     {
@@ -2925,7 +2934,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L27",
       "id": "calendly_getcalendlystatus",
-      "community": 2,
+      "community": 5,
       "norm_label": "getcalendlystatus()"
     },
     {
@@ -2934,7 +2943,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L30",
       "id": "calendly_getcalendlyconnecturl",
-      "community": 2,
+      "community": 5,
       "norm_label": "getcalendlyconnecturl()"
     },
     {
@@ -2943,7 +2952,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L33",
       "id": "calendly_getcalendlyeventtypes",
-      "community": 2,
+      "community": 5,
       "norm_label": "getcalendlyeventtypes()"
     },
     {
@@ -2952,7 +2961,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L36",
       "id": "calendly_synccalendly",
-      "community": 2,
+      "community": 5,
       "norm_label": "synccalendly()"
     },
     {
@@ -2961,7 +2970,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L39",
       "id": "calendly_disconnectcalendly",
-      "community": 2,
+      "community": 5,
       "norm_label": "disconnectcalendly()"
     },
     {
@@ -2970,7 +2979,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L43",
       "id": "calendly_createschedulinglink",
-      "community": 2,
+      "community": 5,
       "norm_label": "createschedulinglink()"
     },
     {
@@ -2979,7 +2988,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\calendly.ts",
       "source_location": "L51",
       "id": "calendly_cancelcalendlymeeting",
-      "community": 2,
+      "community": 5,
       "norm_label": "cancelcalendlymeeting()"
     },
     {
@@ -2988,7 +2997,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_client_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "client.ts"
     },
     {
@@ -2997,7 +3006,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L12",
       "id": "client_authheader",
-      "community": 2,
+      "community": 0,
       "norm_label": "authheader()"
     },
     {
@@ -3006,7 +3015,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L19",
       "id": "client_apiget",
-      "community": 0,
+      "community": 2,
       "norm_label": "apiget()"
     },
     {
@@ -3015,7 +3024,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L26",
       "id": "client_send",
-      "community": 2,
+      "community": 0,
       "norm_label": "send()"
     },
     {
@@ -3024,7 +3033,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L37",
       "id": "client_apipost",
-      "community": 2,
+      "community": 0,
       "norm_label": "apipost()"
     },
     {
@@ -3033,7 +3042,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L38",
       "id": "client_apipatch",
-      "community": 4,
+      "community": 0,
       "norm_label": "apipatch()"
     },
     {
@@ -3042,7 +3051,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L39",
       "id": "client_apiput",
-      "community": 2,
+      "community": 0,
       "norm_label": "apiput()"
     },
     {
@@ -3051,7 +3060,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\client.ts",
       "source_location": "L40",
       "id": "client_apidelete",
-      "community": 2,
+      "community": 0,
       "norm_label": "apidelete()"
     },
     {
@@ -3141,7 +3150,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_conversations_ts",
-      "community": 0,
+      "community": 2,
       "norm_label": "conversations.ts"
     },
     {
@@ -3150,7 +3159,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L39",
       "id": "conversations_getconversations",
-      "community": 0,
+      "community": 2,
       "norm_label": "getconversations()"
     },
     {
@@ -3168,7 +3177,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L50",
       "id": "conversations_getmessages",
-      "community": 0,
+      "community": 2,
       "norm_label": "getmessages()"
     },
     {
@@ -3177,7 +3186,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L60",
       "id": "conversations_sendmessage",
-      "community": 0,
+      "community": 2,
       "norm_label": "sendmessage()"
     },
     {
@@ -3186,7 +3195,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L65",
       "id": "conversations_markconversationread",
-      "community": 0,
+      "community": 2,
       "norm_label": "markconversationread()"
     },
     {
@@ -3195,7 +3204,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L68",
       "id": "conversations_getconversation",
-      "community": 0,
+      "community": 2,
       "norm_label": "getconversation()"
     },
     {
@@ -3204,7 +3213,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L76",
       "id": "conversations_archiveconversation",
-      "community": 0,
+      "community": 2,
       "norm_label": "archiveconversation()"
     },
     {
@@ -3213,7 +3222,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L79",
       "id": "conversations_getadminconversations",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminconversations()"
     },
     {
@@ -3222,7 +3231,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\conversations.ts",
       "source_location": "L90",
       "id": "conversations_adminupdateconversationstatus",
-      "community": 0,
+      "community": 2,
       "norm_label": "adminupdateconversationstatus()"
     },
     {
@@ -3231,7 +3240,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_education_ts",
-      "community": 0,
+      "community": 2,
       "norm_label": "education.ts"
     },
     {
@@ -3240,7 +3249,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L67",
       "id": "education_parsemetadata",
-      "community": 0,
+      "community": 2,
       "norm_label": "parsemetadata()"
     },
     {
@@ -3249,7 +3258,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L73",
       "id": "education_parsecheckliststate",
-      "community": 0,
+      "community": 2,
       "norm_label": "parsecheckliststate()"
     },
     {
@@ -3258,7 +3267,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L81",
       "id": "education_getfightermodules",
-      "community": 0,
+      "community": 2,
       "norm_label": "getfightermodules()"
     },
     {
@@ -3267,7 +3276,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L84",
       "id": "education_getfightermodule",
-      "community": 0,
+      "community": 2,
       "norm_label": "getfightermodule()"
     },
     {
@@ -3276,7 +3285,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L87",
       "id": "education_updatemoduleprogress",
-      "community": 4,
+      "community": 0,
       "norm_label": "updatemoduleprogress()"
     },
     {
@@ -3285,7 +3294,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L91",
       "id": "education_completemodule",
-      "community": 4,
+      "community": 0,
       "norm_label": "completemodule()"
     },
     {
@@ -3294,7 +3303,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L96",
       "id": "education_getadminmoduledetail",
-      "community": 0,
+      "community": 2,
       "norm_label": "getadminmoduledetail()"
     },
     {
@@ -3312,7 +3321,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L102",
       "id": "education_getmoduleanalytics",
-      "community": 0,
+      "community": 2,
       "norm_label": "getmoduleanalytics()"
     },
     {
@@ -3321,7 +3330,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L105",
       "id": "education_addmoduleresource",
-      "community": 0,
+      "community": 2,
       "norm_label": "addmoduleresource()"
     },
     {
@@ -3330,7 +3339,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L108",
       "id": "education_deletemoduleresource",
-      "community": 0,
+      "community": 2,
       "norm_label": "deletemoduleresource()"
     },
     {
@@ -3339,7 +3348,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\education.ts",
       "source_location": "L113",
       "id": "education_getmanagermoduleprogress",
-      "community": 0,
+      "community": 2,
       "norm_label": "getmanagermoduleprogress()"
     },
     {
@@ -3348,7 +3357,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_events_ts",
-      "community": 2,
+      "community": 5,
       "norm_label": "events.ts"
     },
     {
@@ -3357,7 +3366,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L115",
       "id": "events_getcalendarfeed",
-      "community": 0,
+      "community": 2,
       "norm_label": "getcalendarfeed()"
     },
     {
@@ -3366,7 +3375,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L127",
       "id": "events_getevents",
-      "community": 2,
+      "community": 5,
       "norm_label": "getevents()"
     },
     {
@@ -3375,7 +3384,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L130",
       "id": "events_geteventtemplates",
-      "community": 2,
+      "community": 5,
       "norm_label": "geteventtemplates()"
     },
     {
@@ -3384,7 +3393,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L133",
       "id": "events_createevent",
-      "community": 2,
+      "community": 5,
       "norm_label": "createevent()"
     },
     {
@@ -3393,7 +3402,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L136",
       "id": "events_getevent",
-      "community": 2,
+      "community": 5,
       "norm_label": "getevent()"
     },
     {
@@ -3402,7 +3411,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L139",
       "id": "events_updateevent",
-      "community": 2,
+      "community": 5,
       "norm_label": "updateevent()"
     },
     {
@@ -3411,7 +3420,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L142",
       "id": "events_deleteevent",
-      "community": 2,
+      "community": 0,
       "norm_label": "deleteevent()"
     },
     {
@@ -3420,7 +3429,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L145",
       "id": "events_addobligation",
-      "community": 2,
+      "community": 5,
       "norm_label": "addobligation()"
     },
     {
@@ -3429,7 +3438,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L151",
       "id": "events_addobligationsfromtemplate",
-      "community": 2,
+      "community": 5,
       "norm_label": "addobligationsfromtemplate()"
     },
     {
@@ -3438,7 +3447,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L154",
       "id": "events_updateobligation",
-      "community": 2,
+      "community": 5,
       "norm_label": "updateobligation()"
     },
     {
@@ -3447,7 +3456,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L157",
       "id": "events_completeobligation",
-      "community": 2,
+      "community": 5,
       "norm_label": "completeobligation()"
     },
     {
@@ -3456,7 +3465,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L178",
       "id": "events_guidedcreateevent",
-      "community": 2,
+      "community": 15,
       "norm_label": "guidedcreateevent()"
     },
     {
@@ -3465,7 +3474,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L183",
       "id": "events_getlinkablefighters",
-      "community": 2,
+      "community": 5,
       "norm_label": "getlinkablefighters()"
     },
     {
@@ -3474,7 +3483,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L186",
       "id": "events_confirmevent",
-      "community": 2,
+      "community": 0,
       "norm_label": "confirmevent()"
     },
     {
@@ -3483,7 +3492,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\events.ts",
       "source_location": "L189",
       "id": "events_declineevent",
-      "community": 2,
+      "community": 0,
       "norm_label": "declineevent()"
     },
     {
@@ -3492,7 +3501,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\fighters.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_fighters_ts",
-      "community": 4,
+      "community": 0,
       "norm_label": "fighters.ts"
     },
     {
@@ -3501,7 +3510,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\fighters.ts",
       "source_location": "L27",
       "id": "fighters_getsponsorforge",
-      "community": 4,
+      "community": 0,
       "norm_label": "getsponsorforge()"
     },
     {
@@ -3510,7 +3519,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\fighters.ts",
       "source_location": "L30",
       "id": "fighters_submitsponsorforge",
-      "community": 4,
+      "community": 0,
       "norm_label": "submitsponsorforge()"
     },
     {
@@ -3519,7 +3528,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\fighters.ts",
       "source_location": "L86",
       "id": "fighters_getfighterprofile",
-      "community": 4,
+      "community": 0,
       "norm_label": "getfighterprofile()"
     },
     {
@@ -3528,7 +3537,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\fighters.ts",
       "source_location": "L89",
       "id": "fighters_updatefighterprofile",
-      "community": 4,
+      "community": 0,
       "norm_label": "updatefighterprofile()"
     },
     {
@@ -3537,7 +3546,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\fighters.ts",
       "source_location": "L98",
       "id": "fighters_updatefightersocials",
-      "community": 4,
+      "community": 0,
       "norm_label": "updatefightersocials()"
     },
     {
@@ -3546,7 +3555,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_manager_ts",
-      "community": 4,
+      "community": 0,
       "norm_label": "manager.ts"
     },
     {
@@ -3555,7 +3564,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L53",
       "id": "manager_getmanagerroster",
-      "community": 4,
+      "community": 0,
       "norm_label": "getmanagerroster()"
     },
     {
@@ -3564,7 +3573,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L56",
       "id": "manager_invitefighter",
-      "community": 4,
+      "community": 0,
       "norm_label": "invitefighter()"
     },
     {
@@ -3573,7 +3582,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L65",
       "id": "manager_creatependingfighter",
-      "community": 4,
+      "community": 0,
       "norm_label": "creatependingfighter()"
     },
     {
@@ -3582,7 +3591,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L69",
       "id": "manager_updatependingprofile",
-      "community": 4,
+      "community": 0,
       "norm_label": "updatependingprofile()"
     },
     {
@@ -3591,7 +3600,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L73",
       "id": "manager_convertpendingtoinvite",
-      "community": 4,
+      "community": 0,
       "norm_label": "convertpendingtoinvite()"
     },
     {
@@ -3600,7 +3609,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L76",
       "id": "manager_updateconnectionstatus",
-      "community": 4,
+      "community": 0,
       "norm_label": "updateconnectionstatus()"
     },
     {
@@ -3609,7 +3618,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L80",
       "id": "manager_resendinvite",
-      "community": 4,
+      "community": 0,
       "norm_label": "resendinvite()"
     },
     {
@@ -3618,7 +3627,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L83",
       "id": "manager_getfighterdetail",
-      "community": 4,
+      "community": 0,
       "norm_label": "getfighterdetail()"
     },
     {
@@ -3627,7 +3636,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L86",
       "id": "manager_updatefighterprofile",
-      "community": 4,
+      "community": 0,
       "norm_label": "updatefighterprofile()"
     },
     {
@@ -3636,7 +3645,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L99",
       "id": "manager_getfightermanager",
-      "community": 4,
+      "community": 0,
       "norm_label": "getfightermanager()"
     },
     {
@@ -3645,7 +3654,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L102",
       "id": "manager_requestmanager",
-      "community": 4,
+      "community": 0,
       "norm_label": "requestmanager()"
     },
     {
@@ -3654,7 +3663,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L106",
       "id": "manager_cancelmanagerrequest",
-      "community": 4,
+      "community": 0,
       "norm_label": "cancelmanagerrequest()"
     },
     {
@@ -3663,7 +3672,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L110",
       "id": "manager_acceptmanagerinvite",
-      "community": 4,
+      "community": 0,
       "norm_label": "acceptmanagerinvite()"
     },
     {
@@ -3672,7 +3681,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L114",
       "id": "manager_declinemanagerinvite",
-      "community": 4,
+      "community": 0,
       "norm_label": "declinemanagerinvite()"
     },
     {
@@ -3681,7 +3690,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\manager.ts",
       "source_location": "L117",
       "id": "manager_getmanagercontracts",
-      "community": 4,
+      "community": 0,
       "norm_label": "getmanagercontracts()"
     },
     {
@@ -3699,7 +3708,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\notifications.ts",
       "source_location": "L17",
       "id": "notifications_getnotifications",
-      "community": 0,
+      "community": 12,
       "norm_label": "getnotifications()"
     },
     {
@@ -3771,7 +3780,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_opportunities_ts",
-      "community": 0,
+      "community": 2,
       "norm_label": "opportunities.ts"
     },
     {
@@ -3780,7 +3789,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L37",
       "id": "opportunities_getopportunities",
-      "community": 0,
+      "community": 2,
       "norm_label": "getopportunities()"
     },
     {
@@ -3789,7 +3798,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L42",
       "id": "opportunities_getmyopportunities",
-      "community": 0,
+      "community": 2,
       "norm_label": "getmyopportunities()"
     },
     {
@@ -3798,7 +3807,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L45",
       "id": "opportunities_getopportunity",
-      "community": 0,
+      "community": 2,
       "norm_label": "getopportunity()"
     },
     {
@@ -3807,7 +3816,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L48",
       "id": "opportunities_createopportunity",
-      "community": 16,
+      "community": 17,
       "norm_label": "createopportunity()"
     },
     {
@@ -3816,7 +3825,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L51",
       "id": "opportunities_updateopportunity",
-      "community": 16,
+      "community": 17,
       "norm_label": "updateopportunity()"
     },
     {
@@ -3825,7 +3834,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L54",
       "id": "opportunities_publishopportunity",
-      "community": 16,
+      "community": 17,
       "norm_label": "publishopportunity()"
     },
     {
@@ -3834,7 +3843,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L57",
       "id": "opportunities_getoppapplications",
-      "community": 0,
+      "community": 2,
       "norm_label": "getoppapplications()"
     },
     {
@@ -3843,7 +3852,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L60",
       "id": "opportunities_changeopportunitystatus",
-      "community": 2,
+      "community": 0,
       "norm_label": "changeopportunitystatus()"
     },
     {
@@ -3852,7 +3861,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L63",
       "id": "opportunities_getsponsormatches",
-      "community": 0,
+      "community": 2,
       "norm_label": "getsponsormatches()"
     },
     {
@@ -3879,7 +3888,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\opportunities.ts",
       "source_location": "L72",
       "id": "opportunities_adminrecompute",
-      "community": 0,
+      "community": 2,
       "norm_label": "adminrecompute()"
     },
     {
@@ -3888,7 +3897,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\payments.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_payments_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "payments.ts"
     },
     {
@@ -3906,7 +3915,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\payments.ts",
       "source_location": "L38",
       "id": "payments_getpayment",
-      "community": 2,
+      "community": 0,
       "norm_label": "getpayment()"
     },
     {
@@ -3915,7 +3924,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\payments.ts",
       "source_location": "L41",
       "id": "payments_getcontractpayments",
-      "community": 2,
+      "community": 0,
       "norm_label": "getcontractpayments()"
     },
     {
@@ -3924,7 +3933,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\payments.ts",
       "source_location": "L44",
       "id": "payments_getmilestones",
-      "community": 2,
+      "community": 0,
       "norm_label": "getmilestones()"
     },
     {
@@ -3933,7 +3942,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\payments.ts",
       "source_location": "L47",
       "id": "payments_addmilestone",
-      "community": 2,
+      "community": 0,
       "norm_label": "addmilestone()"
     },
     {
@@ -3942,7 +3951,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\public.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_lib_api_public_ts",
-      "community": 0,
+      "community": 2,
       "norm_label": "public.ts"
     },
     {
@@ -3951,7 +3960,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\public.ts",
       "source_location": "L41",
       "id": "public_getpublicfighterprofile",
-      "community": 0,
+      "community": 2,
       "norm_label": "getpublicfighterprofile()"
     },
     {
@@ -3960,7 +3969,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\public.ts",
       "source_location": "L44",
       "id": "public_getpublicteam",
-      "community": 0,
+      "community": 2,
       "norm_label": "getpublicteam()"
     },
     {
@@ -3969,7 +3978,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\lib\\api\\public.ts",
       "source_location": "L48",
       "id": "public_storageurl",
-      "community": 0,
+      "community": 2,
       "norm_label": "storageurl()"
     },
     {
@@ -4113,7 +4122,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\HomePage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_homepage_tsx",
-      "community": 54,
+      "community": 55,
       "norm_label": "homepage.tsx"
     },
     {
@@ -4122,7 +4131,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\HomePage.tsx",
       "source_location": "L12",
       "id": "homepage_homepage",
-      "community": 54,
+      "community": 55,
       "norm_label": "homepage()"
     },
     {
@@ -4131,7 +4140,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_inboxpage_tsx",
-      "community": 0,
+      "community": 2,
       "norm_label": "inboxpage.tsx"
     },
     {
@@ -4140,7 +4149,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L13",
       "id": "inboxpage_timeago",
-      "community": 0,
+      "community": 2,
       "norm_label": "timeago()"
     },
     {
@@ -4149,7 +4158,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L21",
       "id": "inboxpage_formattimestamp",
-      "community": 0,
+      "community": 2,
       "norm_label": "formattimestamp()"
     },
     {
@@ -4158,7 +4167,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L161",
       "id": "inboxpage_load",
-      "community": 0,
+      "community": 2,
       "norm_label": "load()"
     },
     {
@@ -4167,7 +4176,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L230",
       "id": "inboxpage_loadmore",
-      "community": 0,
+      "community": 2,
       "norm_label": "loadmore()"
     },
     {
@@ -4176,7 +4185,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L243",
       "id": "inboxpage_handlesend",
-      "community": 0,
+      "community": 2,
       "norm_label": "handlesend()"
     },
     {
@@ -4185,7 +4194,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\InboxPage.tsx",
       "source_location": "L285",
       "id": "inboxpage_handlekeydown",
-      "community": 0,
+      "community": 2,
       "norm_label": "handlekeydown()"
     },
     {
@@ -4194,7 +4203,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\LoginPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_loginpage_tsx",
-      "community": 4,
+      "community": 22,
       "norm_label": "loginpage.tsx"
     },
     {
@@ -4203,7 +4212,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\LoginPage.tsx",
       "source_location": "L67",
       "id": "loginpage_handlesubmit",
-      "community": 4,
+      "community": 22,
       "norm_label": "handlesubmit()"
     },
     {
@@ -4212,7 +4221,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\LoginPage.tsx",
       "source_location": "L92",
       "id": "loginpage_handlemagiclink",
-      "community": 4,
+      "community": 22,
       "norm_label": "handlemagiclink()"
     },
     {
@@ -4221,7 +4230,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\PodcastPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_podcastpage_tsx",
-      "community": 31,
+      "community": 32,
       "norm_label": "podcastpage.tsx"
     },
     {
@@ -4230,7 +4239,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\PodcastPage.tsx",
       "source_location": "L53",
       "id": "podcastpage_eplabel",
-      "community": 31,
+      "community": 32,
       "norm_label": "eplabel()"
     },
     {
@@ -4239,7 +4248,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\PodcastPage.tsx",
       "source_location": "L58",
       "id": "podcastpage_primarylink",
-      "community": 31,
+      "community": 32,
       "norm_label": "primarylink()"
     },
     {
@@ -4248,7 +4257,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\RegisterPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_registerpage_tsx",
-      "community": 92,
+      "community": 93,
       "norm_label": "registerpage.tsx"
     },
     {
@@ -4257,7 +4266,7 @@
       "source_file": "src\\pages\\TeamPage.tsx",
       "source_location": "L1",
       "id": "src_pages_teampage_tsx",
-      "community": 55,
+      "community": 56,
       "norm_label": "teampage.tsx"
     },
     {
@@ -4266,7 +4275,7 @@
       "source_file": "src\\pages\\TeamPage.tsx",
       "source_location": "L9",
       "id": "teampage_headshot",
-      "community": 55,
+      "community": 56,
       "norm_label": "headshot()"
     },
     {
@@ -4275,7 +4284,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\VerifyEmailPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_verifyemailpage_tsx",
-      "community": 3,
+      "community": 0,
       "norm_label": "verifyemailpage.tsx"
     },
     {
@@ -4284,7 +4293,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\VerifyEmailPage.tsx",
       "source_location": "L30",
       "id": "verifyemailpage_poll",
-      "community": 3,
+      "community": 0,
       "norm_label": "poll()"
     },
     {
@@ -4356,7 +4365,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\DetailPage.tsx",
       "source_location": "L356",
       "id": "detailpage_load",
-      "community": 2,
+      "community": 0,
       "norm_label": "load()"
     },
     {
@@ -4374,7 +4383,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\DetailPage.tsx",
       "source_location": "L375",
       "id": "detailpage_addms",
-      "community": 2,
+      "community": 0,
       "norm_label": "addms()"
     },
     {
@@ -4419,7 +4428,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\ListPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_contracts_listpage_tsx",
-      "community": 32,
+      "community": 33,
       "norm_label": "listpage.tsx"
     },
     {
@@ -4428,7 +4437,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\ListPage.tsx",
       "source_location": "L29",
       "id": "listpage_statuspill",
-      "community": 32,
+      "community": 33,
       "norm_label": "statuspill()"
     },
     {
@@ -4437,7 +4446,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\contracts\\ListPage.tsx",
       "source_location": "L107",
       "id": "listpage_e",
-      "community": 32,
+      "community": 33,
       "norm_label": "e()"
     },
     {
@@ -4446,7 +4455,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\AdminDashboard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admindashboard_tsx",
-      "community": 33,
+      "community": 34,
       "norm_label": "admindashboard.tsx"
     },
     {
@@ -4455,7 +4464,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\AdminDashboard.tsx",
       "source_location": "L30",
       "id": "admindashboard_gotozone",
-      "community": 33,
+      "community": 34,
       "norm_label": "gotozone()"
     },
     {
@@ -4464,7 +4473,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\AdminDashboard.tsx",
       "source_location": "L32",
       "id": "admindashboard_selectzone",
-      "community": 33,
+      "community": 34,
       "norm_label": "selectzone()"
     },
     {
@@ -4473,7 +4482,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\DashShell.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_dashshell_tsx",
-      "community": 93,
+      "community": 94,
       "norm_label": "dashshell.tsx"
     },
     {
@@ -4482,7 +4491,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\DashWidgets.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_dashwidgets_tsx",
-      "community": 56,
+      "community": 57,
       "norm_label": "dashwidgets.tsx"
     },
     {
@@ -4491,7 +4500,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\DashWidgets.tsx",
       "source_location": "L98",
       "id": "dashwidgets_toxy",
-      "community": 56,
+      "community": 57,
       "norm_label": "toxy()"
     },
     {
@@ -4500,7 +4509,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_fighterdashboard_tsx",
-      "community": 4,
+      "community": 0,
       "norm_label": "fighterdashboard.tsx"
     },
     {
@@ -4509,7 +4518,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L73",
       "id": "fighterdashboard_submitrequest",
-      "community": 4,
+      "community": 0,
       "norm_label": "submitrequest()"
     },
     {
@@ -4518,7 +4527,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L87",
       "id": "fighterdashboard_cancel",
-      "community": 4,
+      "community": 0,
       "norm_label": "cancel()"
     },
     {
@@ -4527,7 +4536,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L119",
       "id": "fighterdashboard_accept",
-      "community": 4,
+      "community": 0,
       "norm_label": "accept()"
     },
     {
@@ -4536,7 +4545,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L129",
       "id": "fighterdashboard_reject",
-      "community": 4,
+      "community": 0,
       "norm_label": "reject()"
     },
     {
@@ -4545,7 +4554,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L222",
       "id": "fighterdashboard_handlecheck",
-      "community": 4,
+      "community": 0,
       "norm_label": "handlecheck()"
     },
     {
@@ -4554,7 +4563,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L233",
       "id": "fighterdashboard_handlecomplete",
-      "community": 4,
+      "community": 0,
       "norm_label": "handlecomplete()"
     },
     {
@@ -4563,7 +4572,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\FighterDashboard.tsx",
       "source_location": "L719",
       "id": "fighterdashboard_submit",
-      "community": 4,
+      "community": 0,
       "norm_label": "submit()"
     },
     {
@@ -4572,7 +4581,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_managerdashboard_tsx",
-      "community": 4,
+      "community": 0,
       "norm_label": "managerdashboard.tsx"
     },
     {
@@ -4590,7 +4599,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L104",
       "id": "managerdashboard_set",
-      "community": 4,
+      "community": 0,
       "norm_label": "set()"
     },
     {
@@ -4599,7 +4608,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L106",
       "id": "managerdashboard_save",
-      "community": 4,
+      "community": 0,
       "norm_label": "save()"
     },
     {
@@ -4608,7 +4617,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L401",
       "id": "managerdashboard_sendinvite",
-      "community": 4,
+      "community": 0,
       "norm_label": "sendinvite()"
     },
     {
@@ -4617,7 +4626,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L411",
       "id": "managerdashboard_saveedit",
-      "community": 4,
+      "community": 0,
       "norm_label": "saveedit()"
     },
     {
@@ -4626,7 +4635,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L425",
       "id": "managerdashboard_remove",
-      "community": 4,
+      "community": 0,
       "norm_label": "remove()"
     },
     {
@@ -4635,7 +4644,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L537",
       "id": "managerdashboard_expand",
-      "community": 4,
+      "community": 0,
       "norm_label": "expand()"
     },
     {
@@ -4644,7 +4653,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L547",
       "id": "managerdashboard_changestatus",
-      "community": 4,
+      "community": 0,
       "norm_label": "changestatus()"
     },
     {
@@ -4653,7 +4662,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L556",
       "id": "managerdashboard_resend",
-      "community": 4,
+      "community": 0,
       "norm_label": "resend()"
     },
     {
@@ -4662,7 +4671,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L565",
       "id": "managerdashboard_submitinvite",
-      "community": 4,
+      "community": 0,
       "norm_label": "submitinvite()"
     },
     {
@@ -4671,7 +4680,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L576",
       "id": "managerdashboard_submitcreate",
-      "community": 4,
+      "community": 0,
       "norm_label": "submitcreate()"
     },
     {
@@ -4680,7 +4689,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\ManagerDashboard.tsx",
       "source_location": "L597",
       "id": "managerdashboard_isdraft",
-      "community": 4,
+      "community": 0,
       "norm_label": "isdraft()"
     },
     {
@@ -4716,7 +4725,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminCharts.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admin_admincharts_tsx",
-      "community": 57,
+      "community": 58,
       "norm_label": "admincharts.tsx"
     },
     {
@@ -4725,7 +4734,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminCharts.tsx",
       "source_location": "L19",
       "id": "admincharts_chartempty",
-      "community": 57,
+      "community": 58,
       "norm_label": "chartempty()"
     },
     {
@@ -4734,7 +4743,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminUtils.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admin_adminutils_tsx",
-      "community": 58,
+      "community": 59,
       "norm_label": "adminutils.tsx"
     },
     {
@@ -4743,7 +4752,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\AdminUtils.tsx",
       "source_location": "L5",
       "id": "adminutils_ffield",
-      "community": 58,
+      "community": 59,
       "norm_label": "ffield()"
     },
     {
@@ -4959,7 +4968,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\Content.tsx",
       "source_location": "L271",
       "id": "content_setstatus",
-      "community": 3,
+      "community": 0,
       "norm_label": "setstatus()"
     },
     {
@@ -5031,7 +5040,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\Education.tsx",
       "source_location": "L88",
       "id": "education_update",
-      "community": 5,
+      "community": 4,
       "norm_label": "update()"
     },
     {
@@ -5067,7 +5076,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\MarketplaceOps.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admin_marketplaceops_tsx",
-      "community": 0,
+      "community": 2,
       "norm_label": "marketplaceops.tsx"
     },
     {
@@ -5076,7 +5085,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\MarketplaceOps.tsx",
       "source_location": "L309",
       "id": "marketplaceops_decide",
-      "community": 0,
+      "community": 2,
       "norm_label": "decide()"
     },
     {
@@ -5085,7 +5094,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\MarketplaceOps.tsx",
       "source_location": "L382",
       "id": "marketplaceops_recompute",
-      "community": 0,
+      "community": 2,
       "norm_label": "recompute()"
     },
     {
@@ -5094,7 +5103,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\MarketplaceOps.tsx",
       "source_location": "L486",
       "id": "marketplaceops_changestatus",
-      "community": 0,
+      "community": 2,
       "norm_label": "changestatus()"
     },
     {
@@ -5103,7 +5112,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\UsersVetting.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_admin_usersvetting_tsx",
-      "community": 4,
+      "community": 0,
       "norm_label": "usersvetting.tsx"
     },
     {
@@ -5112,7 +5121,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\UsersVetting.tsx",
       "source_location": "L40",
       "id": "usersvetting_act",
-      "community": 4,
+      "community": 0,
       "norm_label": "act()"
     },
     {
@@ -5121,7 +5130,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\admin\\UsersVetting.tsx",
       "source_location": "L356",
       "id": "usersvetting_reactivate",
-      "community": 4,
+      "community": 0,
       "norm_label": "reactivate()"
     },
     {
@@ -5130,7 +5139,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\shared\\CommandLayout.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_shared_commandlayout_tsx",
-      "community": 59,
+      "community": 60,
       "norm_label": "commandlayout.tsx"
     },
     {
@@ -5139,7 +5148,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\shared\\CommandLayout.tsx",
       "source_location": "L6",
       "id": "commandlayout_clickablepanel",
-      "community": 59,
+      "community": 60,
       "norm_label": "clickablepanel()"
     },
     {
@@ -5148,7 +5157,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Campaigns.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_sponsor_campaigns_tsx",
-      "community": 2,
+      "community": 0,
       "norm_label": "campaigns.tsx"
     },
     {
@@ -5157,7 +5166,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Campaigns.tsx",
       "source_location": "L15",
       "id": "campaigns_spinner",
-      "community": 2,
+      "community": 0,
       "norm_label": "spinner()"
     },
     {
@@ -5166,7 +5175,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Campaigns.tsx",
       "source_location": "L34",
       "id": "campaigns_handlestatus",
-      "community": 2,
+      "community": 0,
       "norm_label": "handlestatus()"
     },
     {
@@ -5265,7 +5274,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Contracts.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_sponsor_contracts_tsx",
-      "community": 94,
+      "community": 95,
       "norm_label": "contracts.tsx"
     },
     {
@@ -5274,7 +5283,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\dashboards\\sponsor\\Overview.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_dashboards_sponsor_overview_tsx",
-      "community": 95,
+      "community": 96,
       "norm_label": "overview.tsx"
     },
     {
@@ -5328,7 +5337,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_fighter_fighterprofileeditpage_tsx",
-      "community": 26,
+      "community": 27,
       "norm_label": "fighterprofileeditpage.tsx"
     },
     {
@@ -5337,7 +5346,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L30",
       "id": "fighterprofileeditpage_sectionheader",
-      "community": 26,
+      "community": 27,
       "norm_label": "sectionheader()"
     },
     {
@@ -5346,7 +5355,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L39",
       "id": "fighterprofileeditpage_label",
-      "community": 26,
+      "community": 27,
       "norm_label": "label()"
     },
     {
@@ -5355,7 +5364,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\fighter\\FighterProfileEditPage.tsx",
       "source_location": "L48",
       "id": "fighterprofileeditpage_input",
-      "community": 26,
+      "community": 27,
       "norm_label": "input()"
     },
     {
@@ -5607,7 +5616,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\opportunities\\DiscoveryPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_opportunities_discoverypage_tsx",
-      "community": 34,
+      "community": 35,
       "norm_label": "discoverypage.tsx"
     },
     {
@@ -5616,7 +5625,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\opportunities\\DiscoveryPage.tsx",
       "source_location": "L17",
       "id": "discoverypage_oppcard",
-      "community": 34,
+      "community": 35,
       "norm_label": "oppcard()"
     },
     {
@@ -5625,7 +5634,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\opportunities\\DiscoveryPage.tsx",
       "source_location": "L34",
       "id": "discoverypage_e",
-      "community": 34,
+      "community": 35,
       "norm_label": "e()"
     },
     {
@@ -5634,7 +5643,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\FighterPublicPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_public_fighterpublicpage_tsx",
-      "community": 35,
+      "community": 36,
       "norm_label": "fighterpublicpage.tsx"
     },
     {
@@ -5643,7 +5652,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\FighterPublicPage.tsx",
       "source_location": "L12",
       "id": "fighterpublicpage_safehref",
-      "community": 35,
+      "community": 36,
       "norm_label": "safehref()"
     },
     {
@@ -5652,7 +5661,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\FighterPublicPage.tsx",
       "source_location": "L22",
       "id": "fighterpublicpage_statpill",
-      "community": 35,
+      "community": 36,
       "norm_label": "statpill()"
     },
     {
@@ -5661,7 +5670,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\public\\TeamPublicPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_public_teampublicpage_tsx",
-      "community": 96,
+      "community": 97,
       "norm_label": "teampublicpage.tsx"
     },
     {
@@ -5733,7 +5742,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunitiesPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_sponsor_opportunitiespage_tsx",
-      "community": 2,
+      "community": 0,
       "norm_label": "opportunitiespage.tsx"
     },
     {
@@ -5742,7 +5751,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunitiesPage.tsx",
       "source_location": "L90",
       "id": "opportunitiespage_handlestatuschange",
-      "community": 2,
+      "community": 0,
       "norm_label": "handlestatuschange()"
     },
     {
@@ -5751,7 +5760,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_sponsor_opportunityformpage_tsx",
-      "community": 16,
+      "community": 17,
       "norm_label": "opportunityformpage.tsx"
     },
     {
@@ -5760,7 +5769,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L88",
       "id": "opportunityformpage_set",
-      "community": 0,
+      "community": 2,
       "norm_label": "set()"
     },
     {
@@ -5769,7 +5778,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L89",
       "id": "opportunityformpage_togglechip",
-      "community": 16,
+      "community": 17,
       "norm_label": "togglechip()"
     },
     {
@@ -5778,7 +5787,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L92",
       "id": "opportunityformpage_adddeliverable",
-      "community": 16,
+      "community": 17,
       "norm_label": "adddeliverable()"
     },
     {
@@ -5787,7 +5796,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L93",
       "id": "opportunityformpage_upddeliv",
-      "community": 16,
+      "community": 17,
       "norm_label": "upddeliv()"
     },
     {
@@ -5796,7 +5805,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L95",
       "id": "opportunityformpage_removedeliv",
-      "community": 16,
+      "community": 17,
       "norm_label": "removedeliv()"
     },
     {
@@ -5805,7 +5814,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L126",
       "id": "opportunityformpage_buildpayload",
-      "community": 16,
+      "community": 17,
       "norm_label": "buildpayload()"
     },
     {
@@ -5814,7 +5823,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L148",
       "id": "opportunityformpage_save",
-      "community": 16,
+      "community": 17,
       "norm_label": "save()"
     },
     {
@@ -5823,7 +5832,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L165",
       "id": "opportunityformpage_publish",
-      "community": 16,
+      "community": 17,
       "norm_label": "publish()"
     },
     {
@@ -5832,7 +5841,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\OpportunityFormPage.tsx",
       "source_location": "L188",
       "id": "opportunityformpage_sectioncard",
-      "community": 16,
+      "community": 17,
       "norm_label": "sectioncard()"
     },
     {
@@ -5841,7 +5850,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\pages\\sponsor\\SponsorOnboardPage.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_pages_sponsor_sponsoronboardpage_tsx",
-      "community": 97,
+      "community": 98,
       "norm_label": "sponsoronboardpage.tsx"
     },
     {
@@ -5850,7 +5859,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\LoginPage.test.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_loginpage_test_tsx",
-      "community": 60,
+      "community": 61,
       "norm_label": "loginpage.test.tsx"
     },
     {
@@ -5859,7 +5868,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\LoginPage.test.tsx",
       "source_location": "L7",
       "id": "loginpage_test_wrapper",
-      "community": 60,
+      "community": 61,
       "norm_label": "wrapper()"
     },
     {
@@ -5868,7 +5877,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\Navbar.test.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_navbar_test_tsx",
-      "community": 61,
+      "community": 62,
       "norm_label": "navbar.test.tsx"
     },
     {
@@ -5877,7 +5886,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\Navbar.test.tsx",
       "source_location": "L7",
       "id": "navbar_test_wrapper",
-      "community": 61,
+      "community": 62,
       "norm_label": "wrapper()"
     },
     {
@@ -5886,7 +5895,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\setup.ts",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_setup_ts",
-      "community": 98,
+      "community": 99,
       "norm_label": "setup.ts"
     },
     {
@@ -5895,7 +5904,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\useAuth.test.tsx",
       "source_location": "L1",
       "id": "c_users_athar_eleventh_round_beta_src_test_useauth_test_tsx",
-      "community": 62,
+      "community": 63,
       "norm_label": "useauth.test.tsx"
     },
     {
@@ -5904,7 +5913,7 @@
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\test\\useAuth.test.tsx",
       "source_location": "L24",
       "id": "useauth_test_wrapper",
-      "community": 62,
+      "community": 63,
       "norm_label": "wrapper()"
     },
     {
@@ -6173,7 +6182,7 @@
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L1",
-      "community": 63,
+      "community": 64,
       "norm_label": "claude.md",
       "id": "claude_md"
     },
@@ -6182,7 +6191,7 @@
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L1",
-      "community": 63,
+      "community": 64,
       "norm_label": "graphify",
       "id": "er_app_claude_graphify"
     },
@@ -7190,7 +7199,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L1",
-      "community": 15,
+      "community": 16,
       "norm_label": "design.md",
       "id": "design_reference_stitch_eleventh_round_cinematic_redesign_design_md"
     },
@@ -7199,7 +7208,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L114",
-      "community": 15,
+      "community": 16,
       "norm_label": "brand & style",
       "id": "stitch_eleventh_round_cinematic_redesign_design_brand_style"
     },
@@ -7208,7 +7217,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L120",
-      "community": 15,
+      "community": 16,
       "norm_label": "colors",
       "id": "stitch_eleventh_round_cinematic_redesign_design_colors"
     },
@@ -7217,7 +7226,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L131",
-      "community": 15,
+      "community": 16,
       "norm_label": "typography",
       "id": "stitch_eleventh_round_cinematic_redesign_design_typography"
     },
@@ -7226,7 +7235,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L139",
-      "community": 15,
+      "community": 16,
       "norm_label": "layout & spacing",
       "id": "stitch_eleventh_round_cinematic_redesign_design_layout_spacing"
     },
@@ -7235,7 +7244,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L147",
-      "community": 15,
+      "community": 16,
       "norm_label": "elevation & depth",
       "id": "stitch_eleventh_round_cinematic_redesign_design_elevation_depth"
     },
@@ -7244,7 +7253,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L157",
-      "community": 15,
+      "community": 16,
       "norm_label": "shapes",
       "id": "stitch_eleventh_round_cinematic_redesign_design_shapes"
     },
@@ -7253,7 +7262,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L163",
-      "community": 15,
+      "community": 16,
       "norm_label": "components",
       "id": "stitch_eleventh_round_cinematic_redesign_design_components"
     },
@@ -7262,7 +7271,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L165",
-      "community": 15,
+      "community": 16,
       "norm_label": "buttons",
       "id": "stitch_eleventh_round_cinematic_redesign_design_buttons"
     },
@@ -7271,7 +7280,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L170",
-      "community": 15,
+      "community": 16,
       "norm_label": "input fields",
       "id": "stitch_eleventh_round_cinematic_redesign_design_input_fields"
     },
@@ -7280,7 +7289,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L175",
-      "community": 15,
+      "community": 16,
       "norm_label": "cards",
       "id": "stitch_eleventh_round_cinematic_redesign_design_cards"
     },
@@ -7289,7 +7298,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L180",
-      "community": 15,
+      "community": 16,
       "norm_label": "progress bars & data",
       "id": "stitch_eleventh_round_cinematic_redesign_design_progress_bars_data"
     },
@@ -7298,7 +7307,7 @@
       "file_type": "document",
       "source_file": "design-reference/stitch_eleventh_round_cinematic_redesign/DESIGN.md",
       "source_location": "L186",
-      "community": 15,
+      "community": 16,
       "norm_label": "navigation",
       "id": "stitch_eleventh_round_cinematic_redesign_design_navigation"
     }
@@ -9240,7 +9249,19 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L58",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_src": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
+      "_tgt": "auth_emailhaspendingrosterinvite",
+      "source": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
+      "target": "auth_emailhaspendingrosterinvite",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
+      "source_location": "L74",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
       "_tgt": "auth_bootstrapprofile",
@@ -9252,7 +9273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L367",
+      "source_location": "L395",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_server_routes_auth_js",
       "_tgt": "auth_isemailverified",
@@ -9264,7 +9285,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\server\\routes\\auth.js",
-      "source_location": "L69",
+      "source_location": "L84",
       "weight": 1.0,
       "_src": "auth_bootstrapprofile",
       "_tgt": "auth_computeonboardingcomplete",
@@ -12252,7 +12273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\athar\\eleventh-round-beta\\src\\hooks\\useAuth.tsx",
-      "source_location": "L256",
+      "source_location": "L261",
       "weight": 1.0,
       "_src": "c_users_athar_eleventh_round_beta_src_hooks_useauth_tsx",
       "_tgt": "useauth_useauth",

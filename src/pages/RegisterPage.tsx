@@ -426,15 +426,19 @@ export default function RegisterPage() {
   const submitFinal = async () => {
     setLoading(true)
     setError('')
+    // A manager roster invite is always for a fighter — never send sponsor/manager
+    // for an invited email. The backend enforces this too.
+    const forceFighter = invitedFighter || !!invite?.hasPendingInvite
+    const accountType: RegisterData['accountType'] = forceFighter ? 'fighter' : (form.accountType as RegisterData['accountType'])
     const payload: RegisterData = {
       name:        form.name.trim(),
       email:       form.email.trim(),
       password:    form.password,
-      accountType: form.accountType as RegisterData['accountType'],
-      teamName:    form.teamName || undefined,
-      subdomain:   form.subdomain || undefined,
+      accountType,
+      teamName:    forceFighter ? undefined : (form.teamName || undefined),
+      subdomain:   forceFighter ? undefined : (form.subdomain || undefined),
       onboarding: {
-        q1: form.accountType,
+        q1: accountType,
         q2: form.goal,
         q3: form.commonProblem,
         q4: form.endGoal,

@@ -52,22 +52,44 @@ export function computeOnboardingComplete(role, onboarding) {
   return !!onboarding
 }
 
+// A manager roster invite is ALWAYS for a fighter. If a pending invite exists for
+// this email, the new account must be a fighter regardless of what account type
+// the client selected — this prevents an invited fighter from being created as a
+// sponsor/manager (and wrongly landing on sponsor setup).
+async function emailHasPendingRosterInvite(sb, email) {
+  if (!email) return false
+  const { data } = await sb
+    .from('manager_fighters')
+    .select('id')
+    .eq('invited_email', String(email).toLowerCase())
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+  return !!data
+}
+
 // Idempotently create the profile + onboarding rows for an auth user. Used by
 // both the client-signUp register flow and the post-verify safety net, so a user
 // is never left verified-but-profileless. Throws on a fatal profile failure.
 async function bootstrapProfile(sb, { userId, email, name, role, accountType, teamName, subdomain, onboarding }) {
   const { data: existing } = await sb.from('profiles').select('id').eq('id', userId).maybeSingle()
   if (!existing) {
-    const { error: profileErr } = await sb.from('profiles').insert({
+    const base = {
       id:           userId,
       email,
       name,
       role,
       account_type: accountType,
       team_name:    teamName || null,
-      subdomain:    subdomain || null,
       onboarding_complete: computeOnboardingComplete(role, onboarding),
-    })
+    }
+    let { error: profileErr } = await sb.from('profiles').insert({ ...base, subdomain: subdomain || null })
+    // If the subdomain was taken between the client's availability check and now,
+    // still create the profile (without the subdomain) so the user isn't stranded.
+    if (profileErr && subdomain && /duplicate|unique|23505/i.test(`${profileErr.message} ${profileErr.code ?? ''}`)) {
+      log.warn({ userId, subdomain }, 'subdomain conflict at bootstrap — creating profile without subdomain')
+      ;({ error: profileErr } = await sb.from('profiles').insert({ ...base, subdomain: null }))
+    }
     if (profileErr) throw profileErr
   }
   if (onboarding) {
@@ -92,9 +114,15 @@ async function bootstrapProfile(sb, { userId, email, name, role, accountType, te
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   try {
     const sb = requireSupabase()
-    const { name, email, password, accountType, teamName, subdomain, onboarding, userId } = req.valid
-    const role = accountType === 'fighter' ? 'fighter'
-               : accountType === 'sponsor' ? 'sponsor'
+    const { name, email, password, accountType, teamName, subdomain, onboarding } = req.valid
+    // A pending manager roster invite is always for a fighter — override any
+    // other account type the client sent so an invited user is never created as
+    // a sponsor/manager.
+    const forcedFighter = await emailHasPendingRosterInvite(sb, email)
+    if (forcedFighter && accountType !== 'fighter') log.info({ email }, 'register: pending roster invite → forcing fighter role')
+    const effAccountType = forcedFighter ? 'fighter' : accountType
+    const role = effAccountType === 'fighter' ? 'fighter'
+               : effAccountType === 'sponsor' ? 'sponsor'
                : 'manager'
 
     // 1. Uniqueness checks
@@ -109,23 +137,15 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       }
     }
 
-    // ── New flow: the browser already created the auth user via the normal
-    //    supabase.auth.signUp() (which reliably sends the confirmation email via
-    //    Supabase's SMTP). Here we ONLY bootstrap profile + onboarding rows for
-    //    that user. We never create the user or auto-confirm in this path.
-    if (userId) {
-      const { data: got, error: getErr } = await sb.auth.admin.getUserById(userId)
-      if (getErr || !got?.user || (got.user.email || '').toLowerCase() !== email.toLowerCase()) {
-        log.warn({ userId, email }, 'register bootstrap: auth user/email mismatch')
-        return res.status(400).json({ error: 'Could not verify the new account. Please try registering again.' })
-      }
-      await bootstrapProfile(sb, { userId, email, name, role, accountType, teamName, subdomain, onboarding })
-      log.info({ userId, email }, 'profile bootstrapped (client signUp flow)')
-      return res.status(201).json({ ok: true, autoConfirmed: false })
-    }
-
-    // ── Legacy flow (no userId): backend creates the auth user. Kept for
-    //    backward compatibility, server tests, and AUTH_AUTOCONFIRM dev mode.
+    // NOTE: the public client-signUp flow does NOT bootstrap the profile here.
+    // There is no authenticated session at sign-up time (email confirmation is
+    // required), so trusting a client-supplied userId would be an IDOR. Instead
+    // the profile/onboarding rows are created in /post-verify, which is
+    // requireAuth-gated and derives the user id from the verified JWT. Signup
+    // details ride along in Supabase user_metadata until then.
+    //
+    // The flow below is the LEGACY backend-createUser path, kept only for
+    // AUTH_AUTOCONFIRM dev mode, server tests, and backward compatibility.
     // 2. Create the auth user.
     //    - AUTO_CONFIRM on  → email_confirm:true, user can log in immediately
     //    - AUTO_CONFIRM off → email_confirm:false, we send a verification link
@@ -133,7 +153,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       email,
       password,
       email_confirm: AUTO_CONFIRM,
-      user_metadata: { name, account_type: accountType, team_name: teamName, subdomain },
+      user_metadata: { name, account_type: effAccountType, team_name: teamName, subdomain },
     })
 
     if (createErr) {
@@ -168,7 +188,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       email,
       name,
       role,
-      account_type: accountType,
+      account_type: effAccountType,
       team_name:    teamName || null,
       subdomain:    subdomain || null,
       onboarding_complete: computeOnboardingComplete(role, onboarding),
@@ -232,23 +252,31 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════════════
 router.post('/post-verify', requireAuth, async (req, res) => {
   try {
-    // Safety net: if registration's profile bootstrap never completed, the user
-    // would be verified-but-profileless. Recreate the profile now from the auth
-    // user's signup metadata so login always finds a profile.
+    // Primary profile bootstrap for the client-signUp flow: this is the FIRST
+    // authenticated request after a user verifies, so we create their profile +
+    // onboarding rows here, deriving identity from the verified JWT (req.user.id)
+    // — never from client input. Signup details were stashed in user_metadata at
+    // sign-up time. Idempotent: a no-op if the profile already exists.
     if (!req.user?.role) {
       try {
         const sb = requireSupabase()
         const { data: got } = await sb.auth.admin.getUserById(req.user.id)
         const meta = got?.user?.user_metadata || {}
-        const accountType = meta.account_type || 'fighter'
-        const role = meta.role || (accountType === 'fighter' ? 'fighter'
-                                : accountType === 'sponsor' ? 'sponsor' : 'manager')
+        let accountType = ['fighter', 'management', 'promotion', 'sponsor'].includes(meta.account_type)
+          ? meta.account_type : 'fighter'
+        // A pending manager roster invite forces a fighter account.
+        if (await emailHasPendingRosterInvite(sb, req.user.email)) {
+          if (accountType !== 'fighter') log.info({ userId: req.user.id }, 'post-verify: pending roster invite → forcing fighter role')
+          accountType = 'fighter'
+        }
+        const role = accountType === 'fighter' ? 'fighter'
+                   : accountType === 'sponsor' ? 'sponsor' : 'manager'
         await bootstrapProfile(sb, {
           userId: req.user.id, email: req.user.email, name: meta.name || 'Fighter',
           role, accountType, teamName: meta.team_name || null, subdomain: meta.subdomain || null,
-          onboarding: null,
+          onboarding: meta.onboarding || null,
         })
-        log.info({ userId: req.user.id }, 'post-verify safety-net profile bootstrap')
+        log.info({ userId: req.user.id, role }, 'post-verify profile bootstrap')
       } catch (e) {
         log.warn({ err: e, userId: req.user.id }, 'post-verify profile bootstrap failed')
       }

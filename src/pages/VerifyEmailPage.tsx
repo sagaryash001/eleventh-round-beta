@@ -9,7 +9,7 @@ import Navbar from '../components/Navbar'
 type Status = 'verifying' | 'success' | 'error'
 
 export default function VerifyEmailPage() {
-  const { user } = useAuth()
+  const { refreshUser } = useAuth()
   const navigate        = useNavigate()
   const [status, setStatus] = useState<Status>('verifying')
   const [message, setMessage] = useState('')
@@ -32,26 +32,30 @@ export default function VerifyEmailPage() {
       if (cancelled) return
 
       if (data.session?.user) {
-        // Fire welcome-email hook (server picks up role/subdomain from profile)
-        apiFetch('/api/auth/post-verify', {
+        // post-verify creates the profile + onboarding rows (authenticated, from
+        // the verified JWT) and sends the welcome email. Await it, then load the
+        // freshly-created profile so we route by the correct role.
+        await apiFetch('/api/auth/post-verify', {
           method: 'POST',
           headers: {
             'Content-Type':  'application/json',
             'Authorization': `Bearer ${data.session.access_token}`,
           },
-        }).catch(() => { /* non-fatal */ })
+        }).catch(() => { /* non-fatal — profile bootstrap is idempotent */ })
+
+        const profile = await refreshUser()
+        if (cancelled) return
 
         setStatus('success')
 
-        // Redirect after 2.5s — useAuth will have populated `user` by then
         setTimeout(() => {
-          const role = user?.role
-          const complete = user?.onboarding_complete
+          const role = profile?.role
+          const complete = profile?.onboarding_complete
           if (!complete && role !== 'admin') {
             navigate(
-              role === 'fighter' ? '/onboarding/fighter' :
               role === 'manager' ? '/onboarding/manager' :
-              '/onboarding/sponsor',
+              role === 'sponsor' ? '/onboarding/sponsor' :
+              '/onboarding/fighter',
               { replace: true }
             )
             return
@@ -77,7 +81,7 @@ export default function VerifyEmailPage() {
 
     poll()
     return () => { cancelled = true }
-  }, [navigate, user?.role])
+  }, [navigate, refreshUser])
 
   return (
     <div className="min-h-screen bg-black flex flex-col">

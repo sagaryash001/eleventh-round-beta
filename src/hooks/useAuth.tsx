@@ -33,7 +33,7 @@ interface AuthContextValue {
   login:        (email: string, password: string) => Promise<{ ok: boolean; error?: string; needsVerification?: boolean }>
   register:     (data: RegisterData) => Promise<{ ok: boolean; error?: string; autoConfirmed?: boolean; code?: string; emailFailed?: boolean }>
   logout:       () => Promise<void>
-  refreshUser:  () => Promise<void>
+  refreshUser:  () => Promise<AuthUser | null>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -141,15 +141,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const refreshUser = useCallback(async () => {
-    if (!supabase) return
+  const refreshUser = useCallback(async (): Promise<AuthUser | null> => {
+    if (!supabase) return null
     const { data } = await supabase.auth.getSession()
-    if (!data.session?.user) return
+    if (!data.session?.user) return null
     const profile = await fetchProfile(data.session.user.id)
     if (profile) {
       setUser(profile)
       setToken(data.session.access_token)
     }
+    return profile
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
@@ -178,17 +179,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const role: UserRole = data.accountType === 'fighter' ? 'fighter'
       : data.accountType === 'sponsor' ? 'sponsor' : 'manager'
 
-    // 1. Create the auth user via the NORMAL client signup. This is the reliable
-    //    way to send the confirmation email — Supabase sends it through its own
-    //    configured SMTP (SendGrid). Admin createUser does NOT send a signup
-    //    email, and resend() after admin-create was unreliable.
+    // Create the auth user via the NORMAL client signup — the reliable way to
+    // send the confirmation email (Supabase sends it through its configured SMTP /
+    // SendGrid). Admin createUser does NOT send a signup email. Signup details
+    // ride in user_metadata; the backend builds the profile at /post-verify
+    // (authenticated), so no profile data is trusted from an unauthenticated call.
     const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
       email:    data.email,
       password: data.password,
       options: {
         emailRedirectTo: `${siteUrl}/verify-email`,
-        data: { name: data.name, account_type: data.accountType, role,
-                team_name: data.teamName ?? null, subdomain: data.subdomain ?? null },
+        data: {
+          name: data.name, account_type: data.accountType, role,
+          team_name: data.teamName ?? null, subdomain: data.subdomain ?? null,
+          onboarding: data.onboarding ?? null,
+        },
       },
     })
 
@@ -208,30 +213,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (signUpData?.user && Array.isArray(identities) && identities.length === 0) {
       return { ok: false, code: 'exists', error: 'An account with this email already exists.' }
     }
-
-    const userId = signUpData?.user?.id
-    if (!userId) {
+    if (!signUpData?.user?.id) {
       return { ok: false, emailFailed: true, error: 'Signup did not return a user. Please try again.' }
     }
 
-    // 2. Bootstrap profile + onboarding rows for the new (unconfirmed) user.
-    try {
-      const res  = await apiFetch('/api/auth/register', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ...data, userId }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        console.error('[auth] profile bootstrap failed:', res.status, json?.error)
-        return { ok: false, error: json.error ?? 'Account created, but profile setup failed. Contact support.' }
+    // If email confirmation is disabled at the project level (dev), signUp returns
+    // a session immediately — bootstrap the profile via the authenticated
+    // post-verify endpoint and proceed straight to the dashboard.
+    if (signUpData.session) {
+      try {
+        await apiFetch('/api/auth/post-verify', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${signUpData.session.access_token}` },
+        })
+      } catch (err) {
+        console.error('[auth] post-verify bootstrap error:', (err as Error)?.message)
       }
-      return { ok: true }
-    } catch (err) {
-      console.error('[auth] register request error:', (err as Error)?.message)
-      return { ok: false, error: 'Account created, but we could not reach the server to finish setup.' }
+      await refreshUser()
+      return { ok: true, autoConfirmed: true }
     }
-  }, [])
+
+    // Email confirmation required: the email is on its way. The profile is created
+    // at verify time. Truthful "check your inbox" — signUp accepted the send.
+    return { ok: true }
+  }, [refreshUser])
 
   const logout = useCallback(async () => {
     // Invalidate any deferred profile fetch so it can't re-sign-us-in.
