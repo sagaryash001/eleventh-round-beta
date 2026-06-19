@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, siteUrl } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 import { getSponsorStatus } from '../lib/api/sponsors'
 import { clearApiCache } from './useApi'
@@ -31,7 +31,7 @@ interface AuthContextValue {
   token:        string | null
   loading:      boolean
   login:        (email: string, password: string) => Promise<{ ok: boolean; error?: string; needsVerification?: boolean }>
-  register:     (data: RegisterData) => Promise<{ ok: boolean; error?: string; autoConfirmed?: boolean; code?: string }>
+  register:     (data: RegisterData) => Promise<{ ok: boolean; error?: string; autoConfirmed?: boolean; code?: string; emailFailed?: boolean }>
   logout:       () => Promise<void>
   refreshUser:  () => Promise<void>
 }
@@ -174,21 +174,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const register = useCallback(async (data: RegisterData) => {
+    if (!supabase) return { ok: false, error: 'Auth is not configured.' }
+    const role: UserRole = data.accountType === 'fighter' ? 'fighter'
+      : data.accountType === 'sponsor' ? 'sponsor' : 'manager'
+
+    // 1. Create the auth user via the NORMAL client signup. This is the reliable
+    //    way to send the confirmation email — Supabase sends it through its own
+    //    configured SMTP (SendGrid). Admin createUser does NOT send a signup
+    //    email, and resend() after admin-create was unreliable.
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+      email:    data.email,
+      password: data.password,
+      options: {
+        emailRedirectTo: `${siteUrl}/verify-email`,
+        data: { name: data.name, account_type: data.accountType, role,
+                team_name: data.teamName ?? null, subdomain: data.subdomain ?? null },
+      },
+    })
+
+    if (signUpErr) {
+      // Surface as an email-send failure so the UI shows a truthful retry state
+      // (never "check your inbox" when nothing was sent).
+      console.error('[auth-confirmation-email] failed', {
+        message: signUpErr.message,
+        status:  (signUpErr as { status?: number }).status,
+        name:    signUpErr.name,
+      })
+      return { ok: false, emailFailed: true, error: signUpErr.message || 'Could not send the verification email.' }
+    }
+
+    // Supabase obfuscates an existing email by returning a user with NO identities.
+    const identities = signUpData?.user?.identities
+    if (signUpData?.user && Array.isArray(identities) && identities.length === 0) {
+      return { ok: false, code: 'exists', error: 'An account with this email already exists.' }
+    }
+
+    const userId = signUpData?.user?.id
+    if (!userId) {
+      return { ok: false, emailFailed: true, error: 'Signup did not return a user. Please try again.' }
+    }
+
+    // 2. Bootstrap profile + onboarding rows for the new (unconfirmed) user.
     try {
       const res  = await apiFetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(data),
+        body:    JSON.stringify({ ...data, userId }),
       })
       const json = await res.json()
       if (!res.ok) {
-        console.error('[auth] register failed:', res.status, json?.error)
-        return { ok: false, error: json.error ?? 'Registration failed.', code: json?.code }
+        console.error('[auth] profile bootstrap failed:', res.status, json?.error)
+        return { ok: false, error: json.error ?? 'Account created, but profile setup failed. Contact support.' }
       }
-      return { ok: true, autoConfirmed: !!json.autoConfirmed }
+      return { ok: true }
     } catch (err) {
       console.error('[auth] register request error:', (err as Error)?.message)
-      return { ok: false, error: 'Cannot reach the server. Is it running?' }
+      return { ok: false, error: 'Account created, but we could not reach the server to finish setup.' }
     }
   }, [])
 

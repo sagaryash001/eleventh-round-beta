@@ -18,6 +18,17 @@ const log    = childLogger('manager')
 // Minimum gap between resends of the same invite — prevents accidental spam.
 const RESEND_COOLDOWN_MS = 60 * 1000
 
+// Best-effort: set the invite email delivery status. Kept OUT of the core
+// insert/update so creating an invite never fails if migration 0029
+// (invite_email_status) hasn't been applied yet — the status simply stays null
+// (UI shows "Invite queued") until the column exists.
+async function setInviteEmailStatus(connId, status) {
+  if (!connId) return
+  const { error } = await adminSupabase.from('manager_fighters')
+    .update({ invite_email_status: status }).eq('id', connId)
+  if (error) log.warn({ err: error, connId, status }, 'invite_email_status update skipped (apply migration 0029?)')
+}
+
 function requireManager(req, res, next) {
   if (!['manager', 'admin'].includes(req.user?.role))
     return res.status(403).json({ error: 'Manager access required.' })
@@ -107,13 +118,26 @@ router.get('/roster', ...guard, async (req, res) => {
     const sb  = adminSupabase
     const mid = req.user.id
 
-    // All non-removed connections for this manager
-    const { data: connections, error: connErr } = await sb
+    // All non-removed connections for this manager.
+    // invite_email_status (migration 0029) may not be applied yet — if the column
+    // is missing, transparently fall back to the query without it so the roster
+    // never white-screens during a code-before-migration deploy window.
+    const BASE_COLS = 'id, fighter_id, status, source, invited_email, invited_name, pending_fighter_data, requested_by, request_message, team_name, created_at, accepted_at, declined_at'
+    let { data: connections, error: connErr } = await sb
       .from('manager_fighters')
-      .select('id, fighter_id, status, source, invited_email, invited_name, pending_fighter_data, requested_by, request_message, team_name, invite_email_status, created_at, accepted_at, declined_at')
+      .select(`${BASE_COLS}, invite_email_status`)
       .eq('manager_id', mid)
       .neq('status', 'removed')
       .order('created_at', { ascending: false })
+    if (connErr && /invite_email_status/.test(connErr.message || '')) {
+      log.warn('invite_email_status column missing — apply migration 0029. Falling back.')
+      ;({ data: connections, error: connErr } = await sb
+        .from('manager_fighters')
+        .select(BASE_COLS)
+        .eq('manager_id', mid)
+        .neq('status', 'removed')
+        .order('created_at', { ascending: false }))
+    }
     if (connErr) throw connErr
 
     const activeFids = (connections ?? [])
@@ -243,9 +267,10 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
     if (existingEmail) {
       const { error } = await adminSupabase.from('manager_fighters')
         .update({ status: 'pending', invited_name: name ?? null,
-          request_message: message ?? null, invite_email_status: 'queued', updated_at: now })
+          request_message: message ?? null, updated_at: now })
         .eq('id', existingEmail.id)
       if (error) throw error
+      await setInviteEmailStatus(existingEmail.id, 'queued')
       adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existingEmail.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
       log.info({ mid, email, connectionId: existingEmail.id, route: 'email-invite-reuse' }, 'roster invite (non-platform) — email queued')
       return res.json({ ok: true, connection_id: existingEmail.id, matched: false })
@@ -254,9 +279,10 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
     const { data, error } = await adminSupabase.from('manager_fighters')
       .insert({ manager_id: mid, fighter_id: null, status: 'pending',
         source: 'manager_invite', invited_email: email, invited_name: name ?? null,
-        request_message: message ?? null, requested_by: mid, invite_email_status: 'queued' })
+        request_message: message ?? null, requested_by: mid })
       .select('id').maybeSingle()
     if (error) throw error
+    await setInviteEmailStatus(data.id, 'queued')
     adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
     log.info({ mid, email, connectionId: data.id, route: 'email-invite-new' }, 'roster invite (non-platform) — email queued')
     return res.status(201).json({ ok: true, connection_id: data.id, matched: false })
@@ -396,9 +422,10 @@ router.post('/roster/:connectionId/invite-email', ...guard, validate(PendingProf
 
     // No platform account — convert to an email invite (non-platform).
     const { error } = await adminSupabase.from('manager_fighters')
-      .update({ source: 'manager_invite', invited_email: email, requested_by: mid, invite_email_status: 'queued', updated_at: now })
+      .update({ source: 'manager_invite', invited_email: email, requested_by: mid, updated_at: now })
       .eq('id', conn.id)
     if (error) throw error
+    await setInviteEmailStatus(conn.id, 'queued')
     adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: conn.id, payload: { invited_email: email, invited_name: conn.invited_name, manager_id: mid } }).then(() => {}).catch(() => {})
     log.info({ mid, email, connectionId: conn.id, route: 'convert-email' }, 'draft converted to invite (non-platform) — email queued')
     res.json({ ok: true, connection_id: conn.id, matched: false })
@@ -502,10 +529,10 @@ router.post('/roster/:connectionId/resend', ...guard, async (req, res) => {
     // real delivery state again once the dispatcher reprocesses it.
     const requeueEmail = !conn.fighter_id && conn.invited_email
     const { error } = await adminSupabase.from('manager_fighters')
-      .update({ status: 'pending', declined_at: null, updated_at: now,
-        ...(requeueEmail ? { invite_email_status: 'queued' } : {}) })
+      .update({ status: 'pending', declined_at: null, updated_at: now })
       .eq('id', conn.id)
     if (error) throw error
+    if (requeueEmail) await setInviteEmailStatus(conn.id, 'queued')
 
     const { error: outboxErr } = await adminSupabase.from('outbox_events').insert({
       event_type:     'manager.roster_invite',

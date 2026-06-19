@@ -12,7 +12,7 @@
 // VerifyEmailPage (error state). Never logs passwords or tokens.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { supabase } from './supabase'
+import { supabase, siteUrl } from './supabase'
 
 export interface ResendResult {
   ok: boolean
@@ -30,12 +30,16 @@ export async function resendVerification(email: string): Promise<ResendResult> {
   const { error } = await supabase.auth.resend({
     type: 'signup',
     email: trimmed,
-    options: { emailRedirectTo: `${window.location.origin}/verify-email` },
+    options: { emailRedirectTo: `${siteUrl}/verify-email` },
   })
 
   if (error) {
-    // Log message only — never the email body, password, or any token.
-    console.error('[auth] resend verification failed:', error.message)
+    // Log message + status only — never the email body, password, or any token.
+    console.error('[auth-confirmation-email] failed', {
+      message: error.message,
+      status:  (error as { status?: number }).status,
+      name:    error.name,
+    })
 
     // An already-verified user can't be "re-sent" a signup link. Surface this as
     // a distinct outcome so the UI tells the truth ("already verified — sign in")

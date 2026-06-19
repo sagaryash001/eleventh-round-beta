@@ -52,13 +52,50 @@ export function computeOnboardingComplete(role, onboarding) {
   return !!onboarding
 }
 
+// Idempotently create the profile + onboarding rows for an auth user. Used by
+// both the client-signUp register flow and the post-verify safety net, so a user
+// is never left verified-but-profileless. Throws on a fatal profile failure.
+async function bootstrapProfile(sb, { userId, email, name, role, accountType, teamName, subdomain, onboarding }) {
+  const { data: existing } = await sb.from('profiles').select('id').eq('id', userId).maybeSingle()
+  if (!existing) {
+    const { error: profileErr } = await sb.from('profiles').insert({
+      id:           userId,
+      email,
+      name,
+      role,
+      account_type: accountType,
+      team_name:    teamName || null,
+      subdomain:    subdomain || null,
+      onboarding_complete: computeOnboardingComplete(role, onboarding),
+    })
+    if (profileErr) throw profileErr
+  }
+  if (onboarding) {
+    const { data: existingOb } = await sb.from('onboarding').select('user_id').eq('user_id', userId).maybeSingle()
+    if (!existingOb) {
+      const { error: obErr } = await sb.from('onboarding').insert({
+        user_id:           userId,
+        q1_role:           onboarding.q1 ?? null,
+        q2_goal:           onboarding.q2 ?? null,
+        q3_common_problem: onboarding.q3 ?? null,
+        q4_end_goal:       onboarding.q4 ?? null,
+        q5_upcoming_event: onboarding.q5 ?? null,
+      })
+      if (obErr) log.warn({ err: obErr, userId }, 'onboarding insert failed (non-fatal)')
+    }
+  }
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/register
 // ═════════════════════════════════════════════════════════════════════════════
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   try {
     const sb = requireSupabase()
-    const { name, email, password, accountType, teamName, subdomain, onboarding } = req.valid
+    const { name, email, password, accountType, teamName, subdomain, onboarding, userId } = req.valid
+    const role = accountType === 'fighter' ? 'fighter'
+               : accountType === 'sponsor' ? 'sponsor'
+               : 'manager'
 
     // 1. Uniqueness checks
     if (subdomain) {
@@ -72,6 +109,23 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       }
     }
 
+    // ── New flow: the browser already created the auth user via the normal
+    //    supabase.auth.signUp() (which reliably sends the confirmation email via
+    //    Supabase's SMTP). Here we ONLY bootstrap profile + onboarding rows for
+    //    that user. We never create the user or auto-confirm in this path.
+    if (userId) {
+      const { data: got, error: getErr } = await sb.auth.admin.getUserById(userId)
+      if (getErr || !got?.user || (got.user.email || '').toLowerCase() !== email.toLowerCase()) {
+        log.warn({ userId, email }, 'register bootstrap: auth user/email mismatch')
+        return res.status(400).json({ error: 'Could not verify the new account. Please try registering again.' })
+      }
+      await bootstrapProfile(sb, { userId, email, name, role, accountType, teamName, subdomain, onboarding })
+      log.info({ userId, email }, 'profile bootstrapped (client signUp flow)')
+      return res.status(201).json({ ok: true, autoConfirmed: false })
+    }
+
+    // ── Legacy flow (no userId): backend creates the auth user. Kept for
+    //    backward compatibility, server tests, and AUTH_AUTOCONFIRM dev mode.
     // 2. Create the auth user.
     //    - AUTO_CONFIRM on  → email_confirm:true, user can log in immediately
     //    - AUTO_CONFIRM off → email_confirm:false, we send a verification link
@@ -106,14 +160,11 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       return res.status(500).json({ error: 'Registration failed. Please try again.' })
     }
 
-    const userId = created.user.id
-    const role   = accountType === 'fighter' ? 'fighter'
-                 : accountType === 'sponsor' ? 'sponsor'
-                 : 'manager'
+    const newUserId = created.user.id
 
     // 3. Insert profile (service role bypasses RLS)
     const { error: profileErr } = await sb.from('profiles').insert({
-      id:           userId,
+      id:           newUserId,
       email,
       name,
       role,
@@ -125,22 +176,22 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 
     if (profileErr) {
       // Roll back the auth user so the next try has a clean slate
-      log.error({ err: profileErr, userId }, 'profile insert failed — rolling back auth user')
-      await sb.auth.admin.deleteUser(userId).catch(() => {})
+      log.error({ err: profileErr, userId: newUserId }, 'profile insert failed — rolling back auth user')
+      await sb.auth.admin.deleteUser(newUserId).catch(() => {})
       return res.status(500).json({ error: 'Registration failed. Please try again.' })
     }
 
     // 4. Insert onboarding answers
     if (onboarding) {
       const { error: obErr } = await sb.from('onboarding').insert({
-        user_id:           userId,
+        user_id:           newUserId,
         q1_role:           onboarding.q1 ?? null,
         q2_goal:           onboarding.q2 ?? null,
         q3_common_problem: onboarding.q3 ?? null,
         q4_end_goal:       onboarding.q4 ?? null,
         q5_upcoming_event: onboarding.q5 ?? null,
       })
-      if (obErr) log.warn({ err: obErr, userId }, 'onboarding insert failed (non-fatal)')
+      if (obErr) log.warn({ err: obErr, userId: newUserId }, 'onboarding insert failed (non-fatal)')
     }
 
     // 5. Email verification.
@@ -152,7 +203,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     //                       after this responds, so the confirmation email is
     //                       delivered through Supabase Auth's configured SMTP.
     if (AUTO_CONFIRM) {
-      log.info({ userId, email }, 'user auto-confirmed (AUTH_AUTOCONFIRM=true) — no email verification')
+      log.info({ userId: newUserId, email }, 'user auto-confirmed (AUTH_AUTOCONFIRM=true) — no email verification')
       return res.status(201).json({
         ok:            true,
         autoConfirmed: true,
@@ -160,7 +211,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       })
     }
 
-    log.info({ userId, email }, 'user created unconfirmed — client will trigger Supabase confirmation email')
+    log.info({ userId: newUserId, email }, 'user created unconfirmed — client will trigger Supabase confirmation email')
     return res.status(201).json({
       ok:            true,
       autoConfirmed: false,
@@ -181,6 +232,28 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════════════
 router.post('/post-verify', requireAuth, async (req, res) => {
   try {
+    // Safety net: if registration's profile bootstrap never completed, the user
+    // would be verified-but-profileless. Recreate the profile now from the auth
+    // user's signup metadata so login always finds a profile.
+    if (!req.user?.role) {
+      try {
+        const sb = requireSupabase()
+        const { data: got } = await sb.auth.admin.getUserById(req.user.id)
+        const meta = got?.user?.user_metadata || {}
+        const accountType = meta.account_type || 'fighter'
+        const role = meta.role || (accountType === 'fighter' ? 'fighter'
+                                : accountType === 'sponsor' ? 'sponsor' : 'manager')
+        await bootstrapProfile(sb, {
+          userId: req.user.id, email: req.user.email, name: meta.name || 'Fighter',
+          role, accountType, teamName: meta.team_name || null, subdomain: meta.subdomain || null,
+          onboarding: null,
+        })
+        log.info({ userId: req.user.id }, 'post-verify safety-net profile bootstrap')
+      } catch (e) {
+        log.warn({ err: e, userId: req.user.id }, 'post-verify profile bootstrap failed')
+      }
+    }
+
     const { id, email, name, role, subdomain } = req.user
     sendWelcomeEmail(email, name || 'Fighter', role, subdomain).catch(err =>
       log.error({ err, userId: id }, 'sendWelcomeEmail failed'),

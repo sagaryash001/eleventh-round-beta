@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth, RegisterData } from '../hooks/useAuth'
 import { apiFetch } from '../lib/api'
 import { validatePassword, getPasswordRules } from '../lib/passwordValidation'
-import { resendVerification } from '../lib/resendVerification'
 import ResendVerification from '../components/ResendVerification'
 import Navbar from '../components/Navbar'
 
@@ -269,6 +268,9 @@ export default function RegisterPage() {
   // Set when registration reports the email is already taken — we offer a
   // resend-verification path rather than a dead-end error.
   const [existingAccount, setExistingAccount] = useState(false)
+  // Set when the account was created but the confirmation email failed to send —
+  // we show a truthful, recoverable state instead of "check your inbox".
+  const [emailFailed, setEmailFailed] = useState(false)
   // Pending manager invite for the entered email (drives the invite-aware UI).
   const [invite, setInvite]                   = useState<PendingInvite | null>(null)
   const [inviteDismissed, setInviteDismissed] = useState(false)
@@ -444,11 +446,12 @@ export default function RegisterPage() {
       setLoading(false)
       // Email already registered — show the "may not be verified, resend?" path.
       if (result.code === 'exists') { setError(''); setExistingAccount(true); return }
+      // Account created but the verification email did not send — recoverable.
+      if (result.emailFailed) { setError(result.error ?? ''); setEmailFailed(true); return }
       return setError(result.error ?? 'Registration failed.')
     }
 
-    // Auto-confirm mode: no email step — log the user straight in.
-    // The redirect-if-logged-in effect will take them to their dashboard.
+    // Auto-confirm mode (dev only): no email step — log the user straight in.
     if (result.autoConfirmed) {
       const loginResult = await login(form.email.trim(), form.password)
       setLoading(false)
@@ -457,10 +460,9 @@ export default function RegisterPage() {
       return navigate('/login', { replace: true })
     }
 
-    // The backend created an UNCONFIRMED user but did not send an email. Trigger
-    // Supabase's confirmation email now (via its SMTP) before showing the inbox
-    // screen. The done-screen's resend button handles any follow-up sends.
-    await resendVerification(form.email.trim())
+    // The client signUp already sent the confirmation email via Supabase's SMTP —
+    // do NOT resend here (that would double-send / hit rate limits). Only now,
+    // after a confirmed-successful send, do we show the inbox screen.
     setLoading(false)
     setStep('done')
   }
@@ -532,8 +534,38 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* ── Email-send failure (account created, email not sent) ── */}
+          {emailFailed && (
+            <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden text-center"
+                 style={{ borderLeft: '2px solid #8b0000' }}>
+              <div className="relative z-10">
+                <div className="sec-label mb-2 justify-center">Action Needed</div>
+                <h2 className="font-display text-off-white uppercase mb-4"
+                    style={{ fontSize:'clamp(26px,3.4vw,40px)', lineHeight:0.95 }}>
+                  Couldn't Send Verification Email
+                </h2>
+                <p className="font-narrow text-gray-1 leading-relaxed mb-6" style={{ fontSize:14, maxWidth:380, margin:'0 auto 20px' }}>
+                  Your account was created, but we could not send the verification email to{' '}
+                  <strong className="text-off-white">{form.email}</strong>. Try resending it below.
+                </p>
+                {error && <p className="font-condensed text-[11px] text-blood-glow mb-4">{error}</p>}
+                <ResendVerification email={form.email.trim()} cooldownSeconds={60} className="mb-4" />
+                <div className="flex flex-col gap-2 items-center">
+                  <button type="button" onClick={() => { setEmailFailed(false); submitFinal() }}
+                    className="btn-ghost text-[11px] py-2 px-4">Retry Registration</button>
+                  <Link to="/login" className="font-condensed text-[10px] text-gray-3 hover:text-off-white transition-colors no-underline">
+                    Back to Sign In
+                  </Link>
+                  <p className="font-condensed text-[10px] text-gray-3 mt-1">
+                    Still stuck? Contact <span className="text-off-white">support@eleventh-rnd.com</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Card */}
-          {step !== 'done' && !existingAccount && !showInviteScreen && (
+          {step !== 'done' && !existingAccount && !showInviteScreen && !emailFailed && (
             <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden"
                  style={{ borderLeft: '2px solid #8b0000' }}>
               <div className="absolute inset-0 pointer-events-none"

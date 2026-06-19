@@ -7,20 +7,33 @@
 // Anything that requires elevated privileges goes through our Express API,
 // which uses the service-role key server-side.
 //
-// ── Supabase Dashboard Auth URL Configuration (required for password reset) ──
-// Authentication → URL Configuration:
-//   Site URL:      https://eleventh-round-beta.vercel.app
+// ── Supabase Dashboard Auth URL Configuration (REQUIRED for signup + reset) ──
+// Authentication → URL Configuration. EVERY origin we send email redirects to
+// MUST be allow-listed here, or Supabase rejects the email and NOTHING reaches
+// SendGrid (this is a common cause of "confirmation email never arrives"):
+//   Site URL:      https://eleventh-rnd.com          (production)
 //   Redirect URLs:
-//     https://eleventh-round-beta.vercel.app/**
-//     https://eleventh-round-beta.vercel.app/reset-password
-//     https://eleventh-round-beta.vercel.app/verify-email
-//     http://localhost:5173/**   (dev)
+//     https://eleventh-rnd.com/**                     (production — REQUIRED)
+//     https://eleventh-round-beta.vercel.app/**       (preview)
+//     http://localhost:5173/**                        (dev)
+//
+// The redirect origin is `siteUrl` below — pin it in prod with VITE_SITE_URL so
+// it can never accidentally be a preview/local origin.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const URL  = (import.meta as any).env?.VITE_SUPABASE_URL      as string | undefined
 const ANON = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string | undefined
+
+// Origin used for auth email redirect links (signup confirmation, password
+// reset). Pin to the production domain with VITE_SITE_URL so emails never point
+// at a preview/local origin; falls back to the current origin in dev. This value
+// MUST be in Supabase Auth → URL Configuration → Redirect URLs, or Supabase will
+// refuse to send the email.
+export const siteUrl =
+  ((import.meta as any).env?.VITE_SITE_URL as string | undefined) ||
+  (typeof window !== 'undefined' ? window.location.origin : '')
 
 if (!URL || !ANON) {
   // Don't crash the app — useAuth's demo flow still works without Supabase.

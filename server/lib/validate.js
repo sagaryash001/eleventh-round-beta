@@ -54,6 +54,10 @@ export const RegisterSchema = z.object({
   accountType: z.enum(['fighter', 'management', 'promotion', 'sponsor']),
   teamName:    z.string().trim().max(120).optional().nullable(),
   subdomain:   SubdomainSchema.optional().nullable(),
+  // Present when the browser already created the auth user via the normal
+  // supabase.auth.signUp() (the reliable email-sending path). When set, the
+  // backend only bootstraps the profile/onboarding rows for this user.
+  userId:      z.string().uuid().optional(),
   onboarding:  z.object({
     q1: z.string().max(500).optional(),
     q2: z.string().max(500).optional(),
