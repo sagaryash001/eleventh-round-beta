@@ -23,6 +23,7 @@ export interface RosterEntry {
   requested_by: string | null
   request_message: string | null
   team_name: string | null
+  invite_email_status: 'queued' | 'sent' | 'failed' | null
   created_at: string
   accepted_at: string | null
   declined_at: string | null

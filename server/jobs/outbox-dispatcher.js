@@ -439,8 +439,9 @@ async function handleMessageReceived(payload) {
   ))
 }
 
-async function handleManagerRosterInvite(payload) {
+async function handleManagerRosterInvite(payload, event) {
   const { invited_email, invited_name, manager_id, fighter_id, message } = payload
+  const connId = event?.aggregate_id ?? null
 
   let managerName = 'A manager'
   if (manager_id) {
@@ -460,19 +461,35 @@ async function handleManagerRosterInvite(payload) {
       related_type: 'manager_fighters',
       related_id:   null,
     })
+    log.info({ connId, fighter_id, manager_id, route: 'in-app' }, 'manager.roster_invite — in-app notification created')
     return
   }
 
-  // Case B — non-platform fighter: email invite to register/accept.
+  // Case B — non-platform fighter: email invite. Track the REAL delivery status
+  // on the roster row so the UI never lies about "sent". A send failure rethrows
+  // so the dispatcher marks the event failed (retry with backoff).
   if (!invited_email) return
-  await email(invited_email, `${esc(managerName)} invited you to join their roster`, emailHtml(`
-    <p>Hi${invited_name ? ` <strong style="color:#f0ece4">${esc(invited_name)}</strong>` : ''},</p>
-    <p><strong style="color:#f0ece4">${esc(managerName)}</strong> has invited you to join their fighter roster
-       on The Eleventh Round.</p>
-    ${message ? `<p style="padding:12px;background:#141416;border-left:2px solid #8b0000;margin:16px 0;font-size:13px;color:#b8b4ae">&ldquo;${esc(message)}&rdquo;</p>` : ''}
-    <p>Create an account or sign in to accept the invitation.</p>
-    ${ctaButton(`${CLIENT}/register`, 'Accept Invitation')}
-  `))
+  try {
+    await _sendEmail(invited_email, `${esc(managerName)} invited you to join their roster`, emailHtml(`
+      <p>Hi${invited_name ? ` <strong style="color:#f0ece4">${esc(invited_name)}</strong>` : ''},</p>
+      <p><strong style="color:#f0ece4">${esc(managerName)}</strong> has invited you to join their fighter roster
+         on The Eleventh Round.</p>
+      ${message ? `<p style="padding:12px;background:#141416;border-left:2px solid #8b0000;margin:16px 0;font-size:13px;color:#b8b4ae">&ldquo;${esc(message)}&rdquo;</p>` : ''}
+      <p>Create an account or sign in to accept the invitation.</p>
+      ${ctaButton(`${CLIENT}/register?email=${encodeURIComponent(invited_email)}`, 'Accept Invitation')}
+    `))
+    if (connId) {
+      await adminSupabase.from('manager_fighters').update({ invite_email_status: 'sent' }).eq('id', connId)
+    }
+    log.info({ connId, invited_email, manager_id, route: 'email', result: 'sent' }, 'manager.roster_invite — email sent')
+  } catch (e) {
+    if (connId) {
+      await adminSupabase.from('manager_fighters').update({ invite_email_status: 'failed' }).eq('id', connId)
+        .then(() => {}).catch(() => {})
+    }
+    log.error({ err: e, connId, invited_email, manager_id, route: 'email' }, 'manager.roster_invite — email FAILED')
+    throw e
+  }
 }
 
 // Fighter accepted a manager's invite → notify the manager.
@@ -710,7 +727,7 @@ async function processBatch(events) {
     }
 
     try {
-      await handler(event.payload)
+      await handler(event.payload, event)
       await adminSupabase.from('outbox_events').update({
         status:       'sent',
         processed_at: new Date().toISOString(),

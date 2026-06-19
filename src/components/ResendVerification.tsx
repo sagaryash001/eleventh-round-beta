@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { resendVerification } from '../lib/resendVerification'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,7 +14,7 @@ import { resendVerification } from '../lib/resendVerification'
 //    after registration or after an auto-resend on the login screen.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type State = 'idle' | 'sending' | 'sent' | 'error'
+type State = 'idle' | 'sending' | 'sent' | 'error' | 'verified'
 
 export default function ResendVerification({
   email: emailProp,
@@ -50,6 +51,9 @@ export default function ResendVerification({
     if (res.ok) {
       setState('sent')
       setCooldown(cooldownSeconds)
+    } else if (res.alreadyVerified) {
+      // Truthful: nothing was sent because the account is already verified.
+      setState('verified')
     } else {
       setState('error')
       setError(res.error ?? 'Could not resend. Please try again.')
@@ -91,6 +95,12 @@ export default function ResendVerification({
       {state === 'sent' && (
         <p className="font-condensed text-[10px] tracking-wide mt-2 text-center" style={{ color: '#4a8c4a' }}>
           ✓ Verification email sent. Check your inbox — and your spam folder.
+        </p>
+      )}
+      {state === 'verified' && (
+        <p className="font-condensed text-[10px] tracking-wide mt-2 text-center text-gray-2">
+          This email is already verified.{' '}
+          <Link to="/login" className="text-blood-glow hover:text-off-white transition-colors no-underline">Sign In</Link>
         </p>
       )}
       {state === 'error' && error && (

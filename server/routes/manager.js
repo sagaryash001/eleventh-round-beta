@@ -110,7 +110,7 @@ router.get('/roster', ...guard, async (req, res) => {
     // All non-removed connections for this manager
     const { data: connections, error: connErr } = await sb
       .from('manager_fighters')
-      .select('id, fighter_id, status, source, invited_email, invited_name, pending_fighter_data, requested_by, request_message, team_name, created_at, accepted_at, declined_at')
+      .select('id, fighter_id, status, source, invited_email, invited_name, pending_fighter_data, requested_by, request_message, team_name, invite_email_status, created_at, accepted_at, declined_at')
       .eq('manager_id', mid)
       .neq('status', 'removed')
       .order('created_at', { ascending: false })
@@ -142,6 +142,7 @@ router.get('/roster', ...guard, async (req, res) => {
         fighter_id:           fid,
         invited_email:        c.invited_email,
         invited_name:         c.invited_name,
+        invite_email_status:  c.invite_email_status ?? null,
         pending_fighter_data: c.pending_fighter_data ?? {},
         requested_by:         c.requested_by,
         request_message:      c.request_message,
@@ -242,22 +243,22 @@ router.post('/roster/invite', ...guard, validate(ManagerInviteSchema), async (re
     if (existingEmail) {
       const { error } = await adminSupabase.from('manager_fighters')
         .update({ status: 'pending', invited_name: name ?? null,
-          request_message: message ?? null, updated_at: now })
+          request_message: message ?? null, invite_email_status: 'queued', updated_at: now })
         .eq('id', existingEmail.id)
       if (error) throw error
       adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: existingEmail.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
-      log.info({ mid, email, connectionId: existingEmail.id, route: 'email-invite-reuse' }, 'roster invite (non-platform)')
+      log.info({ mid, email, connectionId: existingEmail.id, route: 'email-invite-reuse' }, 'roster invite (non-platform) — email queued')
       return res.json({ ok: true, connection_id: existingEmail.id, matched: false })
     }
 
     const { data, error } = await adminSupabase.from('manager_fighters')
       .insert({ manager_id: mid, fighter_id: null, status: 'pending',
         source: 'manager_invite', invited_email: email, invited_name: name ?? null,
-        request_message: message ?? null, requested_by: mid })
+        request_message: message ?? null, requested_by: mid, invite_email_status: 'queued' })
       .select('id').maybeSingle()
     if (error) throw error
     adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: data.id, payload: { invited_email: email, invited_name: name ?? null, manager_id: mid, message: message ?? null } }).then(() => {}).catch(() => {})
-    log.info({ mid, email, connectionId: data.id, route: 'email-invite-new' }, 'roster invite (non-platform)')
+    log.info({ mid, email, connectionId: data.id, route: 'email-invite-new' }, 'roster invite (non-platform) — email queued')
     return res.status(201).json({ ok: true, connection_id: data.id, matched: false })
   } catch (err) {
     log.error({ err }, 'POST /manager/roster/invite threw')
@@ -395,11 +396,11 @@ router.post('/roster/:connectionId/invite-email', ...guard, validate(PendingProf
 
     // No platform account — convert to an email invite (non-platform).
     const { error } = await adminSupabase.from('manager_fighters')
-      .update({ source: 'manager_invite', invited_email: email, requested_by: mid, updated_at: now })
+      .update({ source: 'manager_invite', invited_email: email, requested_by: mid, invite_email_status: 'queued', updated_at: now })
       .eq('id', conn.id)
     if (error) throw error
     adminSupabase.from('outbox_events').insert({ event_type: 'manager.roster_invite', aggregate_type: 'manager_fighters', aggregate_id: conn.id, payload: { invited_email: email, invited_name: conn.invited_name, manager_id: mid } }).then(() => {}).catch(() => {})
-    log.info({ mid, email, connectionId: conn.id, route: 'convert-email' }, 'draft converted to invite (non-platform)')
+    log.info({ mid, email, connectionId: conn.id, route: 'convert-email' }, 'draft converted to invite (non-platform) — email queued')
     res.json({ ok: true, connection_id: conn.id, matched: false })
   } catch (err) {
     log.error({ err }, 'POST /manager/roster/:id/invite-email threw')
@@ -497,8 +498,12 @@ router.post('/roster/:connectionId/resend', ...guard, async (req, res) => {
       return res.status(429).json({ error: 'Invite was just sent. Please wait a moment before resending.' })
     }
 
+    // Requeue: a non-platform invite goes back to 'queued' so the UI shows the
+    // real delivery state again once the dispatcher reprocesses it.
+    const requeueEmail = !conn.fighter_id && conn.invited_email
     const { error } = await adminSupabase.from('manager_fighters')
-      .update({ status: 'pending', declined_at: null, updated_at: now })
+      .update({ status: 'pending', declined_at: null, updated_at: now,
+        ...(requeueEmail ? { invite_email_status: 'queued' } : {}) })
       .eq('id', conn.id)
     if (error) throw error
 
@@ -510,7 +515,7 @@ router.post('/roster/:connectionId/resend', ...guard, async (req, res) => {
     })
     if (outboxErr) log.warn({ err: outboxErr, connectionId: conn.id }, 'resend outbox insert failed')
 
-    log.info({ connectionId: conn.id, mid, fid: conn.fighter_id, email: conn.invited_email, status: 'pending' }, 'invite resent')
+    log.info({ connectionId: conn.id, mid, fid: conn.fighter_id, email: conn.invited_email, status: 'pending' }, 'invite resent (requeued)')
     res.json({ ok: true })
   } catch (err) {
     log.error({ err }, 'POST /manager/roster/:id/resend threw')

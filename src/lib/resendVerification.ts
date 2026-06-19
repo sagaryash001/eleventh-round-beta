@@ -17,6 +17,9 @@ import { supabase } from './supabase'
 export interface ResendResult {
   ok: boolean
   error?: string
+  /** True when Supabase reports the email is already verified — there is nothing
+   *  to resend, so the UI should guide the user to sign in (not claim "sent"). */
+  alreadyVerified?: boolean
 }
 
 export async function resendVerification(email: string): Promise<ResendResult> {
@@ -34,13 +37,17 @@ export async function resendVerification(email: string): Promise<ResendResult> {
     // Log message only — never the email body, password, or any token.
     console.error('[auth] resend verification failed:', error.message)
 
-    // A user who is already verified can't be "re-sent" a signup link; from the
-    // user's point of view there's nothing to do, so treat it as success.
+    // An already-verified user can't be "re-sent" a signup link. Surface this as
+    // a distinct outcome so the UI tells the truth ("already verified — sign in")
+    // instead of falsely claiming an email was sent.
     if (/already (confirmed|registered|verified)/i.test(error.message)) {
-      return { ok: true }
+      return { ok: false, alreadyVerified: true, error: 'This email is already verified. Please sign in.' }
     }
     return { ok: false, error: error.message || 'Could not resend verification email.' }
   }
 
+  // Supabase accepted the request → the confirmation email is going out via its
+  // configured SMTP (SendGrid). Only now is it truthful to show "sent".
+  console.log('[auth] resend verification: Supabase accepted the request for', trimmed)
   return { ok: true }
 }

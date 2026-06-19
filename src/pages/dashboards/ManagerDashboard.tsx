@@ -756,21 +756,33 @@ function RosterZone() {
           {pending.map(conn => {
             const isRequest    = conn.source === 'fighter_request'
             const onPlatform   = !!conn.fighter_id          // existing platform fighter
+            const emailFailed  = !isRequest && !onPlatform && conn.invite_email_status === 'failed'
             const displayName  = rosterDisplayName(conn)
             const displayEmail = conn.fighter?.email ?? conn.invited_email ?? null
-            // Status line tailored to invite routing (existing vs non-platform).
+            // Truthful status: in-app invites say "pending acceptance"; email
+            // invites reflect the REAL delivery state from the outbox dispatcher.
+            const emailLine =
+              conn.invite_email_status === 'sent'   ? 'Email sent — awaiting registration'
+            : conn.invite_email_status === 'failed' ? 'Email failed — retry'
+            :                                         'Invite queued'
             const statusLine = isRequest
               ? 'Requested to join your roster'
               : onPlatform
                 ? 'Pending fighter acceptance'
-                : 'Invitation sent — email not yet registered'
+                : emailLine
+            // Badge mirrors the same truth.
+            const [badgeCls, badgeText] = isRequest || onPlatform
+              ? ['badge-yellow', 'Pending']
+              : conn.invite_email_status === 'sent'   ? ['badge-green',  'Email Sent']
+              : conn.invite_email_status === 'failed' ? ['badge-red',    'Email Failed']
+              :                                         ['badge-yellow', 'Queued']
             return (
-              <div key={conn.id} className="dash-card" style={{ borderLeft: '2px solid #c9a82c' }}>
+              <div key={conn.id} className="dash-card" style={{ borderLeft: `2px solid ${emailFailed ? '#8b0000' : '#c9a82c'}` }}>
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="font-condensed font-bold text-off-white" style={{ fontSize: 13 }}>{displayName}</span>
-                      <span className="badge badge-yellow">{onPlatform || isRequest ? 'Pending' : 'Invited'}</span>
+                      <span className={`badge ${badgeCls}`}>{badgeText}</span>
                     </div>
                     {displayEmail && <div className="font-condensed text-[11px] text-gray-3">{displayEmail}</div>}
                     <div className="font-condensed text-[10px] text-gray-3 mt-0.5">
@@ -795,8 +807,11 @@ function RosterZone() {
                     ) : (
                       <>
                         <button onClick={() => resend(conn.id)} disabled={actingId === conn.id}
-                          className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-2 cursor-pointer hover:border-blood hover:text-off-white transition-all disabled:opacity-40">
-                          {actingId === conn.id ? <Spinner /> : 'Resend'}
+                          className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border cursor-pointer transition-all disabled:opacity-40"
+                          style={emailFailed
+                            ? { borderColor: '#2a5c2a', color: '#00c060' }
+                            : { borderColor: '#3a3a40', color: '#b8b4ae' }}>
+                          {actingId === conn.id ? <Spinner /> : emailFailed ? 'Retry' : 'Resend'}
                         </button>
                         <button onClick={() => changeStatus(conn.id, 'removed')} disabled={actingId === conn.id}
                           className="font-condensed font-bold uppercase text-[9px] tracking-[0.1em] px-2.5 py-1.5 border border-charcoal-3 text-gray-3 cursor-pointer hover:border-blood hover:text-blood-glow transition-all disabled:opacity-40">

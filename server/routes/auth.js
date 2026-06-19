@@ -290,4 +290,86 @@ router.post('/resend-verification', validate(LoginSchema.pick({ email: true }).e
   }
 })
 
+// Is the auth user behind this profile id email-verified?
+async function isEmailVerified(sb, userId) {
+  try {
+    const { data } = await sb.auth.admin.getUserById(userId)
+    return !!data?.user?.email_confirmed_at
+  } catch { return false }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// GET /api/auth/pending-invite?email=...
+//
+// Drives the invite-aware registration screen. Privacy: account state is only
+// revealed for emails that ALREADY have a pending manager invite (the inviting
+// manager already knows that email), so this is not a general account-enumeration
+// oracle — arbitrary emails just get { hasPendingInvite: false }.
+// ═════════════════════════════════════════════════════════════════════════════
+router.get('/pending-invite', async (req, res) => {
+  try {
+    const sb    = requireSupabase()
+    const email = String(req.query.email || '').trim().toLowerCase()
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return res.json({ hasPendingInvite: false })
+    }
+
+    // Who is this email? Drives the invited-fighter UI case (A–D).
+    const { data: profile } = await sb.from('profiles').select('id, role').eq('email', email).maybeSingle()
+
+    // A manager-initiated invite is keyed on invited_email (non-platform) OR on
+    // fighter_id (existing platform fighter). Check both; exclude the fighter's
+    // own outbound requests (source = fighter_request).
+    let { data: invite } = await sb
+      .from('manager_fighters')
+      .select('id, status, source, manager_id, invited_name, created_at')
+      .eq('invited_email', email)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (!invite && profile) {
+      const { data: byFid } = await sb
+        .from('manager_fighters')
+        .select('id, status, source, manager_id, invited_name, created_at')
+        .eq('fighter_id', profile.id)
+        .eq('status', 'pending')
+        .in('source', ['manager_invite', 'manual_create'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      invite = byFid
+    }
+
+    if (!invite) return res.json({ hasPendingInvite: false })
+
+    let managerName = null, teamName = null
+    if (invite.manager_id) {
+      const { data: mgr } = await sb.from('profiles').select('name, team_name').eq('id', invite.manager_id).maybeSingle()
+      managerName = mgr?.name ?? null
+      teamName    = mgr?.team_name ?? null
+    }
+
+    let accountState = 'none'                       // Case A — no account yet
+    if (profile) {
+      if (profile.role !== 'fighter') accountState = 'non_fighter'   // Case D
+      else accountState = (await isEmailVerified(sb, profile.id)) ? 'verified' : 'unverified' // Case C / B
+    }
+
+    log.info({ email, accountState, hasInvite: true }, 'pending-invite lookup')
+    return res.json({
+      hasPendingInvite: true,
+      accountState,
+      managerName,
+      teamName,
+      inviteStatus: invite.status,
+      invitedEmail: email,
+    })
+  } catch (err) {
+    log.error({ err }, 'GET /auth/pending-invite threw')
+    return res.json({ hasPendingInvite: false })
+  }
+})
+
 export default router

@@ -59,8 +59,10 @@ async function send(to, subject, html) {
 
   const t = smtpTransport()
   if (!t) {
-    console.warn('[email] No transport configured — skipping email to', to)
-    return
+    // No transport configured. Throw rather than silently skip so callers that
+    // care (e.g. the outbox dispatcher) can mark the work failed and surface a
+    // clear error instead of falsely reporting "sent".
+    throw new Error('No email transport configured — set SENDGRID_API_KEY (or EMAIL_HOST/EMAIL_USER/EMAIL_PASS) in the backend environment.')
   }
   await t.sendMail({ from: `"${FROM_NAME}" <${FROM_EMAIL}>`, to, subject, html })
 }

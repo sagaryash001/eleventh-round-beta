@@ -1,11 +1,103 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth, RegisterData } from '../hooks/useAuth'
 import { apiFetch } from '../lib/api'
 import { validatePassword, getPasswordRules } from '../lib/passwordValidation'
 import { resendVerification } from '../lib/resendVerification'
 import ResendVerification from '../components/ResendVerification'
 import Navbar from '../components/Navbar'
+
+// ── Pending manager-invite context (from GET /api/auth/pending-invite) ─────────
+interface PendingInvite {
+  hasPendingInvite: boolean
+  accountState?: 'none' | 'unverified' | 'verified' | 'non_fighter'
+  managerName?: string | null
+  teamName?: string | null
+}
+
+// Invite-aware card shown when the email has a pending manager roster invite.
+// Cases A–D map to the fighter's account state for that email.
+function InviteCard({ invite, email, onCreateAccount }: {
+  invite: PendingInvite; email: string; onCreateAccount: () => void
+}) {
+  const who = invite.managerName || invite.teamName || 'A manager'
+  const state = invite.accountState ?? 'none'
+
+  const Shell = ({ label, title, children }: { label: string; title: string; children: React.ReactNode }) => (
+    <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden text-center"
+         style={{ borderLeft: '2px solid #8b0000' }}>
+      <div className="relative z-10">
+        <div className="sec-label mb-2 justify-center">{label}</div>
+        <h2 className="font-display text-off-white uppercase mb-4" style={{ fontSize: 'clamp(26px,3.4vw,40px)', lineHeight: 0.95 }}>
+          {title}
+        </h2>
+        {children}
+      </div>
+    </div>
+  )
+  const copyCls = 'font-narrow text-gray-1 leading-relaxed mb-6'
+  const copySty = { fontSize: 14, maxWidth: 380, margin: '0 auto 24px' } as React.CSSProperties
+
+  // Case D — email belongs to a non-fighter account.
+  if (state === 'non_fighter') {
+    return (
+      <Shell label="Roster Invite" title="Wrong account type">
+        <p className={copyCls} style={copySty}>
+          This invite is for a <strong className="text-off-white">fighter</strong> account. Sign in with a fighter
+          account, or contact support if you think this is a mistake.
+        </p>
+        <Link to="/login" className="btn-primary inline-block">Sign In</Link>
+      </Shell>
+    )
+  }
+
+  // Case C — verified fighter account already exists.
+  if (state === 'verified') {
+    return (
+      <Shell label="Roster Invite" title="Roster invite pending">
+        <p className={copyCls} style={copySty}>
+          <strong className="text-off-white">{who}</strong> invited you to join their roster. Sign in to review and
+          respond to the invite from your fighter dashboard.
+        </p>
+        <Link to="/login" className="btn-primary inline-block">Sign In</Link>
+      </Shell>
+    )
+  }
+
+  // Case B — account exists but email not verified.
+  if (state === 'unverified') {
+    return (
+      <Shell label="Roster Invite" title="Verify your email to respond to the roster invite">
+        <p className={copyCls} style={copySty}>
+          Your account already exists. Verify your email, then accept or decline the invite from
+          <strong className="text-off-white"> {who}</strong> in your fighter dashboard.
+        </p>
+        <ResendVerification email={email.trim()} cooldownSeconds={60} className="mb-5" />
+        <p className="font-condensed text-[10px] text-gray-3 text-center">
+          Already verified?{' '}
+          <Link to="/login" className="text-blood-glow hover:text-off-white transition-colors no-underline">Sign In</Link>
+        </p>
+      </Shell>
+    )
+  }
+
+  // Case A — no account yet for this email.
+  return (
+    <Shell label="Roster Invite" title="You've been invited to join a roster">
+      <p className={copyCls} style={copySty}>
+        <strong className="text-off-white">{who}</strong> invited you to join their roster on The Eleventh Round.
+        Create your fighter account to review and respond to the invite.
+      </p>
+      <button type="button" onClick={onCreateAccount} className="btn-primary inline-block">
+        Create Fighter Account
+      </button>
+      <p className="font-condensed text-[10px] text-gray-3 text-center mt-5">
+        Already have an account?{' '}
+        <Link to="/login" className="text-blood-glow hover:text-off-white transition-colors no-underline">Sign In</Link>
+      </p>
+    </Shell>
+  )
+}
 
 // ── Inline SVG eye icon ───────────────────────────────────────────────────────
 function EyeIcon({ visible }: { visible: boolean }) {
@@ -170,12 +262,18 @@ function Progress({ current, total }: { current: number; total: number }) {
 export default function RegisterPage() {
   const { register, login, user } = useAuth()
   const navigate           = useNavigate()
+  const location           = useLocation()
   const [step, setStep]    = useState<Step>('account')
   const [error, setError]  = useState('')
   const [loading, setLoading] = useState(false)
   // Set when registration reports the email is already taken — we offer a
   // resend-verification path rather than a dead-end error.
   const [existingAccount, setExistingAccount] = useState(false)
+  // Pending manager invite for the entered email (drives the invite-aware UI).
+  const [invite, setInvite]                   = useState<PendingInvite | null>(null)
+  const [inviteDismissed, setInviteDismissed] = useState(false)
+  const [invitedFighter, setInvitedFighter]   = useState(false)
+  const inviteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [subStatus, setSubStatus] = useState<'idle'|'checking'|'ok'|'taken'|'invalid'>('idle')
   const subTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
 
@@ -238,6 +336,37 @@ export default function RegisterPage() {
     }, 500)
   }, [form.subdomain])
 
+  // Look up whether an email has a pending manager invite (safe, minimal data).
+  const checkInvite = useCallback(async (rawEmail: string) => {
+    const e = rawEmail.trim().toLowerCase()
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { setInvite(null); return }
+    try {
+      const res  = await apiFetch(`/api/auth/pending-invite?email=${encodeURIComponent(e)}`)
+      const data = await res.json()
+      setInvite(data?.hasPendingInvite ? data : null)
+    } catch { setInvite(null) }
+  }, [])
+
+  // Prefill + check when arriving via an invite link (?email=...).
+  useEffect(() => {
+    const qEmail = new URLSearchParams(location.search).get('email')
+    if (qEmail) {
+      setForm(prev => ({ ...prev, email: qEmail }))
+      checkInvite(qEmail)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Debounced invite check as the user types their email on the account step.
+  useEffect(() => {
+    if (step !== 'account' || inviteDismissed) return
+    if (inviteTimer.current) clearTimeout(inviteTimer.current)
+    inviteTimer.current = setTimeout(() => checkInvite(form.email), 500)
+    return () => { if (inviteTimer.current) clearTimeout(inviteTimer.current) }
+  }, [form.email, step, inviteDismissed, checkInvite])
+
+  const showInviteScreen = !!invite?.hasPendingInvite && !inviteDismissed && step !== 'done'
+
   const stepIdx   = STEPS.indexOf(step)
   const visibleSteps =
     form.accountType === 'sponsor' ? (['account', 'role', 'done'] as Step[]) :
@@ -255,6 +384,8 @@ export default function RegisterPage() {
     if (!validatePassword(form.password))
       return setError('Password must include uppercase, lowercase, number, special character, and be at least 8 characters.')
     if (form.password !== form.confirm) return setError('Passwords do not match.')
+    // Invited fighters are pre-typed as fighters — skip the role question.
+    if (invitedFighter) { setForm(p => ({ ...p, accountType: 'fighter' })); return goNext('goal') }
     goNext('role')
   }
 
@@ -364,8 +495,22 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {/* ── Invite-aware screen (pending manager invite for this email) ── */}
+          {showInviteScreen && (
+            <InviteCard
+              invite={invite!}
+              email={form.email}
+              onCreateAccount={() => {
+                setForm(p => ({ ...p, accountType: 'fighter' }))
+                setInvitedFighter(true)
+                setInviteDismissed(true)
+                setStep('account')
+              }}
+            />
+          )}
+
           {/* ── Existing-account prompt ── */}
-          {existingAccount && (
+          {existingAccount && !showInviteScreen && (
             <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden text-center"
                  style={{ borderLeft: '2px solid #8b0000' }}>
               <div className="relative z-10">
@@ -388,7 +533,7 @@ export default function RegisterPage() {
           )}
 
           {/* Card */}
-          {step !== 'done' && !existingAccount && (
+          {step !== 'done' && !existingAccount && !showInviteScreen && (
             <div className="bg-charcoal border border-charcoal-3 p-8 relative overflow-hidden"
                  style={{ borderLeft: '2px solid #8b0000' }}>
               <div className="absolute inset-0 pointer-events-none"
